@@ -1,0 +1,148 @@
+@import "@fontsource-variable/geist";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Geist Variable', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+@layer base {
+  :root {
+
+    --background: 222 20% 10%;
+    --foreground: 210 30% 90%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 215 15% 55%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 262 80% 65%;
+    --primary: 262 80% 65%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 220 15% 20%;
+    --accent-foreground: 210 30% 90%;
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 30% 80%;
+    --destructive: 0 70% 55%;
+    --card: 222 20% 12%;
+    --card-foreground: 210 30% 90%;
+
+    --tl-bg-deep: 222 25% 7%;
+    --tl-bg-main: 222 20% 10%;
+    --tl-bg-panel: 222 18% 13%;
+    --tl-bg-card: 222 15% 16%;
+    --tl-accent-blue: 210 80% 60%;
+    --tl-border: 220 15% 22%;
+    --tl-glass: rgba(255, 255, 255, 0.04);
+
+
+    /* __________Ajout pour ajustement couleur secondaire_____________  */
+    --tl-accent-h: 84;
+    /* Teinte (Hue) — change ce seul chiffre pour tout changer */
+    --tl-accent-s: 80%;
+    /* Saturation */
+    --tl-accent-l: 65%;
+    /* Luminosité */
+    /* Variantes calculées depuis la teinte principale */
+    --tl-accent-dim: var(--tl-accent-h) 40% 22%;
+    /* Fond très sombre */
+    --tl-accent-mid: var(--tl-accent-h) 40% 25%;
+    /* Fond sombre */
+    --tl-accent-border: var(--tl-accent-h) 40% 35%;
+    /* Bordure */
+    --tl-accent-text: var(--tl-accent-h) 80% 80%;
+    /* Texte clair */
+    --tl-accent-button: var(--tl-accent-h) 60% 35%;
+    /* Fond bouton */
+    --tl-accent-button-border: var(--tl-accent-h) 60% 45%;
+    /* Bordure bouton */
+  }
+
+  .dark {
+
+    --background: 222 20% 10%;
+    --foreground: 210 30% 90%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 215 15% 55%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+
+    --ring: 262 80% 65%;
+    --primary: 262 80% 65%;
+
+    --primary-foreground: 0 0% 100%;
+    --accent: 220 15% 20%;
+    --accent-foreground: 210 30% 90%;
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 30% 80%;
+    --destructive: 0 70% 55%;
+    --card: 222 20% 12%;
+    --card-foreground: 210 30% 90%;
+
+
+
+
+    /* __________Ajout pour ajustement couleur SECONDAIRE_____________  */
+    /*     hsl(var(--tl-accent-purple))     */
+
+    /* __________SECONDAIRE COULEUR_____________  */
+    --tl-accent-princ: 165 48% 94%;
+    /* __________TROISIEME COULEUR_____________  */
+    --tl-accent-terc: 165 80% 76%;
+    /* __________LedOverlay_____________  */
+    --tl-accent-overlay: 165 68% 65%;
+    /* __________NUENES_____________  */
+
+    --tl-accent-h: 165;
+    /* Teinte (Hue) — change ce seul chiffre pour tout changer */
+    --tl-accent-s: 48%;
+    /* Saturation */
+    --tl-accent-l: 94%;
+    /* Luminosité */
+
+    /* Variantes calculées depuis la teinte principale */
+    --tl-accent-dim: var(--tl-accent-h) 40% 22%;
+    /* Fond très sombre */
+    --tl-accent-mid: var(--tl-accent-h) 40% 25%;
+    /* Fond sombre */
+    --tl-accent-border: var(--tl-accent-h) 40% 35%;
+    /* Bordure */
+    --tl-accent-text: var(--tl-accent-h) 80% 80%;
+    /* Texte clair */
+    --tl-accent-button: var(--tl-accent-h) 60% 35%;
+    /* Fond bouton */
+    --tl-accent-button-border: var(--tl-accent-h) 60% 45%;
+    /* Bordure bouton */
+
+
+
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--tl-bg-deep));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--tl-border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--tl-accent-princ));
+}
+
+.glass {
+  background: var(--tl-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--tl-border));
+}
