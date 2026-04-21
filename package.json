@@ -1,7 +1,7 @@
 {
   "name": "tone-lab-ahp",
   "productName": "tone-lab-desktop-app",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "My Electron application description",
   "main": ".vite/build/main.js",
   "private": true,
