@@ -1,5 +1,6 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
+
 
 let started = false;
 if (app.isPackaged) {
@@ -24,6 +25,7 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -34,9 +36,16 @@ const createWindow = () => {
     );
   }
 
-  // Open the DevTools.
+  // Open the DevTools & Menu bar par defaut.
+
+  // DEVTOOLS = Commenter pour retirer
   mainWindow.webContents.openDevTools();
+
+  // MENU = Commenter pour afficher
+  // Menu.setApplicationMenu(null);
+  
 };
+ 
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
