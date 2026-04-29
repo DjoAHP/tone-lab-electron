@@ -88,7 +88,7 @@ export interface AppState {
   sousStackSelectionne: string | null; // id du SousStack
   rechercheSelectionnee: string | null; // id de RechercheInstrument (NOUVEAU)
   sidebarOuverte: boolean;
-  ongletActif: "stack" | "metro";
-  vueActive: "home" | "stack" | "metro";
+  ongletActif: "stack" | "metro" | "diapa";
+  vueActive: "home" | "stack" | "metro" | "diapa";
   modifie: boolean;
 }

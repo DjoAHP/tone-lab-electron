@@ -5,6 +5,7 @@ import { MenuBar } from "./components/MenuBar";
 import { Sidebar } from "./components/Sidebar";
 import { SoundResearchTool } from "./components/SoundResearchTool";
 import { Metronome } from "./components/Metronome";
+import { DiapaTool } from "./components/DiapaTool";
 import { BottomBar } from "./components/BottomBar";
 import { NewStackModal } from "./components/NewStackModal";
 import { useApp } from "./context/AppContext";
@@ -37,7 +38,13 @@ function AppInner() {
           className="flex-1 flex min-w-0"
           style={{ background: "hsl(222, 22%, 9%)" }}
         >
-          {ongletActif === "metro" ? <Metronome /> : <SoundResearchTool />}
+          {ongletActif === "metro" ? (
+            <Metronome />
+          ) : ongletActif === "diapa" ? (
+            <DiapaTool />
+          ) : (
+            <SoundResearchTool />
+          )}
         </main>
       </div>
 

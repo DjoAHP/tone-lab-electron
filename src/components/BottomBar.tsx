@@ -4,6 +4,7 @@
 import { useApp } from "../context/AppContext";
 import StackIcon from "../assets/icons/Bottombar/stack-tool.svg?react";
 import MetroIcon from "../assets/icons/Bottombar/metro-tool.svg?react";
+import DiapaIcon from "../assets/icons/Bottombar/diapa-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
 
 import React from "react";
@@ -11,7 +12,7 @@ import React from "react";
 // ─── Définition des outils ──────────────────────────────────
 // Chaque outil a : id (= ongletActif), label, icône
 const OUTILS: {
-  id: "stack" | "metro";
+  id: "stack" | "metro" | "diapa";
   label: string;
   icone: React.ReactNode;
 }[] = [
@@ -37,6 +38,17 @@ const OUTILS: {
       />
     ),
   },
+  {
+    id: "diapa",
+    label: "Diapa",
+    icone: (
+      <DiapaIcon
+        width="35"
+        height="35"
+        style={{ color: "hsl(var(--tl-accent-princ))" }}
+      />
+    ),
+  },
 ];
 
 // ─── Largeur du fond actif de chaque côté de l'icône ─────────
@@ -52,10 +64,11 @@ export function BottomBar() {
     setVueActive,
   } = useApp();
 
-  function handleOutil(id: "stack" | "metro") {
+  function handleOutil(id: "stack" | "metro" | "diapa") {
     setOngletActif(id);
     if (id === "metro") setVueActive("metro");
     if (id === "stack") setVueActive("home");
+    if (id === "diapa") setVueActive("diapa");
   }
 
   return (

@@ -162,12 +162,12 @@ export function useAppStore() {
   }, []);
 
   const setVueActive = useCallback(
-    (vue: "home" | "stack" | "metro") => mettreAJourEtat({ vueActive: vue }),
+    (vue: "home" | "stack" | "metro" | "diapa") => mettreAJourEtat({ vueActive: vue }),
     [mettreAJourEtat],
   );
 
   const setOngletActif = useCallback(
-    (onglet: "stack" | "metro") => mettreAJourEtat({ ongletActif: onglet }),
+    (onglet: "stack" | "metro" | "diapa") => mettreAJourEtat({ ongletActif: onglet }),
     [mettreAJourEtat],
   );
 
