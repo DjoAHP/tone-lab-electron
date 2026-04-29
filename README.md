@@ -6,6 +6,7 @@ A desktop Electron application built with React, TypeScript, Vite, and Electron 
 
 - 🎵 **Music Research Tools**: Explore and analyze different musical instruments and sounds
 - 🔊 **Sound Research Tool**: Interactive interface for audio experimentation
+- 🎹 **Diapa Tool**: Virtual 2-octave piano keyboard (C4-C6) with AZERTY keyboard support, LED display, multiple timbres (sine, triangle, square, saw), volume control, and sustain mode
 - 💾 **Firebase Integration**: Cloud storage for user data and preferences
 - ☁️ **Cloudinary Integration**: Image upload and transformation capabilities
 - 🎨 **Modern UI**: Built with Tailwind CSS and shadcn/ui components
@@ -148,6 +149,16 @@ The application uses Vite's environment variable prefacing:
 - Example: `VITE_FIREBASE_API_KEY` becomes `import.meta.env.VITE_FIREBASE_API_KEY`
 
 ## Features in Detail
+
+### Diapa Tool
+Interactive virtual piano keyboard with:
+- 2-octave range (C4 to C6) with realistic black and white keys
+- AZERTY physical keyboard support (A Z E R T Y U I O P for white keys, Q S D F G H J K L M for black keys)
+- Real-time LED display showing active note (using Digital-7 font with overlay effect)
+- Multiple timbre options: Sine, Triangle, Square, Sawtooth
+- Volume control with visual slider
+- Sustain mode for sustained notes and chord practice
+- Style consistent with other tools (cards, dark theme, CSS variables)
 
 ### Sound Research Tool
 Interactive workspace for:
