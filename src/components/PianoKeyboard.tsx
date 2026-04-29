@@ -1,10 +1,10 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 
-// ─── Dimensions des touches ────────────────────────
-const WHITE_KEY_WIDTH = 44;
-const BLACK_KEY_WIDTH = 26;
-const WHITE_KEY_HEIGHT = 160;
-const BLACK_KEY_HEIGHT = 100;
+// ─── Dimensions des touches (AGRANDIES) ────────────────────────
+const WHITE_KEY_WIDTH = 60;
+const BLACK_KEY_WIDTH = 36;
+const WHITE_KEY_HEIGHT = 200;
+const BLACK_KEY_HEIGHT = 130;
 
 // ─── Mapping des fréquences (C4 à C6) ─────
 const WHITE_KEYS = [
@@ -40,13 +40,14 @@ const BLACK_KEYS = [
 
 // ─── Mapping clavier AZERTY ────────────────────────
 const WHITE_KEY_MAP: Record<string, string> = {
-  "a": "C4", "z": "D4", "e": "E4", "r": "F4", "t": "G4",
-  "y": "A4", "u": "B4", "i": "C5", "o": "D5", "p": "E5",
-  "^": "F5", "$": "G5", "]": "A5",
+  'a': "C4", 'z': "D4", 'e': "E4", 'r': "F4", 't': "G4",
+  'y': "A4", 'u': "B4", 'i': "C5", 'o': "D5", 'p': "E5",
+  '^': "F5", '$': "G5", ']': "A5",
 };
+
 const BLACK_KEY_MAP: Record<string, string> = {
-  "q": "C#4", "s": "D#4", "d": "F#4", "f": "G#4", "g": "A#4",
-  "h": "C#5", "j": "D#5", "k": "F#5", "l": "G#5", "m": "A#5",
+  'q': "C#4", 's': "D#4", 'd': "F#4", 'f': "G#4", 'g': "A#4",
+  'h': "C#5", 'j': "D#5", 'k': "F#5", 'l': "G#5", 'm': "A#5",
 };
 
 // ─── Types de sons disponibles ────────────────────────
@@ -65,12 +66,12 @@ function createAudioContext(): AudioContext {
 interface PianoKeyboardProps {
   oscType: OscType;
   volume: number;      // 0 à 1
-  sustain: boolean;   // si true, le son ne s'arrête pas tout seul
+  sustain?: boolean;   // Optionnel, mais on ne l'utilise plus
   onNotePlay: (note: string) => void;
 }
 
 // ─── Composant PianoKeyboard ────────────────────────
-export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKeyboardProps) {
+export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProps) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const activeNoteRef = useRef<string | null>(null);
   const [activeNote, setActiveNote] = useState<string | null>(null);
@@ -96,17 +97,10 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
       // Feedback visuel
       setActiveNote(note);
       onNotePlay(note);
-      if (!sustain) {
-        setTimeout(() => {
-          if (activeNoteRef.current === note) {
-            setActiveNote(null);
-          }
-        }, 200);
-      }
       activeNoteRef.current = note;
 
-      // Arrêter l'oscillateur précédent si sustain est désactivé
-      if (oscRef.current && !sustain) {
+      // Arrêter l'oscillateur précédent
+      if (oscRef.current) {
         try { oscRef.current.stop(); } catch { /* ignore */ }
       }
 
@@ -117,40 +111,23 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
       osc.type = oscType;
       osc.frequency.value = frequency;
 
-      // Enveloppe ADSR simplifiée
+      // Enveloppe
       const now = ctx.currentTime;
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(volume, now + 0.01);
-      if (!sustain) {
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-      }
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now);
-      if (!sustain) {
-        osc.stop(now + 0.5);
-      }
+      osc.stop(now + 0.5);
 
       oscRef.current = osc;
       gainRef.current = gain;
     },
-    [getAudioContext, oscType, volume, sustain, onNotePlay],
+    [getAudioContext, oscType, volume, onNotePlay],
   );
-
-  // Relâcher la note (pour sustain)
-  const releaseNote = useCallback(() => {
-    if (oscRef.current && gainRef.current) {
-      const now = audioCtxRef.current?.currentTime ?? 0;
-      gainRef.current.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-      try { oscRef.current.stop(now + 0.3); } catch { /* ignore */ }
-      setTimeout(() => {
-        setActiveNote(null);
-        activeNoteRef.current = null;
-      }, 300);
-    }
-  }, []);
 
   // Gestion du clavier physique (AZERTY)
   useEffect(() => {
@@ -165,23 +142,11 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
       }
     };
 
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (sustain) {
-        const key = e.key.toLowerCase();
-        const note = WHITE_KEY_MAP[key] ?? BLACK_KEY_MAP[key];
-        if (note && note === activeNoteRef.current) {
-          releaseNote();
-        }
-      }
-    };
-
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [playNote, releaseNote, sustain]);
+  }, [playNote]);
 
   // Nettoyage au démontage
   useEffect(() => {
@@ -193,33 +158,15 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
 
   const totalWidth = WHITE_KEYS.length * WHITE_KEY_WIDTH;
 
-  // Fonction pour générer les props communes des touches blanches
+  // Fonction pour générer les touches blanches
   const renderWhiteKey = (key: typeof WHITE_KEYS[0], index: number) => {
     const isActive = activeNote === key.note;
     return (
       <button
         key={key.note}
         onMouseDown={() => playNote(key.freq, key.note)}
-        onMouseUp={() => sustain && releaseNote()}
-        onMouseEnter={(e) => {
-          if (!isActive) {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "hsl(222, 15%, 20%)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          // Relâcher si sustain
-          if (sustain) {
-            releaseNote();
-          }
-          // Reset hover
-          if (!isActive) {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "hsl(222, 15%, 16%)";
-          }
-        }}
+        className="absolute flex flex-col items-center justify-end pb-2"
         style={{
-          position: "absolute",
           left: `${index * WHITE_KEY_WIDTH}px`,
           width: `${WHITE_KEY_WIDTH}px`,
           height: `${WHITE_KEY_HEIGHT}px`,
@@ -234,13 +181,9 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
           borderBottomLeftRadius: "4px",
           borderBottomRightRadius: "4px",
           cursor: "pointer",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "center",
-          paddingBottom: "8px",
           color: "hsl(220, 15%, 45%)",
-          fontSize: "9px",
-          fontFamily: "monospace",
+          fontSize: "10px",
+          fontFamily: "'Courier New', monospace",
           transition: "background 0.1s, border-color 0.1s",
           zIndex: 1,
           userSelect: "none",
@@ -251,7 +194,7 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
     );
   };
 
-  // Fonction pour générer les props communes des touches noires
+  // Fonction pour générer les touches noires
   const renderBlackKey = (key: typeof BLACK_KEYS[0]) => {
     const isActive = activeNote === key.note;
     const left = (key.afterWhiteIndex + 1) * WHITE_KEY_WIDTH - BLACK_KEY_WIDTH / 2;
@@ -259,26 +202,8 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
       <button
         key={key.note}
         onMouseDown={() => playNote(key.freq, key.note)}
-        onMouseUp={() => sustain && releaseNote()}
-        onMouseEnter={(e) => {
-          if (!isActive) {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "hsl(222, 25%, 12%)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          // Relâcher si sustain
-          if (sustain) {
-            releaseNote();
-          }
-          // Reset hover
-          if (!isActive) {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "hsl(222, 25%, 7%)";
-          }
-        }}
+        className="absolute flex flex-col items-center justify-end pb-1.5"
         style={{
-          position: "absolute",
           left: `${left}px`,
           top: "0",
           width: `${BLACK_KEY_WIDTH}px`,
@@ -294,13 +219,9 @@ export function PianoKeyboard({ oscType, volume, sustain, onNotePlay }: PianoKey
           borderBottomLeftRadius: "3px",
           borderBottomRightRadius: "3px",
           cursor: "pointer",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "center",
-          paddingBottom: "6px",
           color: "hsl(220, 15%, 35%)",
-          fontSize: "8px",
-          fontFamily: "monospace",
+          fontSize: "9px",
+          fontFamily: "'Courier New', monospace",
           transition: "background 0.1s, border-color 0.1s",
           zIndex: 2,
           userSelect: "none",
