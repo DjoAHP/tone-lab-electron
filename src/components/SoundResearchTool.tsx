@@ -6,7 +6,7 @@ import type { SoundEntry, InstrumentType } from "../types";
 import StackIcon from "../assets/icons/Bottombar/stack-tool.svg?react";
 import { PluginGallery } from "./PluginGallery";
 
-// Import icônes instruments
+// Import icônes instruments avec ?react
 import PianoIcon from "../assets/icons/Instruments/piano.svg?react";
 import TromboneIcon from "../assets/icons/Instruments/trombone.svg?react";
 import TrompetteIcon from "../assets/icons/Instruments/trompette.svg?react";
@@ -16,10 +16,7 @@ import SynthetiseurIcon from "../assets/icons/Instruments/synthetiseur.svg?react
 import DrumIcon from "../assets/icons/Instruments/drum.svg?react";
 import TomIcon from "../assets/icons/Instruments/tom.svg?react";
 
-const INSTRUMENT_ICONS: Record<
-  string,
-  React.FC<React.SVGProps<SVGSVGElement>>
-> = {
+const INSTRUMENT_ICONS: Partial<Record<string, React.FC<React.SVGProps<SVGSVGElement>>>> = {
   piano: PianoIcon,
   trombone: TromboneIcon,
   trompette: TrompetteIcon,
@@ -50,16 +47,16 @@ import type { Plugin } from "../types";
 const INSTRUMENTS_LISTE: {
   id: InstrumentType;
   label: string;
-  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
 }[] = [
-  { id: "piano", label: "Piano", Icon: PianoIcon },
-  { id: "trombone", label: "Trombone", Icon: TromboneIcon },
-  { id: "trompette", label: "Trompette", Icon: TrompetteIcon },
-  { id: "micro", label: "Micro", Icon: MicroIcon },
-  { id: "rhodes", label: "Rhodes", Icon: RhodesIcon },
-  { id: "synthetiseur", label: "Synthé", Icon: SynthetiseurIcon },
-  { id: "drum", label: "Drum", Icon: DrumIcon },
-  { id: "tom", label: "Tom", Icon: TomIcon },
+  { id: "piano", label: "Piano", icon: PianoIcon },
+  { id: "trombone", label: "Trombone", icon: TromboneIcon },
+  { id: "trompette", label: "Trompette", icon: TrompetteIcon },
+  { id: "micro", label: "Micro", icon: MicroIcon },
+  { id: "rhodes", label: "Rhodes", icon: RhodesIcon },
+  { id: "synthetiseur", label: "Synthé", icon: SynthetiseurIcon },
+  { id: "drum", label: "Drum", icon: DrumIcon },
+  { id: "tom", label: "Tom", icon: TomIcon },
 ];
 
 interface EditModalProps {
@@ -264,8 +261,9 @@ function EditModal({
           <div>
             <label style={labelStyle}>Instrument</label>
             <div className="grid grid-cols-5 gap-2">
-              {INSTRUMENTS_LISTE.map(({ id, label, Icon }) => {
+              {INSTRUMENTS_LISTE.map(({ id, label, icon }) => {
                 const actif = form.instrument === id;
+                const Icon = icon;
                 return (
                   <button
                     key={id}
@@ -280,11 +278,7 @@ function EditModal({
                         : "1px solid transparent",
                     }}
                   >
-                    <Icon
-                      width="22"
-                      height="22"
-                      style={{ opacity: actif ? 1 : 0.6 }}
-                    />
+                    <Icon width="18" height="18" style={{ opacity: actif ? 1 : 0.55 }} />
                     <span
                       className="text-[10px]"
                       style={{
@@ -845,12 +839,12 @@ export function SoundResearchTool() {
                     border: "1px solid hsl(220, 15%, 22%)",
                   }}
                 >
-                  <div
-                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ background: "hsl(222, 20%, 20%)" }}
-                  >
-                    <InstrIcon width="24" height="24" />
-                  </div>
+                    <div
+                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ background: "hsl(222, 20%, 20%)" }}
+                    >
+                      <InstrIcon width="24" height="24" />
+                    </div>
                   <span
                     className="text-sm font-medium"
                     style={{ color: "hsl(210, 30%, 88%)" }}

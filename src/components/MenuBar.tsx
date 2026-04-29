@@ -4,6 +4,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
+import { SvgIcon } from "./SvgIcon";
 
 // ─── Composant Menu déroulant ────────────────
 // Props = les "paramètres" qu'on passe à un composant
@@ -184,7 +185,6 @@ export function MenuBar() {
           height="20"
           style={{
             color: "hsl(var(--tl-accent-princ))",
-            flexShrink: 0,
           }}
         />
         <span className="text-sm font-semibold text-white">ToneLab</span>

@@ -4,28 +4,29 @@ import React, { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import type { InstrumentType, Plugin } from "../types";
 
-import PianoIcon from "../assets/icons/Instruments/piano.svg?react";
-import TromboneIcon from "../assets/icons/Instruments/trombone.svg?react";
-import TrompetteIcon from "../assets/icons/Instruments/trompette.svg?react";
-import MicroIcon from "../assets/icons/Instruments/Micro.svg?react";
-import RhodesIcon from "../assets/icons/Instruments/Rhodes.svg?react";
-import SynthetiseurIcon from "../assets/icons/Instruments/synthetiseur.svg?react";
-import DrumIcon from "../assets/icons/Instruments/drum.svg?react";
-import TomIcon from "../assets/icons/Instruments/tom.svg?react";
+import PianoIcon from "../assets/icons/Instruments/piano.svg?raw";
+import TromboneIcon from "../assets/icons/Instruments/trombone.svg?raw";
+import TrompetteIcon from "../assets/icons/Instruments/trompette.svg?raw";
+import MicroIcon from "../assets/icons/Instruments/Micro.svg?raw";
+import RhodesIcon from "../assets/icons/Instruments/Rhodes.svg?raw";
+import SynthetiseurIcon from "../assets/icons/Instruments/synthetiseur.svg?raw";
+import DrumIcon from "../assets/icons/Instruments/drum.svg?raw";
+import TomIcon from "../assets/icons/Instruments/tom.svg?raw";
+import { SvgIcon } from "./SvgIcon";
 
 const INSTRUMENTS: {
   id: InstrumentType;
   label: string;
-  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  iconSrc: string;
 }[] = [
-  { id: "piano", label: "Piano", Icon: PianoIcon },
-  { id: "trombone", label: "Trombone", Icon: TromboneIcon },
-  { id: "trompette", label: "Trompette", Icon: TrompetteIcon },
-  { id: "micro", label: "Micro", Icon: MicroIcon },
-  { id: "rhodes", label: "Rhodes", Icon: RhodesIcon },
-  { id: "synthetiseur", label: "Synthé", Icon: SynthetiseurIcon },
-  { id: "drum", label: "Drum", Icon: DrumIcon },
-  { id: "tom", label: "Tom", Icon: TomIcon },
+  { id: "piano", label: "Piano", iconSrc: PianoIcon },
+  { id: "trombone", label: "Trombone", iconSrc: TromboneIcon },
+  { id: "trompette", label: "Trompette", iconSrc: TrompetteIcon },
+  { id: "micro", label: "Micro", iconSrc: MicroIcon },
+  { id: "rhodes", label: "Rhodes", iconSrc: RhodesIcon },
+  { id: "synthetiseur", label: "Synthé", iconSrc: SynthetiseurIcon },
+  { id: "drum", label: "Drum", iconSrc: DrumIcon },
+  { id: "tom", label: "Tom", iconSrc: TomIcon },
 ];
 
 interface NewStackModalProps {
@@ -255,7 +256,7 @@ export function NewStackModal({ stackId, onFermer }: NewStackModalProps) {
           <div>
             <label style={labelStyle}>Instrument</label>
             <div className="grid grid-cols-5 gap-2">
-              {INSTRUMENTS.map(({ id, label, Icon }) => {
+              {INSTRUMENTS.map(({ id, label, iconSrc }) => {
                 const actif = instrument === id;
                 return (
                   <button
@@ -271,7 +272,8 @@ export function NewStackModal({ stackId, onFermer }: NewStackModalProps) {
                         : "1px solid transparent",
                     }}
                   >
-                    <Icon
+                    <SvgIcon
+                      src={iconSrc}
                       width="22"
                       height="22"
                       style={{ opacity: actif ? 1 : 0.6 }}

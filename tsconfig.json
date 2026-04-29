@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext", // ← Changé de "commonjs" à "ESNext"
+    "module": "ESNext",
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -9,10 +9,13 @@
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
-    "moduleResolution": "bundler", // ← Important pour Vite
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "jsx": "react-jsx",
-    "types": ["node"] // ← Garde cela pour les types Node.js
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src/**/*", "vite.*config.ts"]
 }

@@ -35,18 +35,12 @@ export function HomeButton() {
         }
       }}
     >
-      {/* ── Icône maison — REMPLACE ce bloc par ton SVG importé ── */}
-      {/* Exemple quand ton SVG sera prêt :
-          import HomeIcon from '../assets/icons/Sidebar/home.svg?react';
-          <HomeIcon width="14" height="14" style={{ color: estActif ? 'hsl(var(--tl-accent-princ))' : 'hsl(220,15%,55%)' }} />
-      */}
-
+      {/* ── Icône maison ── */}
       <HomeIcon
         width="14"
         height="14"
         style={{
           color: estActif ? "hsl(var(--tl-accent-princ))" : "hsl(220,15%,55%)",
-          flexShrink: 0,
         }}
       />
 

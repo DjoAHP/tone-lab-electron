@@ -7,7 +7,7 @@ import ProjetIcon from "../assets/icons/Sidebar/projet.svg?react";
 import StackIcon from "../assets/icons/Sidebar/stack.svg?react";
 import { HomeButton } from "./HomeButton";
 
-// Import icônes instruments
+// Import icônes instruments avec ?react
 import PianoIcon from "../assets/icons/Instruments/piano.svg?react";
 import TromboneIcon from "../assets/icons/Instruments/trombone.svg?react";
 import TrompetteIcon from "../assets/icons/Instruments/trompette.svg?react";
@@ -22,9 +22,7 @@ const LARGEUR_MAX = 520;
 const LARGEUR_DEFAUT = 280;
 
 // ── Icône instrument miniature ────────────────────────────────
-const INSTRUMENT_ICONS: Partial<
-  Record<string, React.FC<React.SVGProps<SVGSVGElement>>>
-> = {
+const INSTRUMENT_ICONS: Partial<Record<string, React.FC>> = {
   piano: PianoIcon,
   trombone: TromboneIcon,
   trompette: TrompetteIcon,
@@ -200,14 +198,9 @@ function RechercheItem({
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         {/* Icône instrument ou point */}
         {InstrIcon ? (
-          <InstrIcon
-            width="10"
-            height="10"
-            style={{
-              flexShrink: 0,
-              opacity: estSelectionnee ? 1 : 0.5,
-            }}
-          />
+          <div style={{ width: 10, height: 10, opacity: estSelectionnee ? 1 : 0.5 }}>
+            <InstrIcon />
+          </div>
         ) : (
           <svg width="5" height="5" viewBox="0 0 5 5" fill="currentColor"
             style={{ color: estSelectionnee ? "hsl(var(--tl-accent-terc))" : "hsl(220, 15%, 35%)", flexShrink: 0 }}>
@@ -407,7 +400,7 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
           <path d="M3 2l4 3-4 3V2z" />
         </svg>
 
-        <StackIcon width="12" height="12" style={{ color: "hsl(var(--tl-accent-terc))", flexShrink: 0 }} />
+        <StackIcon width="12" height="12" style={{ color: "hsl(var(--tl-accent-terc))" }} />
 
         <InlineEdit
           valeur={stack.nom}
@@ -511,7 +504,7 @@ function ProjetAccordeon({
 
         <ProjetIcon width="14" height="14"
           className="cursor-pointer"
-          style={{ color: "hsl(var(--tl-accent-princ))", flexShrink: 0 }}
+          style={{ color: "hsl(var(--tl-accent-princ))" }}
           onClick={() => setOuvert(!ouvert)} />
 
         {/* Nom projet — éditable inline */}
@@ -676,16 +669,16 @@ function NouveauStackModal({ onFermer, onCreer }: { onFermer: () => void; onCree
 const INSTRUMENTS_LISTE: {
   id: InstrumentType;
   label: string;
-  Icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  icon: React.FC;
 }[] = [
-  { id: "piano", label: "Piano", Icon: PianoIcon },
-  { id: "trombone", label: "Trombone", Icon: TromboneIcon },
-  { id: "trompette", label: "Trompette", Icon: TrompetteIcon },
-  { id: "micro", label: "Micro", Icon: MicroIcon },
-  { id: "rhodes", label: "Rhodes", Icon: RhodesIcon },
-  { id: "synthetiseur", label: "Synthé", Icon: SynthetiseurIcon },
-  { id: "drum", label: "Drum", Icon: DrumIcon },
-  { id: "tom", label: "Tom", Icon: TomIcon },
+  { id: "piano", label: "Piano", icon: PianoIcon },
+  { id: "trombone", label: "Trombone", icon: TromboneIcon },
+  { id: "trompette", label: "Trompette", icon: TrompetteIcon },
+  { id: "micro", label: "Micro", icon: MicroIcon },
+  { id: "rhodes", label: "Rhodes", icon: RhodesIcon },
+  { id: "synthetiseur", label: "Synthé", icon: SynthetiseurIcon },
+  { id: "drum", label: "Drum", icon: DrumIcon },
+  { id: "tom", label: "Tom", icon: TomIcon },
 ];
 
 interface ModalRechercheProps {
@@ -775,7 +768,7 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
               Instrument
             </label>
             <div className="grid grid-cols-4 gap-1.5">
-              {INSTRUMENTS_LISTE.map(({ id, label, Icon }) => {
+              {INSTRUMENTS_LISTE.map(({ id, label, icon: Icon }) => {
                 const actif = instrument === id;
                 return (
                   <button key={id} onClick={() => setInstrument(actif ? "" : id)}
@@ -784,7 +777,9 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
                       background: actif ? "hsl(var(--tl-accent-dim))" : "hsl(222, 18%, 17%)",
                       border: actif ? "1px solid hsl(var(--tl-accent-border))" : "1px solid transparent",
                     }}>
-                    <Icon width="18" height="18" style={{ opacity: actif ? 1 : 0.55 }} />
+                    <div style={{ width: 18, height: 18, opacity: actif ? 1 : 0.55 }}>
+                      <Icon />
+                    </div>
                     <span className="text-[9px]"
                       style={{ color: actif ? "hsl(var(--tl-accent-text))" : "hsl(220, 15%, 50%)" }}>
                       {label}

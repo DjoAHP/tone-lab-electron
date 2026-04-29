@@ -6,11 +6,9 @@ import StackIcon from "../assets/icons/Bottombar/stack-tool.svg?react";
 import MetroIcon from "../assets/icons/Bottombar/metro-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
 
-
-
 import React from "react";
 
-// ─── Définition des outils ────────────────────────────────────
+// ─── Définition des outils ──────────────────────────────────
 // Chaque outil a : id (= ongletActif), label, icône
 const OUTILS: {
   id: "stack" | "metro";
@@ -44,7 +42,7 @@ const OUTILS: {
 // ─── Largeur du fond actif de chaque côté de l'icône ─────────
 const PADDING_FOND_ACTIF = 30; // px
 
-// ─────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────
 export function BottomBar() {
   const {
     sidebarOuverte,
@@ -56,11 +54,7 @@ export function BottomBar() {
 
   function handleOutil(id: "stack" | "metro") {
     setOngletActif(id);
-    // "stack" conserve la vueActive courante (home ou stack)
-    // "metro" force une vue dédiée
     if (id === "metro") setVueActive("metro");
-    // Si on revient sur Stack, on repasse en "home" par défaut
-    // (sauf si une entrée est déjà sélectionnée — géré dans SoundResearchTool)
     if (id === "stack") setVueActive("home");
   }
 
@@ -86,14 +80,7 @@ export function BottomBar() {
           }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-            <rect
-              x="0"
-              y="0"
-              width="5"
-              height="14"
-              rx="1"
-              opacity={sidebarOuverte ? "1" : "0.4"}
-            />
+            <rect x="0" y="0" width="5" height="14" rx="1" opacity={sidebarOuverte ? "1" : "0.4"} />
             <rect x="7" y="0" width="7" height="2" rx="1" />
             <rect x="7" y="4" width="7" height="2" rx="1" />
             <rect x="7" y="8" width="7" height="2" rx="1" />
@@ -119,7 +106,6 @@ export function BottomBar() {
                 background: estActif ? "hsl(222, 25%, 14%)" : "transparent",
                 border: "none",
                 borderRadius: "0",
-                // Trait de soulignement haut pour l'outil actif
                 borderTop: estActif
                   ? "2px solid hsl(var(--tl-accent-princ))"
                   : "2px solid transparent",
@@ -172,12 +158,11 @@ export function BottomBar() {
           width="14"
           height="14"
           style={{
-            color: "hsl(220, 15%, 30%)",
-            flexShrink: 0,
+            color: "hsl(var(--tl-accent-princ))",
           }}
         />
         <span className="text-[11px]" style={{ color: "hsl(220, 15%, 30%)" }}>
-          ToneLab v1.0.5
+          ToneLab v2.0.0
         </span>
       </div>
     </div>
