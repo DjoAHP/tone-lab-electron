@@ -10,6 +10,27 @@ body {
   overflow: hidden;
 }
 
+#root,
+#root > div {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.setlist-full-height {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.setlist-content-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 @layer base {
   :root {
     --background: 222 20% 10%;

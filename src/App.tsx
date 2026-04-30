@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { MenuBar } from "./components/MenuBar";
 import { Sidebar } from "./components/Sidebar";
+import { SetlistSidebar } from "./components/SetlistSidebar";
 import { SoundResearchTool } from "./components/SoundResearchTool";
 import { Metronome } from "./components/Metronome";
 import { DiapaTool } from "./components/DiapaTool";
+import { SetlistTool } from "./components/SetlistTool";
 import { BottomBar } from "./components/BottomBar";
 import { NewStackModal } from "./components/NewStackModal";
 import { useApp } from "./context/AppContext";
@@ -29,19 +31,22 @@ function AppInner() {
       <MenuBar />
 
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar visible uniquement sur l'outil Stack */}
+        {/* Sidebar visible sur l'outil Stack et Setlist */}
         {ongletActif === "stack" && (
           <Sidebar onOuvrirModalStack={handleOuvrirModalStack} />
         )}
+        {ongletActif === "setlist" && <SetlistSidebar />}
 
         <main
-          className="flex-1 flex min-w-0"
+          className="flex-1 flex min-w-0 setlist-full-height"
           style={{ background: "hsl(222, 22%, 9%)" }}
         >
           {ongletActif === "metro" ? (
             <Metronome />
           ) : ongletActif === "diapa" ? (
             <DiapaTool />
+          ) : ongletActif === "setlist" ? (
+            <SetlistTool />
           ) : (
             <SoundResearchTool />
           )}
