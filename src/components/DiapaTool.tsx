@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { PianoKeyboard, OscType } from "./PianoKeyboard";
 import { LedDisplay } from "./led-display/LedDisplay";
+import LedOverlayDiapa from "./led-display/assets/led-overlay-diapa.svg?react";
 
 // ─── Style Card (réutilisé de Metronome.tsx) ───────────
 const card = {
@@ -57,7 +58,7 @@ export function DiapaTool() {
           <div style={{ display: "flex", flexDirection: "column", gap: "4px", flexShrink: 0 }}>
             <div style={sectionTitle}>Note</div>
             <div style={{ ...card, padding: "12px", display: "flex", justifyContent: "center" }}>
-              <LedDisplay value={activeNote} digits={4} />
+              <LedDisplay value={activeNote} digits={4} overlay={LedOverlayDiapa} />
             </div>
           </div>
 

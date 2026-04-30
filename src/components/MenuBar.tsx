@@ -1,5 +1,5 @@
 // src/components/MenuBar.tsx
-// La barre de menu en haut avec Fichier, Projet, Outils
+// La barre de menu en haut avec Fichier, Projet, Outils, Exporter
 
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
@@ -104,6 +104,7 @@ export function MenuBar() {
     sauvegarderProjet,
     setVueActive, // ← ajoute
     selectionnerEntree, // ← ajoute
+    ongletActif,
   } = useApp();
   // Raccourci clavier Ctrl+S
   useEffect(() => {
@@ -132,6 +133,81 @@ export function MenuBar() {
     const nom = window.prompt("Nom du nouveau projet :", "Nouveau projet");
     if (nom && nom.trim()) {
       nouveauProjet(nom.trim());
+    }
+  }
+
+  // ── Exporter setlist en .tl ────────────────
+  function handleExporterTL() {
+    if (!projet) return;
+    const setlistData = {
+      bandName: projet.bandName,
+      setlistSongs: projet.setlistSongs ?? [],
+    };
+    const blob = new Blob([JSON.stringify(setlistData, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href = url;
+    lien.download = `${(projet.bandName || "setlist").replace(/\s+/g, "_")}.tl`;
+    lien.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Imprimer ────────────────────────────
+  function handleImprimer() {
+    window.print();
+  }
+
+  // ── Exporter en PDF/JPG/PNG (utilise html2canvas) ──
+  async function handleExporterFormat(format: "pdf" | "jpg" | "png") {
+    const a4Container = document.querySelector(".setlist-a4-container") as HTMLElement;
+    if (!a4Container) return;
+
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(a4Container, {
+        backgroundColor: "white",
+        scale: 2,
+      });
+
+      if (format === "pdf") {
+        // Pour PDF : ouvre une nouvelle fenêtre avec l'image et lance l'impression
+        const imgData = canvas.toDataURL("image/png");
+        const printWindow = window.open("", "_blank");
+        if (printWindow) {
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <title>${projet?.bandName || "Setlist"}</title>
+                <style>
+                  body { margin: 0; display: flex; justify-content: center; }
+                  img { width: 210mm; height: 297mm; object-fit: contain; }
+                </style>
+              </head>
+              <body>
+                <img src="${imgData}" alt="Setlist" />
+                <script>
+                  window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() { window.close(); };
+                  };
+                </script>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        }
+      } else {
+        // JPG ou PNG : téléchargement direct
+        const link = document.createElement("a");
+        link.download = `${(projet?.bandName || "setlist").replace(/\s+/g, "_")}.${format}`;
+        link.href = canvas.toDataURL(`image/${format}`);
+        link.click();
+      }
+    } catch {
+      window.alert("Erreur lors de l'exportation. Vérifiez que html2canvas est installé.");
     }
   }
 
@@ -249,6 +325,29 @@ export function MenuBar() {
           Stack — Galerie plugins
         </MenuItem>
       </Menu>
+
+      {/* ── Menu Exporter (visible uniquement sur Setlist) ── */}
+      {ongletActif === "setlist" && (
+        <Menu label="Exporter">
+          <MenuItem onClick={handleExporterTL}>
+            Exporter (.tl)
+          </MenuItem>
+          <MenuSeparateur />
+          <MenuItem onClick={() => handleExporterFormat("pdf")}>
+            Exporter en PDF
+          </MenuItem>
+          <MenuItem onClick={() => handleExporterFormat("jpg")}>
+            Exporter en JPG
+          </MenuItem>
+          <MenuItem onClick={() => handleExporterFormat("png")}>
+            Exporter en PNG
+          </MenuItem>
+          <MenuSeparateur />
+          <MenuItem onClick={handleImprimer}>
+            Imprimer
+          </MenuItem>
+        </Menu>
+      )}
 
       {/* Espace flexible pour pousser les éléments à droite */}
       <div className="flex-1" />

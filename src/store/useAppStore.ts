@@ -10,6 +10,7 @@ import type {
   Stack,
   SousStack,
   RechercheInstrument,
+  SetlistSong,
 } from "../types";
 import {
   fetchPlugins,
@@ -162,13 +163,123 @@ export function useAppStore() {
   }, []);
 
   const setVueActive = useCallback(
-    (vue: "home" | "stack" | "metro" | "diapa") => mettreAJourEtat({ vueActive: vue }),
+    (vue: "home" | "stack" | "metro" | "diapa" | "setlist") => mettreAJourEtat({ vueActive: vue }),
     [mettreAJourEtat],
   );
 
   const setOngletActif = useCallback(
-    (onglet: "stack" | "metro" | "diapa") => mettreAJourEtat({ ongletActif: onglet }),
+    (onglet: "stack" | "metro" | "diapa" | "setlist") => mettreAJourEtat({ ongletActif: onglet }),
     [mettreAJourEtat],
+  );
+
+  // ─── Actions Setlist ──────────────────────────────────────
+  const setBandName = useCallback(
+    (name: string) => {
+      if (!state.projet) return;
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        bandName: name,
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  const addSetlistSong = useCallback(
+    (title: string) => {
+      if (!state.projet) return;
+      const newSong: SetlistSong = {
+        id: genererID(),
+        title,
+        position: (state.projet.setlistSongs?.length ?? 0) + 1,
+      };
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        setlistSongs: [...(state.projet.setlistSongs ?? []), newSong],
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  const updateSetlistSong = useCallback(
+    (songId: string, newTitle: string) => {
+      if (!state.projet?.setlistSongs) return;
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        setlistSongs: state.projet.setlistSongs.map((s) =>
+          s.id === songId ? { ...s, title: newTitle } : s
+        ),
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  const deleteSetlistSong = useCallback(
+    (songId: string) => {
+      if (!state.projet?.setlistSongs) return;
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        setlistSongs: state.projet.setlistSongs
+          .filter((s) => s.id !== songId)
+          .map((s, i) => ({ ...s, position: i + 1 })),
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  const reorderSetlistSong = useCallback(
+    (songId: string, newPosition: number) => {
+      if (!state.projet?.setlistSongs) return;
+      const songs = [...state.projet.setlistSongs];
+      const songIndex = songs.findIndex((s) => s.id === songId);
+      if (songIndex === -1) return;
+
+      const [song] = songs.splice(songIndex, 1);
+      songs.splice(Math.min(newPosition - 1, songs.length), 0, song);
+
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        setlistSongs: songs.map((s, i) => ({ ...s, position: i + 1 })),
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  // ── NOUVEAU : Importer une setlist depuis un fichier .tl ──
+  const importerSetlist = useCallback(
+    (contenuJSON: string): boolean => {
+      try {
+        const data = JSON.parse(contenuJSON) as Partial<ToneLabProject>;
+        if (!state.projet) return false;
+
+        const projetMisAJour: ToneLabProject = {
+          ...state.projet,
+          bandName: data.bandName ?? state.projet.bandName,
+          setlistSongs: data.setlistSongs ?? state.projet.setlistSongs ?? [],
+          date_modification: maintenant(),
+        };
+        sauvegarderDansLocalStorage(projetMisAJour);
+        mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [state.projet, mettreAJourEtat],
   );
 
   // ── Projet ───────────────────────────────────────────────────
@@ -890,6 +1001,13 @@ export function useAppStore() {
     toggleSidebar,
     setVueActive,
     setOngletActif,
+    // Setlist
+    setBandName,
+    addSetlistSong,
+    updateSetlistSong,
+    deleteSetlistSong,
+    reorderSetlistSong,
+    importerSetlist,
     // Plugins
     ajouterPlugin,
     supprimerPlugin,

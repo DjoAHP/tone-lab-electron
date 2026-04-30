@@ -60,6 +60,13 @@ export interface SousStack {
   entry: SoundEntry;
 }
 
+// ─── NOUVEAU : morceau dans une setlist ────────────────
+export interface SetlistSong {
+  id: string;
+  title: string;
+  position: number; // position dans la setlist (1, 2, 3...)
+}
+
 // Stack = un album / groupe de recherches dans un Projet
 export interface Stack {
   id: string;
@@ -77,6 +84,8 @@ export interface ToneLabProject {
   date_modification: string;
   stacks: Stack[];
   entries: SoundEntry[]; // gardé pour rétrocompatibilité
+  bandName?: string;           // Nom du groupe (outil Setlist)
+  setlistSongs?: SetlistSong[]; // Morceaux de la setlist
 }
 
 export interface AppState {
@@ -88,7 +97,7 @@ export interface AppState {
   sousStackSelectionne: string | null; // id du SousStack
   rechercheSelectionnee: string | null; // id de RechercheInstrument (NOUVEAU)
   sidebarOuverte: boolean;
-  ongletActif: "stack" | "metro" | "diapa";
-  vueActive: "home" | "stack" | "metro" | "diapa";
+  ongletActif: "stack" | "metro" | "diapa" | "setlist";
+  vueActive: "home" | "stack" | "metro" | "diapa" | "setlist";
   modifie: boolean;
 }

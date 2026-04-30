@@ -5,6 +5,7 @@ import { useApp } from "../context/AppContext";
 import StackIcon from "../assets/icons/Bottombar/stack-tool.svg?react";
 import MetroIcon from "../assets/icons/Bottombar/metro-tool.svg?react";
 import DiapaIcon from "../assets/icons/Bottombar/diapa-tool.svg?react";
+import SetlistIcon from "../assets/icons/Bottombar/setlist-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
 
 import React from "react";
@@ -12,10 +13,21 @@ import React from "react";
 // ─── Définition des outils ──────────────────────────────────
 // Chaque outil a : id (= ongletActif), label, icône
 const OUTILS: {
-  id: "stack" | "metro" | "diapa";
+  id: "stack" | "metro" | "diapa" | "setlist";
   label: string;
   icone: React.ReactNode;
 }[] = [
+  {
+    id: "diapa",
+    label: "Diapa",
+    icone: (
+      <DiapaIcon
+        width="35"
+        height="35"
+        style={{ color: "hsl(var(--tl-accent-princ))" }}
+      />
+    ),
+  },
   {
     id: "stack",
     label: "Stack",
@@ -39,10 +51,10 @@ const OUTILS: {
     ),
   },
   {
-    id: "diapa",
-    label: "Diapa",
+    id: "setlist",
+    label: "Setlist",
     icone: (
-      <DiapaIcon
+      <SetlistIcon
         width="35"
         height="35"
         style={{ color: "hsl(var(--tl-accent-princ))" }}
@@ -64,11 +76,12 @@ export function BottomBar() {
     setVueActive,
   } = useApp();
 
-  function handleOutil(id: "stack" | "metro" | "diapa") {
+  function handleOutil(id: "stack" | "metro" | "diapa" | "setlist") {
     setOngletActif(id);
     if (id === "metro") setVueActive("metro");
     if (id === "stack") setVueActive("home");
     if (id === "diapa") setVueActive("diapa");
+    if (id === "setlist") setVueActive("setlist");
   }
 
   return (
