@@ -64,51 +64,43 @@ export function DiapaTool() {
         </div>
 
         {/* ─── SECTION 2: VOLUME ─────────────── */}
-        <div style={{
-          display: "flex",
-          gap: "20px",
-          marginBottom: "20px",
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-        }}>
-          <div style={{ flex: "1 1 200px", minWidth: "200px" }}>
-            <div style={sectionTitle}>Volume</div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}>
-              <div className="flex-1 relative h-5 flex items-center">
+        <div style={{ marginBottom: "20px", width: "100%" }}>
+          <div style={sectionTitle}>Volume</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}>
+            <div className="flex-1 relative h-5 flex items-center">
+              <div
+                className="w-full h-1.5 rounded-full relative"
+                style={{ background: "hsl(222, 20%, 22%)" }}
+              >
                 <div
-                  className="w-full h-1.5 rounded-full relative"
-                  style={{ background: "hsl(222, 20%, 22%)" }}
-                >
-                  <div
-                    className="absolute left-0 top-0 h-full rounded-full"
-                    style={{
-                      width: `${volume * 100}%`,
-                      background: "hsl(var(--tl-accent-princ))",
-                    }}
-                  />
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={volume}
-                  onChange={e => setVolume(Number(e.target.value))}
-                  className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+                  className="absolute left-0 top-0 h-full rounded-full"
+                  style={{
+                    width: `${volume * 100}%`,
+                    background: "hsl(var(--tl-accent-princ))",
+                  }}
                 />
               </div>
-              <span
-                className="text-[10px] font-mono font-bold min-w-[32px] text-right"
-                style={{ color: "hsl(var(--tl-accent-text))" }}
-              >
-                {Math.round(volume * 100)}%
-              </span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={volume}
+                onChange={e => setVolume(Number(e.target.value))}
+                className="absolute inset-0 w-full opacity-0 cursor-pointer h-full"
+              />
             </div>
+            <span
+              className="text-[10px] font-mono font-bold min-w-[32px] text-right"
+              style={{ color: "hsl(var(--tl-accent-text))" }}
+            >
+              {Math.round(volume * 100)}%
+            </span>
           </div>
         </div>
 
         {/* ─── SECTION 3: TIMBRE ─────────────── */}
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "20px", width: "100%" }}>
           <div style={sectionTitle}>Timbre</div>
           <div style={{ display: "flex", gap: "4px" }}>
             {oscTypes.map(({ type, label }) => {
