@@ -23,7 +23,22 @@ export function SetlistSidebar() {
     deleteSetlistSong,
     reorderSetlistSong,
     importerSetlist,
+    initialiserProjet,
   } = useApp();
+
+  // Style commun pour les select de temps
+  const timeSelectStyle: React.CSSProperties = {
+    width: "46px",
+    background: "hsl(222, 18%, 14%)",
+    border: "1px solid hsl(220, 15%, 22%)",
+    borderRadius: "4px",
+    color: "hsl(220, 15%, 50%)",
+    fontSize: "11px",
+    padding: "2px 2px",
+    textAlign: "center",
+    flexShrink: 0,
+    cursor: "pointer",
+  };
 
   const [newSongTitle, setNewSongTitle] = useState("");
   const [editingSongId, setEditingSongId] = useState<string | null>(null);
@@ -51,7 +66,7 @@ export function SetlistSidebar() {
 
   const handleSaveEdit = useCallback(() => {
     if (editingSongId && editTitle.trim()) {
-      updateSetlistSong(editingSongId, editTitle.trim());
+      updateSetlistSong(editingSongId, { title: editTitle.trim() });
     }
     setEditingSongId(null);
   }, [editingSongId, editTitle, updateSetlistSong]);
@@ -119,6 +134,17 @@ export function SetlistSidebar() {
     };
     input.click();
   }, [importerSetlist]);
+  // Formater les secondes en mm:ss
+  const formatTime = (secs: number): string => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Extraire minutes/secondes depuis un temps en secondes
+  const getMinutes = (secs: number | undefined): string => secs ? Math.floor(secs / 60).toString() : "";
+  const getSeconds = (secs: number | undefined): string => secs ? (secs % 60).toString() : "";
+
 
   return (
     <div style={{
@@ -129,12 +155,12 @@ export function SetlistSidebar() {
       borderRight: "1px solid hsl(220, 15%, 18%)",
       display: "flex",
       flexDirection: "column",
-      overflowY: "auto",
     }}>
-      {/* En-tête */}
+      {/* En-tête - FIXE en haut */}
       <div style={{
         padding: "10px 12px",
         borderBottom: "1px solid hsl(220, 15%, 16%)",
+        flexShrink: 0,
       }}>
         <span style={{
           fontSize: "11px",
@@ -147,109 +173,121 @@ export function SetlistSidebar() {
         </span>
       </div>
 
-      {/* Contenu */}
-      <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-        {/* Input Band Name */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label style={{ fontSize: "11px", color: "hsl(220, 15%, 50%)" }}>
-            Groupe
-          </label>
-          <input
-            type="text"
-            value={projet?.bandName ?? ""}
-            onChange={(e) => setBandName(e.target.value)}
-            placeholder="Nom du groupe..."
-            style={inputStyle}
-            onFocus={(e) => {
-              (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))";
+      {/* Zone défilable (contenu du milieu) */}
+      <div style={{
+        flex: 1,
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+      }}>
+        <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Input Band Name */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <label style={{ fontSize: "11px", color: "hsl(220, 15%, 50%)" }}>
+              Groupe
+            </label>
+            <input
+              type="text"
+              value={projet?.bandName ?? ""}
+              onChange={(e) => {
+                initialiserProjet();
+                setBandName(e.target.value);
+              }}
+              placeholder="Nom du groupe..."
+              style={inputStyle}
+              onFocus={(e) => {
+                (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))";
+              }}
+              onBlur={(e) => {
+                (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 22%)";
+              }}
+            />
+          </div>
+
+          {/* Séparateur visuel */}
+          <div style={{ height: "1px", background: "hsl(220, 15%, 18%)" }} />
+
+          {/* Input Nouveau morceau */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <label style={{ fontSize: "11px", color: "hsl(220, 15%, 50%)" }}>
+              Morceau
+            </label>
+            <input
+              type="text"
+              value={newSongTitle}
+              onChange={(e) => {
+                initialiserProjet();
+                setNewSongTitle(e.target.value);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleAddSong()}
+              placeholder="Titre du morceau..."
+              style={inputStyle}
+              onFocus={(e) => {
+                (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))";
+              }}
+              onBlur={(e) => {
+                (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 22%)";
+              }}
+            />
+          </div>
+
+          {/* Bouton Ajouter */}
+          <button
+            onClick={handleAddSong}
+            style={{
+              background: "hsl(var(--tl-accent-button))",
+              border: "1px solid hsl(var(--tl-accent-button-border))",
+              color: "hsl(var(--tl-accent-text))",
+              padding: "10px 16px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              cursor: "pointer",
+              transition: "all 0.15s",
             }}
-            onBlur={(e) => {
-              (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 22%)";
-            }}
-          />
-        </div>
+          >
+            + Ajouter à la setlist
+          </button>
 
-        {/* Séparateur visuel */}
-        <div style={{ height: "1px", background: "hsl(220, 15%, 18%)" }} />
+          {/* Nombre de morceaux */}
+          <div style={{
+            textAlign: "center",
+            fontSize: "11px",
+            color: "hsl(220, 15%, 40%)",
+            padding: "4px 0",
+          }}>
+            {songCount} morceau{songCount > 1 ? "x" : ""}
+          </div>
 
-        {/* Input Nouveau morceau */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <label style={{ fontSize: "11px", color: "hsl(220, 15%, 50%)" }}>
-            Morceau
-          </label>
-          <input
-            type="text"
-            value={newSongTitle}
-            onChange={(e) => setNewSongTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAddSong()}
-            placeholder="Titre du morceau..."
-            style={inputStyle}
-            onFocus={(e) => {
-              (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))";
-            }}
-            onBlur={(e) => {
-              (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 22%)";
-            }}
-          />
-        </div>
-
-        {/* Bouton Ajouter */}
-        <button
-          onClick={handleAddSong}
-          style={{
-            background: "hsl(var(--tl-accent-button))",
-            border: "1px solid hsl(var(--tl-accent-button-border))",
-            color: "hsl(var(--tl-accent-text))",
-            padding: "10px 16px",
-            borderRadius: "8px",
-            fontSize: "13px",
-            cursor: "pointer",
-            transition: "all 0.15s",
-          }}
-        >
-          + Ajouter à la setlist
-        </button>
-
-        {/* Nombre de morceaux */}
-        <div style={{
-          textAlign: "center",
-          fontSize: "11px",
-          color: "hsl(220, 15%, 40%)",
-          padding: "4px 0",
-        }}>
-          {songCount} morceau{songCount > 1 ? "x" : ""}
-        </div>
-
-        {/* Liste des morceaux (avec drag & drop) */}
-        {songCount > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1, overflowY: "auto" }}>
-            {songs.map((song) => (
-              <div
-                key={song.id}
-                draggable="true"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "6px 8px",
-                  borderRadius: "6px",
-                  background:
-                    dragOverSongId === song.id
-                      ? "rgba(255,255,255,0.05)"
-                      : draggedSongId === song.id
-                      ? "rgba(255,255,255,0.02)"
-                      : "transparent",
-                  cursor: draggedSongId === song.id ? "grabbing" : "grab",
-                  opacity: draggedSongId === song.id ? 0.5 : 1,
-                  transition: "background 0.15s",
-                  border: "1px solid transparent",
-                  borderColor: dragOverSongId === song.id ? "hsl(var(--tl-accent-princ))" : "transparent",
-                }}
-                onDragStart={(e) => handleDragStart(e, song.id)}
-                onDragOver={(e) => handleDragOver(e, song.id)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, song.id)}
-                onDragEnd={handleDragEnd}
+          {/* Liste des morceaux (avec drag & drop) */}
+          {songCount > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              {songs.map((song) => (
+                <div
+                  key={song.id}
+                  draggable="true"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "6px 8px",
+                    borderRadius: "6px",
+                    background:
+                      dragOverSongId === song.id
+                        ? "rgba(255,255,255,0.05)"
+                        : draggedSongId === song.id
+                        ? "rgba(255,255,255,0.02)"
+                        : "transparent",
+                    cursor: draggedSongId === song.id ? "grabbing" : "grab",
+                    opacity: draggedSongId === song.id ? 0.5 : 1,
+                    transition: "background 0.15s",
+                    border: "1px solid transparent",
+                    borderColor: dragOverSongId === song.id ? "hsl(var(--tl-accent-princ))" : "transparent",
+                  }}
+                  onDragStart={(e) => handleDragStart(e, song.id)}
+                  onDragOver={(e) => handleDragOver(e, song.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, song.id)}
+                  onDragEnd={handleDragEnd}
               >
                 {/* Icône drag */}
                 <svg width="8" height="12" viewBox="0 0 8 12" fill="currentColor" style={{ color: "hsl(220, 15%, 30%)", flexShrink: 0 }}>
@@ -261,44 +299,79 @@ export function SetlistSidebar() {
                   <circle cx="6" cy="10" r="1" />
                 </svg>
 
-                {/* Titre (éditable) */}
-                {editingSongId === song.id ? (
-                  <input
-                    autoFocus
-                    type="text"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    onBlur={handleSaveEdit}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveEdit();
-                      if (e.key === "Escape") handleCancelEdit();
-                    }}
-                    style={{
-                      flex: 1,
-                      background: "transparent",
-                      border: "none",
-                      borderBottom: "2px solid #333",
-                      color: "white",
-                      fontSize: "12px",
-                      outline: "none",
-                    }}
-                  />
-                ) : (
-                  <span
-                    onClick={() => handleStartEdit(song)}
-                    style={{
-                      flex: 1,
-                      fontSize: "12px",
-                      color: "hsl(220, 15%, 70%)",
-                      cursor: "pointer",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {song.title}
-                  </span>
-                )}
+                {/* Titre (éditable) + Temps */}
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+                  {editingSongId === song.id ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onBlur={handleSaveEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveEdit();
+                        if (e.key === "Escape") handleCancelEdit();
+                      }}
+                      style={{
+                        flex: 1,
+                        background: "transparent",
+                        border: "none",
+                        borderBottom: "2px solid #333",
+                        color: "white",
+                        fontSize: "12px",
+                        outline: "none",
+                      }}
+                    />
+                  ) : (
+                    <span
+                      onClick={() => handleStartEdit(song)}
+                      style={{
+                        flex: 1,
+                        fontSize: "12px",
+                        color: "hsl(220, 15%, 70%)",
+                        cursor: "pointer",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {song.title}
+                    </span>
+                  )}
+
+                  {/* Select temps (min & sec) */}
+                  <div style={{ display: "flex", gap: "2px", flexShrink: 0, alignItems: "center" }}>
+                    <select
+                      value={getMinutes(song.time)}
+                      onChange={(e) => {
+                        const m = parseInt(e.target.value, 10);
+                        const s = song.time ? song.time % 60 : 0;
+                        updateSetlistSong(song.id, { time: m * 60 + s });
+                      }}
+                      title="Minutes"
+                      style={timeSelectStyle}
+                    >
+                      {Array.from({ length: 31 }, (_, i) => (
+                        <option key={i} value={i}>{i} min</option>
+                      ))}
+                    </select>
+                    <span style={{ color: "hsl(220, 15%, 30%)", fontSize: "11px" }}>:</span>
+                    <select
+                      value={getSeconds(song.time)}
+                      onChange={(e) => {
+                        const s = parseInt(e.target.value, 10);
+                        const m = song.time ? Math.floor(song.time / 60) : 0;
+                        updateSetlistSong(song.id, { time: m * 60 + s });
+                      }}
+                      title="Secondes"
+                      style={timeSelectStyle}
+                    >
+                      {Array.from({ length: 60 }, (_, i) => (
+                        <option key={i} value={i}>{i}s</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
                 {/* Bouton supprimer */}
                 <button
@@ -327,10 +400,15 @@ export function SetlistSidebar() {
           </div>
         )}
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
+      </div>
+      </div>
 
-        {/* Bouton Importer */}
+      {/* Bouton Importer - FIXE en bas, hors de la zone scrollable */}
+      <div style={{
+        padding: "10px",
+        borderTop: "1px solid hsl(220, 15%, 18%)",
+        flexShrink: 0,
+      }}>
         <button
           onClick={handleImporter}
           style={{
@@ -342,6 +420,7 @@ export function SetlistSidebar() {
             fontSize: "13px",
             cursor: "pointer",
             transition: "all 0.15s",
+            width: "100%",
           }}
           onMouseEnter={(e) => {
             (e.target as HTMLButtonElement).style.borderColor = "hsl(220, 15%, 35%)";

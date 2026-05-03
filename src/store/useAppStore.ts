@@ -30,6 +30,7 @@ function maintenant(): string {
 
 function creerProjetVide(nom: string): ToneLabProject {
   return {
+    id: genererID(),
     version: "1.1.0",
     nom,
     description: "",
@@ -147,6 +148,7 @@ export function useAppStore() {
     sousStackSelectionne: null,
     rechercheSelectionnee: null,
     sidebarOuverte: true,
+    setlistSidebarOuverte: true,
     ongletActif: "stack",
     vueActive: "home",
     modifie: false,
@@ -158,7 +160,7 @@ export function useAppStore() {
     });
   }, []);
 
-  const mettreAJourEtat = useCallback((modifications: Partial<AppState>) => {
+  const mettreAJourEtat = useCallback((modifications: any) => {
     setState((prev) => ({ ...prev, ...modifications }));
   }, []);
 
@@ -171,6 +173,22 @@ export function useAppStore() {
     (onglet: "stack" | "metro" | "diapa" | "setlist") => mettreAJourEtat({ ongletActif: onglet }),
     [mettreAJourEtat],
   );
+  // ── Initialiser le projet si nécessaire ──────────────────
+  const initialiserProjet = useCallback(() => {
+    if (state.projet) return;
+    const nouveauProjet: ToneLabProject = {
+      id: genererID(),
+      version: "1.1.0",
+      nom: "Nouveau Projet",
+      description: "",
+      date_creation: maintenant(),
+      date_modification: maintenant(),
+      stacks: [],
+      entries: [],
+    };
+    sauvegarderDansLocalStorage(nouveauProjet);
+    mettreAJourEtat({ projet: nouveauProjet, modifie: true });
+  }, [state.projet, mettreAJourEtat]);
 
   // ─── Actions Setlist ──────────────────────────────────────
   const setBandName = useCallback(
@@ -207,12 +225,12 @@ export function useAppStore() {
   );
 
   const updateSetlistSong = useCallback(
-    (songId: string, newTitle: string) => {
+    (songId: string, updates: Partial<SetlistSong>) => {
       if (!state.projet?.setlistSongs) return;
       const projetMisAJour: ToneLabProject = {
         ...state.projet,
         setlistSongs: state.projet.setlistSongs.map((s) =>
-          s.id === songId ? { ...s, title: newTitle } : s
+          s.id === songId ? { ...s, ...updates } : s
         ),
         date_modification: maintenant(),
       };
@@ -958,6 +976,11 @@ export function useAppStore() {
   const toggleSidebar = useCallback(() => {
     mettreAJourEtat({ sidebarOuverte: !state.sidebarOuverte });
   }, [state.sidebarOuverte, mettreAJourEtat]);
+  // ── Setlist Sidebar ────────────────────────────────
+  const toggleSetlistSidebar = useCallback(() => {
+    mettreAJourEtat({ setlistSidebarOuverte: !state.setlistSidebarOuverte });
+  }, [state.setlistSidebarOuverte, mettreAJourEtat]);
+
 
   return {
     // État
@@ -969,6 +992,7 @@ export function useAppStore() {
     sousStackSelectionne: state.sousStackSelectionne,
     rechercheSelectionnee: state.rechercheSelectionnee,
     sidebarOuverte: state.sidebarOuverte,
+    setlistSidebarOuverte: state.setlistSidebarOuverte,
     ongletActif: state.ongletActif,
     vueActive: state.vueActive,
     modifie: state.modifie,
@@ -978,6 +1002,7 @@ export function useAppStore() {
     ouvrirProjet,
     enregistrerProjet,
     sauvegarderProjet,
+    initialiserProjet,
     // Actions stacks
     ajouterStack,
     renommerStack,
@@ -999,6 +1024,7 @@ export function useAppStore() {
     selectionnerEntree,
     // UI
     toggleSidebar,
+    toggleSetlistSidebar,
     setVueActive,
     setOngletActif,
     // Setlist

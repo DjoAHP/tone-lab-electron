@@ -15,7 +15,7 @@ import { useApp } from "./context/AppContext";
 function AppInner() {
   const [modalSousStackOuverte, setModalSousStackOuverte] = useState(false);
   const [stackIdCible, setStackIdCible] = useState<string | null>(null);
-  const { projet, stackSelectionne, ongletActif } = useApp();
+  const { projet, stackSelectionne, ongletActif, setlistSidebarOuverte } = useApp();
 
   function handleOuvrirModalStack(stackId?: string) {
     const id = stackId ?? stackSelectionne ?? projet?.stacks[0]?.id ?? null;
@@ -35,7 +35,7 @@ function AppInner() {
         {ongletActif === "stack" && (
           <Sidebar onOuvrirModalStack={handleOuvrirModalStack} />
         )}
-        {ongletActif === "setlist" && <SetlistSidebar />}
+        {ongletActif === "setlist" && setlistSidebarOuverte && <SetlistSidebar />}
 
         <main
           className="flex-1 flex min-w-0 setlist-full-height"

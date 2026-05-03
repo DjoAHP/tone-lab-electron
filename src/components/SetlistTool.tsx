@@ -16,6 +16,16 @@ export function SetlistTool() {
   );
   const songCount = songs.length;
 
+  // Formater les secondes en mm:ss
+  const formatTime = (secs: number): string => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Calculer le temps total
+  const tempsTotal = songs.reduce((acc, song) => acc + (song.time ?? 0), 0);
+
   // Calculer les dimensions pour que la feuille A4 rentre dans le conteneur
   const calculerDimensions = useCallback(() => {
     const container = containerRef.current;
@@ -185,7 +195,21 @@ export function SetlistTool() {
                       lineHeight: "1.2",
                     }}
                   >
-                    {song.title}
+                    <span style={{ flex: 1 }}>{song.title}</span>
+                    {song.time !== undefined && (
+                      <span
+                        style={{
+                          fontSize: `${Math.max(12, dimensions.height * 0.02)}px`,
+                          color: "#888",
+                          fontFamily: "monospace",
+                          flexShrink: 0,
+                          marginLeft: "auto",
+                          paddingLeft: "20px",
+                        }}
+                      >
+                        {formatTime(song.time)}
+                      </span>
+                    )}
                   </span>
                 </div>
               ))
@@ -205,6 +229,22 @@ export function SetlistTool() {
               </div>
             )}
           </div>
+
+          {/* Temps total (discret en bas) */}
+          {songCount > 0 && (
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: `${Math.max(12, dimensions.height * 0.014)}px`,
+                color: "#888",
+                padding: `${Math.max(8, dimensions.height * 0.01)}px 0`,
+                borderTop: "1px solid #eee",
+                flexShrink: 0,
+              }}
+            >
+              Temps total : {formatTime(tempsTotal)}
+            </div>
+          )}
         </div>
       </div>
 

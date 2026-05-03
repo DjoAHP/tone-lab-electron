@@ -71,6 +71,8 @@ export function BottomBar() {
   const {
     sidebarOuverte,
     toggleSidebar,
+    toggleSetlistSidebar,
+    setlistSidebarOuverte,
     ongletActif,
     setOngletActif,
     setVueActive,
@@ -95,24 +97,45 @@ export function BottomBar() {
     >
       {/* ── Bouton toggle sidebar (gauche) ── */}
       <div className="flex items-center h-full px-3">
-        <button
-          onClick={toggleSidebar}
-          title={sidebarOuverte ? "Masquer la sidebar" : "Afficher la sidebar"}
-          className="flex items-center justify-center w-7 h-7 rounded transition-colors"
-          style={{
-            color: sidebarOuverte
-              ? "hsl(var(--tl-accent-princ))"
-              : "hsl(220, 15%, 40%)",
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-            <rect x="0" y="0" width="5" height="14" rx="1" opacity={sidebarOuverte ? "1" : "0.4"} />
-            <rect x="7" y="0" width="7" height="2" rx="1" />
-            <rect x="7" y="4" width="7" height="2" rx="1" />
-            <rect x="7" y="8" width="7" height="2" rx="1" />
-            <rect x="7" y="12" width="7" height="2" rx="1" />
-          </svg>
-        </button>
+        {ongletActif === "setlist" ? (
+          <button
+            onClick={toggleSetlistSidebar}
+            title={setlistSidebarOuverte ? "Masquer la sidebar" : "Afficher la sidebar"}
+            className="flex items-center justify-center w-7 h-7 rounded transition-colors"
+            style={{
+              color: setlistSidebarOuverte
+                ? "hsl(var(--tl-accent-princ))"
+                : "hsl(220, 15%, 40%)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <rect x="0" y="0" width="5" height="14" rx="1" opacity={setlistSidebarOuverte ? "1" : "0.4"} />
+              <rect x="7" y="0" width="7" height="2" rx="1" />
+              <rect x="7" y="4" width="7" height="2" rx="1" />
+              <rect x="7" y="8" width="7" height="2" rx="1" />
+              <rect x="7" y="12" width="7" height="2" rx="1" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            onClick={toggleSidebar}
+            title={sidebarOuverte ? "Masquer la sidebar" : "Afficher la sidebar"}
+            className="flex items-center justify-center w-7 h-7 rounded transition-colors"
+            style={{
+              color: sidebarOuverte
+                ? "hsl(var(--tl-accent-princ))"
+                : "hsl(220, 15%, 40%)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <rect x="0" y="0" width="5" height="14" rx="1" opacity={sidebarOuverte ? "1" : "0.4"} />
+              <rect x="7" y="0" width="7" height="2" rx="1" />
+              <rect x="7" y="4" width="7" height="2" rx="1" />
+              <rect x="7" y="8" width="7" height="2" rx="1" />
+              <rect x="7" y="12" width="7" height="2" rx="1" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* ── Zone outils (centre) ── */}
