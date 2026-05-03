@@ -166,10 +166,36 @@ export function MenuBar() {
 
     try {
       const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(a4Container, {
+
+      // Créer un clone de la feuille A4 à taille réelle hors écran
+      const clone = a4Container.cloneNode(true) as HTMLElement;
+
+      // Dimensions A4 réelles en pixels (210mm × 297mm à ~96 DPI)
+      const a4LargeurPx = 794;
+      const a4HauteurPx = 1123;
+
+      // Appliquer les dimensions A4 réelles au clone
+      clone.style.width = `${a4LargeurPx}px`;
+      clone.style.height = `${a4HauteurPx}px`;
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "-9999px";
+      clone.style.transform = "none"; // Annuler toute transformation
+      clone.style.transformOrigin = "initial";
+
+      // Ajouter le clone au body
+      document.body.appendChild(clone);
+
+      // Capturer le clone à taille réelle
+      const canvas = await html2canvas(clone, {
         backgroundColor: "white",
-        scale: 2,
+        scale: 2, // Haute résolution
+        width: a4LargeurPx,
+        height: a4HauteurPx,
       });
+
+      // Supprimer le clone
+      document.body.removeChild(clone);
 
       if (format === "pdf") {
         // Pour PDF : ouvre une nouvelle fenêtre avec l'image et lance l'impression

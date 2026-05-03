@@ -1,11 +1,14 @@
 // src/components/SetlistTool.tsx
 // Outil Setlist - Affiche la feuille A4
-// La feuille A4 REMPLIT TOUTE LA HAUTEUR entre MenuBar et BottomBar
+// La feuille A4 s'adapte à l'espace disponible entre MenuBar et BottomBar
 
 import { useApp } from "../context/AppContext";
+import { useRef, useEffect, useState, useCallback } from "react";
 
 export function SetlistTool() {
   const { projet } = useApp();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 794, height: 1123 }); // A4 par défaut en px
 
   // Songs triées par position
   const songs = [...(projet?.setlistSongs ?? [])].sort(
@@ -13,12 +16,71 @@ export function SetlistTool() {
   );
   const songCount = songs.length;
 
+  // Calculer les dimensions pour que la feuille A4 rentre dans le conteneur
+  const calculerDimensions = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Ratio A4 (largeur/hauteur)
+    const a4Ratio = 210 / 297; // ≈ 0.707
+
+    // Espace disponible (avec padding)
+    const paddingX = 32;
+    const paddingY = 16;
+    const espaceDispoLargeur = container.clientWidth - paddingX;
+    const espaceDispoHauteur = container.clientHeight - paddingY;
+
+    // Calculer les dimensions qui respectent le ratio A4
+    let newWidth = espaceDispoLargeur;
+    let newHeight = newWidth / a4Ratio;
+
+    // Si la hauteur dépasse, on ajuste selon la hauteur
+    if (newHeight > espaceDispoHauteur) {
+      newHeight = espaceDispoHauteur;
+      newWidth = newHeight * a4Ratio;
+    }
+
+    // Limiter à la taille réelle A4 en pixels (pour ne pas agrandir trop)
+    const a4PxLargeur = 210 * 3.78;
+    const a4PxHauteur = 297 * 3.78;
+    if (newWidth > a4PxLargeur || newHeight > a4PxHauteur) {
+      newWidth = a4PxLargeur;
+      newHeight = a4PxHauteur;
+    }
+
+    // Minimum pour rester lisible
+    const minWidth = 300;
+    if (newWidth < minWidth) {
+      const ratio = minWidth / newWidth;
+      newWidth = minWidth;
+      newHeight = newHeight * ratio;
+    }
+
+    setDimensions({ width: Math.floor(newWidth), height: Math.floor(newHeight) });
+  }, []);
+
+  // Observer les changements de taille du conteneur
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    calculerDimensions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      calculerDimensions();
+    });
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, [calculerDimensions]);
+
   return (
     <div
-      className="flex-1 overflow-hidden"
+      ref={containerRef}
+      className="setlist-content-area overflow-auto"
       style={{ background: "hsl(222, 22%, 9%)" }}
     >
-      {/* Conteneur principal : prend toute la hauteur disponible et centre horizontalement */}
+      {/* Conteneur principal : centre la feuille A4 */}
       <div
         style={{
           display: "flex",
@@ -30,33 +92,30 @@ export function SetlistTool() {
           padding: "8px 16px",
         }}
       >
-        {/* FEUILLE A4 - REMPLIT TOUTE LA HAUTEUR DISPONIBLE */}
+        {/* FEUILLE A4 - DIMENSIONS DYNAMIQUES */}
         <div
           className="setlist-a4-container"
           style={{
-            width: "595px",
-            maxWidth: "100%",
-            flex: "1 1 auto",
-            minHeight: 0,
-            height: "100%",
-            maxHeight: "100%",
+            width: `${dimensions.width}px`,
+            height: `${dimensions.height}px`,
             background: "white",
             borderRadius: "4px",
             boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-            padding: "30px 50px",
+            padding: `${Math.max(20, dimensions.height * 0.03)}px ${Math.max(30, dimensions.width * 0.06)}px`,
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            flexShrink: 0,
           }}
         >
-          {/* Band Name - GROSSE POLICE */}
+          {/* Band Name */}
           <h1
             style={{
               textAlign: "center",
-              fontSize: "42px",
+              fontSize: `${Math.max(24, dimensions.height * 0.04)}px`,
               fontWeight: "bold",
               color: "black",
-              marginBottom: "14px",
+              marginBottom: `${Math.max(10, dimensions.height * 0.015)}px`,
               fontFamily: "serif",
               flexShrink: 0,
             }}
@@ -64,10 +123,10 @@ export function SetlistTool() {
             {projet?.bandName || "Nom du groupe"}
           </h1>
 
-          {/* Séparation stylisée (TRAIT UNIQUE + visible à l'impression) */}
+          {/* Séparation stylisée */}
           <div
             style={{
-              margin: "0 0 14px 0",
+              margin: `0 0 ${Math.max(10, dimensions.height * 0.015)}px 0`,
               flexShrink: 0,
             }}
           >
@@ -79,23 +138,23 @@ export function SetlistTool() {
             />
           </div>
 
-          {/* Nombre de morceaux (discret) */}
+          {/* Nombre de morceaux */}
           <div
             style={{
               textAlign: "center",
-              fontSize: "12px",
+              fontSize: `${Math.max(10, dimensions.height * 0.012)}px`,
               color: "#888",
-              marginBottom: "14px",
+              marginBottom: `${Math.max(10, dimensions.height * 0.015)}px`,
               flexShrink: 0,
             }}
           >
             {songCount} morceau{songCount > 1 ? "x" : ""}
           </div>
 
-          {/* Liste des morceaux - REMPLIT TOUTE LA HAUTEUR RESTANTE */}
+          {/* Liste des morceaux */}
           <div
             style={{
-              flex: 1, // ← Clef : prend tout l'espace restant
+              flex: 1,
               overflow: "hidden",
               display: "flex",
               flexDirection: "column",
@@ -112,12 +171,12 @@ export function SetlistTool() {
                     justifyContent: "center",
                     borderBottom:
                       song.position < songCount ? "2px solid #ccc" : "none",
-                    minHeight: 0, // Important pour flex
+                    minHeight: 0,
                   }}
                 >
                   <span
                     style={{
-                      fontSize: "32px",
+                      fontSize: `${Math.max(18, dimensions.height * 0.03)}px`,
                       color: "black",
                       fontWeight: "600",
                       textAlign: "center",
@@ -138,7 +197,7 @@ export function SetlistTool() {
                   alignItems: "center",
                   justifyContent: "center",
                   color: "#999",
-                  fontSize: "16px",
+                  fontSize: `${Math.max(14, dimensions.height * 0.015)}px`,
                   fontStyle: "italic",
                 }}
               >
