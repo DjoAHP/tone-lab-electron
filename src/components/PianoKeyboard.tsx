@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
+import { getNoteName, isNoteInScale } from "../utils/musicTheory";
 
-// ─── Dimensions des touches (AGRANDIES) ────────────────────────
+// ─── Dimensions des touches ────────────────────────
 const WHITE_KEY_WIDTH = 60;
 const BLACK_KEY_WIDTH = 36;
 const WHITE_KEY_HEIGHT = 200;
@@ -47,7 +48,7 @@ const WHITE_KEY_MAP: Record<string, string> = {
 
 const BLACK_KEY_MAP: Record<string, string> = {
   'q': "C#4", 's': "D#4", 'd': "F#4", 'f': "G#4", 'g': "A#4",
-  'h': "C#5", 'j': "D#5", 'k': "F#5", 'l': "G#5", 'm': "A#5",
+  'h': "C#5", 'j': "D#5", 'k': "F#5", 'l': "G#5", 'm': "A#5"
 };
 
 // ─── Types de sons disponibles ────────────────────────
@@ -66,17 +67,23 @@ function createAudioContext(): AudioContext {
 interface PianoKeyboardProps {
   oscType: OscType;
   volume: number;      // 0 à 1
-  sustain?: boolean;   // Optionnel, mais on ne l'utilise plus
+  sustain?: boolean;   // Maintenir le son après relâchement
   onNotePlay: (note: string) => void;
+  onNoteStop?: (note: string) => void;  // Nouveau : notifier la fin d'une note
+  scaleNotes?: string[];  // Notes de la gamme à highlight
+  activeNotes?: string[]; // Notes actuellement jouées (pour affichage accord)
 }
 
 // ─── Composant PianoKeyboard ────────────────────────
-export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProps) {
+export function PianoKeyboard({
+  oscType, volume, sustain, onNotePlay, onNoteStop, scaleNotes, activeNotes
+}: PianoKeyboardProps) {
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const activeNoteRef = useRef<string | null>(null);
   const [activeNote, setActiveNote] = useState<string | null>(null);
-  const oscRef = useRef<OscillatorNode | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
+
+  // Gestion polyphonique : Map des notes actives -> { osc, gain }
+  const activeOscsRef = useRef<Map<string, { osc: OscillatorNode, gain: GainNode }>>(new Map());
+  const pressedKeysRef = useRef<Set<string>>(new Set());
 
   // Obtenir ou créer le contexte audio
   const getAudioContext = useCallback(() => {
@@ -97,12 +104,6 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
       // Feedback visuel
       setActiveNote(note);
       onNotePlay(note);
-      activeNoteRef.current = note;
-
-      // Arrêter l'oscillateur précédent
-      if (oscRef.current) {
-        try { oscRef.current.stop(); } catch { /* ignore */ }
-      }
 
       // Création du son
       const osc = ctx.createOscillator();
@@ -111,22 +112,56 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
       osc.type = oscType;
       osc.frequency.value = frequency;
 
-      // Enveloppe
+      // Enveloppe d'attaque
       const now = ctx.currentTime;
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(volume, now + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now);
-      osc.stop(now + 0.5);
 
-      oscRef.current = osc;
-      gainRef.current = gain;
+      // Stocker l'oscillateur pour arrêt futur
+      activeOscsRef.current.set(note, { osc, gain });
+
+      // Si pas de sustain, programmer l'arrêt après 0.5s
+      if (!sustain) {
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc.stop(now + 0.5);
+
+        // Nettoyage après arrêt
+        setTimeout(() => {
+          activeOscsRef.current.delete(note);
+          if (activeNote === note) {
+            setActiveNote(null);
+          }
+        }, 600);
+      }
     },
-    [getAudioContext, oscType, volume, onNotePlay],
+    [getAudioContext, oscType, volume, sustain, onNotePlay, activeNote],
+  );
+
+  // Arrêter une note
+  const stopNote = useCallback(
+    (note: string) => {
+      const entry = activeOscsRef.current.get(note);
+      if (!entry) return;
+
+      const now = entry.gain.context.currentTime;
+      entry.gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      entry.osc.stop(now + 0.1);
+
+      activeOscsRef.current.delete(note);
+      if (activeNote === note) {
+        setActiveNote(null);
+      }
+
+      if (onNoteStop) {
+        onNoteStop(note);
+      }
+    },
+    [activeNote, onNoteStop],
   );
 
   // Gestion du clavier physique (AZERTY)
@@ -134,24 +169,47 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
       const note = WHITE_KEY_MAP[key] ?? BLACK_KEY_MAP[key];
-      if (note && note !== activeNoteRef.current) {
-        e.preventDefault();
-        const allKeys = [...WHITE_KEYS, ...BLACK_KEYS];
-        const keyData = allKeys.find(k => k.note === note);
-        if (keyData) playNote(keyData.freq, keyData.note);
+      if (!note) return;
+
+      // Éviter les répétitions de touches
+      if (pressedKeysRef.current.has(key)) return;
+
+      e.preventDefault();
+      pressedKeysRef.current.add(key);
+
+      const allKeys = [...WHITE_KEYS, ...BLACK_KEYS];
+      const keyData = allKeys.find(k => k.note === note);
+      if (keyData) playNote(keyData.freq, keyData.note);
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const note = WHITE_KEY_MAP[key] ?? BLACK_KEY_MAP[key];
+      if (!note) return;
+
+      pressedKeysRef.current.delete(key);
+
+      if (!sustain) {
+        stopNote(note);
       }
+      // Si sustain est ON, on garde la note active jusqu'à désactivation du sustain
     };
 
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [playNote]);
+  }, [playNote, stopNote, sustain]);
 
   // Nettoyage au démontage
   useEffect(() => {
     return () => {
-      oscRef.current?.stop();
+      activeOscsRef.current.forEach(entry => {
+        try { entry.osc.stop(); } catch { /* ignore */ }
+      });
+      activeOscsRef.current.clear();
       audioCtxRef.current?.close();
     };
   }, []);
@@ -161,10 +219,16 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
   // Fonction pour générer les touches blanches
   const renderWhiteKey = (key: typeof WHITE_KEYS[0], index: number) => {
     const isActive = activeNote === key.note;
+    const noteName = getNoteName(key.note);
+    const inScale = scaleNotes ? scaleNotes.includes(noteName) : false;
+    const isInActiveChord = activeNotes ? activeNotes.some(n => getNoteName(n) === noteName) : false;
+
     return (
       <button
         key={key.note}
         onMouseDown={() => playNote(key.freq, key.note)}
+        onMouseUp={() => { if (!sustain) stopNote(key.note); }}
+        onMouseLeave={() => { if (!sustain) stopNote(key.note); }}
         className="absolute flex flex-col items-center justify-end pb-2"
         style={{
           left: `${index * WHITE_KEY_WIDTH}px`,
@@ -172,10 +236,18 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
           height: `${WHITE_KEY_HEIGHT}px`,
           background: isActive
             ? "hsl(var(--tl-accent-dim))"
+            : isInActiveChord
+            ? "hsl(165, 40%, 25%)"
+            : inScale
+            ? "hsl(220, 15%, 22%)"
             : "hsl(222, 15%, 16%)",
           border: `1px solid ${
             isActive
               ? "hsl(var(--tl-accent-border))"
+              : isInActiveChord
+              ? "hsl(165, 50%, 40%)"
+              : inScale
+              ? "hsl(220, 15%, 35%)"
               : "hsl(220, 15%, 22%)"
           }`,
           borderBottomLeftRadius: "4px",
@@ -190,6 +262,18 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
         }}
       >
         {key.note}
+        {inScale && (
+          <div style={{
+            position: "absolute",
+            top: "4px",
+            right: "4px",
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            background: "hsl(var(--tl-accent-princ))",
+            opacity: 0.6,
+          }} />
+        )}
       </button>
     );
   };
@@ -197,11 +281,17 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
   // Fonction pour générer les touches noires
   const renderBlackKey = (key: typeof BLACK_KEYS[0]) => {
     const isActive = activeNote === key.note;
+    const noteName = getNoteName(key.note);
+    const inScale = scaleNotes ? scaleNotes.includes(noteName) : false;
+    const isInActiveChord = activeNotes ? activeNotes.some(n => getNoteName(n) === noteName) : false;
     const left = (key.afterWhiteIndex + 1) * WHITE_KEY_WIDTH - BLACK_KEY_WIDTH / 2;
+
     return (
       <button
         key={key.note}
         onMouseDown={() => playNote(key.freq, key.note)}
+        onMouseUp={() => { if (!sustain) stopNote(key.note); }}
+        onMouseLeave={() => { if (!sustain) stopNote(key.note); }}
         className="absolute flex flex-col items-center justify-end pb-1.5"
         style={{
           left: `${left}px`,
@@ -209,11 +299,19 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
           width: `${BLACK_KEY_WIDTH}px`,
           height: `${BLACK_KEY_HEIGHT}px`,
           background: isActive
-            ? "hsl(var(--tl-accent-h) 40% 30%)"
+            ? "hsl(var(--tl-accent-dim))"
+            : isInActiveChord
+            ? "hsl(165, 40%, 20%)"
+            : inScale
+            ? "hsl(222, 25%, 12%)"
             : "hsl(222, 25%, 7%)",
           border: `1px solid ${
             isActive
               ? "hsl(var(--tl-accent-border))"
+              : isInActiveChord
+              ? "hsl(165, 50%, 30%)"
+              : inScale
+              ? "hsl(220, 15%, 25%)"
               : "hsl(220, 15%, 14%)"
           }`,
           borderBottomLeftRadius: "3px",
@@ -228,6 +326,18 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
         }}
       >
         {key.note}
+        {inScale && (
+          <div style={{
+            position: "absolute",
+            top: "4px",
+            right: "4px",
+            width: "5px",
+            height: "5px",
+            borderRadius: "50%",
+            background: "hsl(var(--tl-accent-princ))",
+            opacity: 0.6,
+          }} />
+        )}
       </button>
     );
   };
@@ -245,7 +355,7 @@ export function PianoKeyboard({ oscType, volume, onNotePlay }: PianoKeyboardProp
       {WHITE_KEYS.map((key, index) => renderWhiteKey(key, index))}
 
       {/* Touches noires */}
-      {BLACK_KEYS.map((key) => renderBlackKey(key))}
+      {BLACK_KEYS.map(key => renderBlackKey(key))}
     </div>
   );
 }
