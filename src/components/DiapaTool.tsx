@@ -221,8 +221,6 @@ export function DiapaTool() {
               volume={volume}
               onNotePlay={handleNotePlay}
               onNoteStop={handleNoteStop}
-              scaleNotes={scaleNotes}
-              activeNotes={activeNotes}
             />
           </div>
           {selectedScale && (

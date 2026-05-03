@@ -1,5 +1,4 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
-import { getNoteName, isNoteInScale } from "../utils/musicTheory";
 
 // ─── Dimensions des touches ────────────────────────
 const WHITE_KEY_WIDTH = 60;
@@ -69,13 +68,11 @@ interface PianoKeyboardProps {
   volume: number;      // 0 à 1
   onNotePlay: (note: string) => void;
   onNoteStop?: (note: string) => void;
-  scaleNotes?: string[];  // Notes de la gamme à highlight
-  activeNotes?: string[]; // Notes actuellement jouées (pour affichage accord)
 }
 
 // ─── Composant PianoKeyboard ────────────────────────
 export function PianoKeyboard({
-  oscType, volume, onNotePlay, onNoteStop, scaleNotes, activeNotes
+  oscType, volume, onNotePlay, onNoteStop
 }: PianoKeyboardProps) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [activeNote, setActiveNote] = useState<string | null>(null);
@@ -209,9 +206,6 @@ export function PianoKeyboard({
   // Fonction pour générer les touches blanches
   const renderWhiteKey = (key: typeof WHITE_KEYS[0], index: number) => {
     const isActive = activeNote === key.note;
-    const noteName = getNoteName(key.note);
-    const inScale = scaleNotes ? scaleNotes.includes(noteName) : false;
-    const isInActiveChord = activeNotes ? activeNotes.some(n => getNoteName(n) === noteName) : false;
 
     return (
       <button
@@ -226,18 +220,10 @@ export function PianoKeyboard({
           height: `${WHITE_KEY_HEIGHT}px`,
           background: isActive
             ? "hsl(var(--tl-accent-dim))"
-            : isInActiveChord
-            ? "hsl(165, 40%, 25%)"
-            : inScale
-            ? "hsl(220, 15%, 22%)"
             : "hsl(222, 15%, 16%)",
           border: `1px solid ${
             isActive
               ? "hsl(var(--tl-accent-border))"
-              : isInActiveChord
-              ? "hsl(165, 50%, 40%)"
-              : inScale
-              ? "hsl(220, 15%, 35%)"
               : "hsl(220, 15%, 22%)"
           }`,
           borderBottomLeftRadius: "4px",
@@ -252,18 +238,6 @@ export function PianoKeyboard({
         }}
       >
         {key.note}
-        {inScale && (
-          <div style={{
-            position: "absolute",
-            top: "4px",
-            right: "4px",
-            width: "6px",
-            height: "6px",
-            borderRadius: "50%",
-            background: "hsl(var(--tl-accent-princ))",
-            opacity: 0.6,
-          }} />
-        )}
       </button>
     );
   };
@@ -271,9 +245,6 @@ export function PianoKeyboard({
   // Fonction pour générer les touches noires
   const renderBlackKey = (key: typeof BLACK_KEYS[0]) => {
     const isActive = activeNote === key.note;
-    const noteName = getNoteName(key.note);
-    const inScale = scaleNotes ? scaleNotes.includes(noteName) : false;
-    const isInActiveChord = activeNotes ? activeNotes.some(n => getNoteName(n) === noteName) : false;
     const left = (key.afterWhiteIndex + 1) * WHITE_KEY_WIDTH - BLACK_KEY_WIDTH / 2;
 
     return (
@@ -290,18 +261,10 @@ export function PianoKeyboard({
           height: `${BLACK_KEY_HEIGHT}px`,
           background: isActive
             ? "hsl(var(--tl-accent-dim))"
-            : isInActiveChord
-            ? "hsl(165, 40%, 20%)"
-            : inScale
-            ? "hsl(222, 25%, 12%)"
             : "hsl(222, 25%, 7%)",
           border: `1px solid ${
             isActive
               ? "hsl(var(--tl-accent-border))"
-              : isInActiveChord
-              ? "hsl(165, 50%, 30%)"
-              : inScale
-              ? "hsl(220, 15%, 25%)"
               : "hsl(220, 15%, 14%)"
           }`,
           borderBottomLeftRadius: "3px",
@@ -316,18 +279,6 @@ export function PianoKeyboard({
         }}
       >
         {key.note}
-        {inScale && (
-          <div style={{
-            position: "absolute",
-            top: "4px",
-            right: "4px",
-            width: "5px",
-            height: "5px",
-            borderRadius: "50%",
-            background: "hsl(var(--tl-accent-princ))",
-            opacity: 0.6,
-          }} />
-        )}
       </button>
     );
   };
