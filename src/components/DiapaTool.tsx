@@ -2,13 +2,6 @@ import { useState, useCallback } from "react";
 import { PianoKeyboard, OscType } from "./PianoKeyboard";
 import { LedDisplay } from "./led-display/LedDisplay";
 import LedOverlayDiapa from "./led-display/assets/led-overlay-diapa.svg?react";
-import {
-  detectChord,
-  formatChord,
-  COMMON_SCALES,
-  Scale,
-  getNoteName,
-} from "../utils/musicTheory";
 
 // ─── Style Card ─────────────────
 const card = {
@@ -28,48 +21,28 @@ const sectionTitle = {
   marginBottom: "8px",
 };
 
+// ─── Boutons de sélection du type d'oscillateur
+const oscTypes: { type: OscType; label: string }[] = [
+  { type: "sine", label: "Sine" },
+  { type: "triangle", label: "Triangle" },
+  { type: "square", label: "Square" },
+  { type: "sawtooth", label: "Sawtooth" },
+];
+
 // ─── Composant DiapaTool ─────────────────
 export function DiapaTool() {
   const [oscType, setOscType] = useState<OscType>("sine");
   const [volume, setVolume] = useState(0.5);
   const [activeNote, setActiveNote] = useState<string>("---");
-  const [activeNotes, setActiveNotes] = useState<string[]>([]);
-  const [selectedScale, setSelectedScale] = useState<Scale | null>(null);
-
-  // Détecter l'accord courant
-  const detectedChord = activeNotes.length >= 2 ? detectChord(activeNotes) : null;
-  const chordLabel = formatChord(detectedChord);
 
   // Gérer le jeu d'une note
   const handleNotePlay = useCallback((note: string) => {
     setActiveNote(note);
-    const noteName = getNoteName(note);
-    setActiveNotes(prev => {
-      if (prev.some(n => getNoteName(n) === noteName)) {
-        return prev;
-      }
-      return [...prev, note];
-    });
   }, []);
 
-  // Gérer l'arrêt d'une note
   const handleNoteStop = useCallback((note: string) => {
-    setActiveNotes(prev => prev.filter(n => getNoteName(n) !== getNoteName(note)));
+    setActiveNote("---");
   }, []);
-
-  const handleScaleSelect = useCallback((scale: Scale | null) => {
-    setSelectedScale(scale);
-  }, []);
-
-  const scaleNotes = selectedScale?.notes;
-
-  // Boutons de sélection du type d'oscillateur
-  const oscTypes: { type: OscType; label: string }[] = [
-    { type: "sine", label: "Sine" },
-    { type: "triangle", label: "Triangle" },
-    { type: "square", label: "Square" },
-    { type: "sawtooth", label: "Sawtooth" },
-  ];
 
   return (
     <div
@@ -77,28 +50,17 @@ export function DiapaTool() {
       style={{ background: "hsl(222, 22%, 9%)" }}
     >
       <div style={{ width: "100%", padding: "16px 24px", maxWidth: "1400px", margin: "0 auto" }}>
-        {/* ─── SECTION 1: LED + ACCORD ─────────────── */}
+        {/* ─── SECTION 1: LED ─────────────── */}
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <div style={sectionTitle}>Note actuelle / Accord</div>
+          <div style={sectionTitle}>Note actuelle</div>
           <div style={{
             ...card,
             display: "inline-block",
             padding: "20px 40px",
             marginBottom: "8px",
           }}>
-            <LedDisplay value={activeNote} digits={4} overlay={LedOverlayDiapa} />
+            <LedDisplay value={activeNote} digits={3} overlay={LedOverlayDiapa} />
           </div>
-          {detectedChord && (
-            <div style={{
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "hsl(var(--tl-accent-princ))",
-              marginTop: "8px",
-              fontFamily: "'Courier New', monospace",
-            }}>
-              {chordLabel}
-            </div>
-          )}
         </div>
 
         {/* ─── SECTION 2: CONTRÔLES ─────────────── */}
@@ -175,41 +137,6 @@ export function DiapaTool() {
               </span>
             </div>
           </div>
-
-          {/* Sélecteur de gamme */}
-          <div style={{ flex: "1 1 250px", minWidth: "200px" }}>
-            <div style={sectionTitle}>Gamme / Tonalité</div>
-            <select
-              value={selectedScale?.name ?? ""}
-              onChange={(e) => {
-                const scale = COMMON_SCALES.find(s => s.name === e.target.value) ?? null;
-                handleScaleSelect(scale);
-              }}
-              style={{
-                width: "100%",
-                background: "hsl(222, 18%, 17%)",
-                border: "1px solid hsl(220, 15%, 22%)",
-                borderRadius: "8px",
-                color: "hsl(220, 15%, 70%)",
-                fontSize: "11px",
-                padding: "8px 12px",
-                cursor: "pointer",
-                outline: "none",
-              }}
-            >
-              <option value="">Aucune</option>
-              <optgroup label="Majeures">
-                {COMMON_SCALES.filter(s => s.name.includes('major')).map(scale => (
-                  <option key={scale.name} value={scale.name}>{scale.label}</option>
-                ))}
-              </optgroup>
-              <optgroup label="Mineures">
-                {COMMON_SCALES.filter(s => s.name.includes('minor')).map(scale => (
-                  <option key={scale.name} value={scale.name}>{scale.label}</option>
-                ))}
-              </optgroup>
-            </select>
-          </div>
         </div>
 
         {/* ─── SECTION 3: CLAVIER ─────────────── */}
@@ -223,16 +150,6 @@ export function DiapaTool() {
               onNoteStop={handleNoteStop}
             />
           </div>
-          {selectedScale && (
-            <div style={{
-              marginTop: "8px",
-              fontSize: "10px",
-              color: "hsl(220, 15%, 40%)",
-              textAlign: "center",
-            }}>
-              Gamme : {selectedScale.label} — Notes : {selectedScale.notes.join(", ")}
-            </div>
-          )}
         </div>
       </div>
     </div>
