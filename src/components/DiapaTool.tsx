@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { PianoKeyboard, OscType } from "./PianoKeyboard";
 import { LedDisplay } from "./led-display/LedDisplay";
 import LedOverlayDiapa from "./led-display/assets/led-overlay-diapa.svg?react";
@@ -28,14 +28,6 @@ const sectionTitle = {
   marginBottom: "8px",
 };
 
-// ─── Interface pour l'historique ─────────────────
-interface HistoryEntry {
-  id: number;
-  note: string;
-  timestamp: number;
-  chord: string | null;
-}
-
 // ─── Composant DiapaTool ─────────────────
 export function DiapaTool() {
   const [oscType, setOscType] = useState<OscType>("sine");
@@ -43,9 +35,6 @@ export function DiapaTool() {
   const [activeNote, setActiveNote] = useState<string>("---");
   const [activeNotes, setActiveNotes] = useState<string[]>([]);
   const [selectedScale, setSelectedScale] = useState<Scale | null>(null);
-  const [sustain, setSustain] = useState(false);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const historyIdRef = useRef(0);
 
   // Détecter l'accord courant
   const detectedChord = activeNotes.length >= 2 ? detectChord(activeNotes) : null;
@@ -55,41 +44,21 @@ export function DiapaTool() {
   const handleNotePlay = useCallback((note: string) => {
     setActiveNote(note);
     const noteName = getNoteName(note);
-
     setActiveNotes(prev => {
       if (prev.some(n => getNoteName(n) === noteName)) {
         return prev;
       }
       return [...prev, note];
     });
+  }, []);
 
-    // Détection d'accord immédiate avec la note ajoutée
-    const newActiveNotes = [...activeNotes, note];
-    const chord = detectChord(newActiveNotes);
-    const entry: HistoryEntry = {
-      id: ++historyIdRef.current,
-      note,
-      timestamp: Date.now(),
-      chord: chord ? `${chord.root} ${chord.label}` : null,
-    };
-    setHistory(prev => [entry, ...prev].slice(0, 50));
-  }, [activeNotes]);
-
-  // Gérer l'arrêt d'une note (quand sustain OFF ou relâchement)
+  // Gérer l'arrêt d'une note
   const handleNoteStop = useCallback((note: string) => {
     setActiveNotes(prev => prev.filter(n => getNoteName(n) !== getNoteName(note)));
   }, []);
 
-  const clearHistory = useCallback(() => {
-    setHistory([]);
-  }, []);
-
   const handleScaleSelect = useCallback((scale: Scale | null) => {
     setSelectedScale(scale);
-  }, []);
-
-  const replayNote = useCallback((note: string) => {
-    setActiveNote(note);
   }, []);
 
   const scaleNotes = selectedScale?.notes;
@@ -207,28 +176,6 @@ export function DiapaTool() {
             </div>
           </div>
 
-          {/* Sustain */}
-          <div style={{ flex: "0 0 auto" }}>
-            <div style={sectionTitle}>Sustain</div>
-            <button
-              onClick={() => setSustain(!sustain)}
-              className="px-4 py-2 rounded-lg text-[10px] font-semibold transition-all uppercase"
-              style={{
-                background: sustain
-                  ? "hsl(var(--tl-accent-dim))"
-                  : "hsl(222, 18%, 17%)",
-                border: sustain
-                  ? "1px solid hsl(var(--tl-accent-border))"
-                  : "1px solid hsl(220, 15%, 22%)",
-                color: sustain
-                  ? "hsl(var(--tl-accent-text))"
-                  : "hsl(220, 15%, 50%)",
-              }}
-            >
-              {sustain ? "ON" : "OFF"}
-            </button>
-          </div>
-
           {/* Sélecteur de gamme */}
           <div style={{ flex: "1 1 250px", minWidth: "200px" }}>
             <div style={sectionTitle}>Gamme / Tonalité</div>
@@ -272,7 +219,6 @@ export function DiapaTool() {
             <PianoKeyboard
               oscType={oscType}
               volume={volume}
-              sustain={sustain}
               onNotePlay={handleNotePlay}
               onNoteStop={handleNoteStop}
               scaleNotes={scaleNotes}
@@ -289,94 +235,6 @@ export function DiapaTool() {
               Gamme : {selectedScale.label} — Notes : {selectedScale.notes.join(", ")}
             </div>
           )}
-        </div>
-
-        {/* ─── SECTION 4: HISTORIQUE ─────────────── */}
-        <div>
-          <div style={{ ...sectionTitle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>Historique ({history.length})</span>
-            {history.length > 0 && (
-              <button
-                onClick={clearHistory}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "hsl(220, 15%, 35%)",
-                  fontSize: "9px",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                }}
-              >
-                Effacer
-              </button>
-            )}
-          </div>
-          <div style={{
-            background: "hsl(222, 20%, 12%)",
-            border: "1px solid hsl(220, 15%, 18%)",
-            borderRadius: "8px",
-            maxHeight: "150px",
-            overflowY: "auto",
-            padding: "8px",
-          }}>
-            {history.length === 0 ? (
-              <div style={{
-                textAlign: "center",
-                padding: "20px",
-                color: "hsl(220, 15%, 30%)",
-                fontSize: "11px",
-                fontStyle: "italic",
-              }}>
-                Jouez des notes pour voir l'historique...
-              </div>
-            ) : (
-              history.map(entry => (
-                <div
-                  key={entry.id}
-                  onClick={() => replayNote(entry.note)}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "6px 8px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    transition: "background 0.1s",
-                    background: "transparent",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.background = "hsl(222, 20%, 16%)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.background = "transparent";
-                  }}
-                >
-                  <span style={{
-                    fontFamily: "'Courier New', monospace",
-                    fontSize: "11px",
-                    color: "hsl(220, 15%, 60%)",
-                  }}>
-                    {entry.note}
-                  </span>
-                  {entry.chord && (
-                    <span style={{
-                      fontSize: "9px",
-                      color: "hsl(var(--tl-accent-princ))",
-                      fontStyle: "italic",
-                    }}>
-                      {entry.chord}
-                    </span>
-                  )}
-                  <span style={{
-                    fontSize: "9px",
-                    color: "hsl(220, 15%, 30%)",
-                  }}>
-                    {new Date(entry.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
         </div>
       </div>
     </div>

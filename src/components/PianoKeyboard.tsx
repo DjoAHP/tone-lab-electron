@@ -67,16 +67,15 @@ function createAudioContext(): AudioContext {
 interface PianoKeyboardProps {
   oscType: OscType;
   volume: number;      // 0 à 1
-  sustain?: boolean;   // Maintenir le son après relâchement
   onNotePlay: (note: string) => void;
-  onNoteStop?: (note: string) => void;  // Nouveau : notifier la fin d'une note
+  onNoteStop?: (note: string) => void;
   scaleNotes?: string[];  // Notes de la gamme à highlight
   activeNotes?: string[]; // Notes actuellement jouées (pour affichage accord)
 }
 
 // ─── Composant PianoKeyboard ────────────────────────
 export function PianoKeyboard({
-  oscType, volume, sustain, onNotePlay, onNoteStop, scaleNotes, activeNotes
+  oscType, volume, onNotePlay, onNoteStop, scaleNotes, activeNotes
 }: PianoKeyboardProps) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [activeNote, setActiveNote] = useState<string | null>(null);
@@ -117,29 +116,24 @@ export function PianoKeyboard({
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(volume, now + 0.01);
 
+      // Arrêt automatique après 0.5s
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now);
+      osc.stop(now + 0.5);
 
-      // Stocker l'oscillateur pour arrêt futur
-      activeOscsRef.current.set(note, { osc, gain });
-
-      // Si pas de sustain, programmer l'arrêt après 0.5s
-      if (!sustain) {
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-        osc.stop(now + 0.5);
-
-        // Nettoyage après arrêt
-        setTimeout(() => {
-          activeOscsRef.current.delete(note);
-          if (activeNote === note) {
-            setActiveNote(null);
-          }
-        }, 600);
-      }
+      // Nettoyage après arrêt
+      setTimeout(() => {
+        activeOscsRef.current.delete(note);
+        if (activeNote === note) {
+          setActiveNote(null);
+        }
+      }, 600);
     },
-    [getAudioContext, oscType, volume, sustain, onNotePlay, activeNote],
+    [getAudioContext, oscType, volume, onNotePlay, activeNote],
   );
 
   // Arrêter une note
@@ -188,11 +182,7 @@ export function PianoKeyboard({
       if (!note) return;
 
       pressedKeysRef.current.delete(key);
-
-      if (!sustain) {
-        stopNote(note);
-      }
-      // Si sustain est ON, on garde la note active jusqu'à désactivation du sustain
+      // On ne fait rien d'autre, la note s'arrête après 0.5s
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -201,7 +191,7 @@ export function PianoKeyboard({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [playNote, stopNote, sustain]);
+  }, [playNote]);
 
   // Nettoyage au démontage
   useEffect(() => {
@@ -227,8 +217,8 @@ export function PianoKeyboard({
       <button
         key={key.note}
         onMouseDown={() => playNote(key.freq, key.note)}
-        onMouseUp={() => { if (!sustain) stopNote(key.note); }}
-        onMouseLeave={() => { if (!sustain) stopNote(key.note); }}
+        onMouseUp={() => stopNote(key.note)}
+        onMouseLeave={() => stopNote(key.note)}
         className="absolute flex flex-col items-center justify-end pb-2"
         style={{
           left: `${index * WHITE_KEY_WIDTH}px`,
@@ -290,8 +280,8 @@ export function PianoKeyboard({
       <button
         key={key.note}
         onMouseDown={() => playNote(key.freq, key.note)}
-        onMouseUp={() => { if (!sustain) stopNote(key.note); }}
-        onMouseLeave={() => { if (!sustain) stopNote(key.note); }}
+        onMouseUp={() => stopNote(key.note)}
+        onMouseLeave={() => stopNote(key.note)}
         className="absolute flex flex-col items-center justify-end pb-1.5"
         style={{
           left: `${left}px`,
