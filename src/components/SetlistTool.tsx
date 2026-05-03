@@ -179,38 +179,59 @@ export function SetlistTool() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    position: "relative",
                     borderBottom:
                       song.position < songCount ? "2px solid #ccc" : "none",
                     minHeight: 0,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: `${Math.max(18, dimensions.height * 0.03)}px`,
-                      color: "black",
-                      fontWeight: "600",
-                      textAlign: "center",
-                      padding: "0 30px",
-                      fontFamily: "sans-serif",
-                      lineHeight: "1.2",
-                    }}
-                  >
-                    <span style={{ flex: 1 }}>{song.title}</span>
-                    {song.time !== undefined && (
+                  {/* Tonalité (trés discrète à gauche) + Titre centré */}
+                  <div style={{ position: "relative", width: "100%", textAlign: "center" }}>
+                    {song.tonality !== undefined && (
                       <span
                         style={{
-                          fontSize: `${Math.max(12, dimensions.height * 0.02)}px`,
-                          color: "#888",
+                          position: "absolute",
+                          left: `${Math.max(10, dimensions.width * 0.02)}px`,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: `${Math.max(10, dimensions.height * 0.015)}px`,
+                          color: "#bbb",
                           fontFamily: "monospace",
-                          flexShrink: 0,
-                          marginLeft: "auto",
-                          paddingLeft: "20px",
+                          fontStyle: "italic",
                         }}
                       >
-                        {formatTime(song.time)}
+                        ({song.tonality})
                       </span>
                     )}
-                  </span>
+                    <span
+                      style={{
+                        fontSize: `${Math.max(18, dimensions.height * 0.03)}px`,
+                        color: "black",
+                        fontWeight: "600",
+                        textAlign: "center",
+                        fontFamily: "sans-serif",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      {song.title}
+                    </span>
+                  </div>
+
+                  {/* Durée à l'extrême droite */}
+                  {song.time !== undefined && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        right: `${Math.max(20, dimensions.width * 0.05)}px`,
+                        fontSize: `${Math.max(12, dimensions.height * 0.02)}px`,
+                        color: "#888",
+                        fontFamily: "monospace",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {formatTime(song.time)}
+                    </span>
+                  )}
                 </div>
               ))
             ) : (

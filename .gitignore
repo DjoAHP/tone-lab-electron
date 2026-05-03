@@ -103,3 +103,6 @@ out/
 
 #demo-test
 demo-test/
+
+#Models infos
+.openclaude-profile.json

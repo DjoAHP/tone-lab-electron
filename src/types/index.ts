@@ -66,6 +66,7 @@ export interface SetlistSong {
   title: string;
   position: number; // position dans la setlist (1, 2, 3...)
   time?: number; // durée en secondes (optionnel)
+  tonality?: string; // tonalité (ex: "C", "D#", "Fm")
 }
 
 // Stack = un album / groupe de recherches dans un Projet
@@ -100,6 +101,7 @@ export interface AppState {
   rechercheSelectionnee: string | null; // id de RechercheInstrument (NOUVEAU)
   sidebarOuverte: boolean;
   setlistSidebarOuverte: boolean;
+  setlistSidebarWidth: number;
   ongletActif: "stack" | "metro" | "diapa" | "setlist";
   vueActive: "home" | "stack" | "metro" | "diapa" | "setlist";
   modifie: boolean;

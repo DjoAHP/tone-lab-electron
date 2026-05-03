@@ -1,6 +1,9 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import type { SetlistSong } from "../types";
+
+const LARGEUR_MIN = 180;
+const LARGEUR_MAX = 400;
 
 const inputStyle = {
   background: "transparent",
@@ -24,6 +27,8 @@ export function SetlistSidebar() {
     reorderSetlistSong,
     importerSetlist,
     initialiserProjet,
+    setlistSidebarWidth,
+    setSetlistSidebarWidth,
   } = useApp();
 
   // Style commun pour les select de temps
@@ -46,6 +51,9 @@ export function SetlistSidebar() {
   const [draggedSongId, setDraggedSongId] = useState<string | null>(null);
   const [dragOverSongId, setDragOverSongId] = useState<string | null>(null);
   const dragItemId = useRef<string | null>(null);
+  const enTrainDeRedimensionner = useRef(false);
+  const xDepart = useRef(0);
+  const largeurDepart = useRef(0);
 
   const songs = [...(projet?.setlistSongs ?? [])].sort(
     (a, b) => a.position - b.position
@@ -134,6 +142,33 @@ export function SetlistSidebar() {
     };
     input.click();
   }, [importerSetlist]);
+  // ── Redimensionnement ───────────────────────────────────
+  const demarrerRedimensionnement = useCallback(
+    (e: React.MouseEvent) => {
+      enTrainDeRedimensionner.current = true;
+      xDepart.current = e.clientX;
+      largeurDepart.current = setlistSidebarWidth;
+      e.preventDefault();
+    },
+    [setlistSidebarWidth],
+  );
+
+  useEffect(() => {
+    function surMouvement(e: MouseEvent) {
+      if (!enTrainDeRedimensionner.current) return;
+      const delta = e.clientX - xDepart.current;
+      const nouvelleLargeur = Math.min(Math.max(largeurDepart.current + delta, LARGEUR_MIN), LARGEUR_MAX);
+      setSetlistSidebarWidth(nouvelleLargeur);
+    }
+    function surRelachement() { enTrainDeRedimensionner.current = false; }
+    document.addEventListener("mousemove", surMouvement);
+    document.addEventListener("mouseup", surRelachement);
+    return () => {
+      document.removeEventListener("mousemove", surMouvement);
+      document.removeEventListener("mouseup", surRelachement);
+    };
+  }, [setSetlistSidebarWidth]);
+
   // Formater les secondes en mm:ss
   const formatTime = (secs: number): string => {
     const m = Math.floor(secs / 60);
@@ -147,8 +182,10 @@ export function SetlistSidebar() {
 
 
   return (
-    <div style={{
-      width: "220px",
+    <div
+      className="flex flex-col h-full flex-shrink-0 relative"
+      style={{
+      width: `${setlistSidebarWidth}px`,
       flexShrink: 0,
       height: "100%",
       background: "hsl(222, 20%, 11%)",
@@ -289,8 +326,9 @@ export function SetlistSidebar() {
                   onDrop={(e) => handleDrop(e, song.id)}
                   onDragEnd={handleDragEnd}
               >
-                {/* Icône drag */}
-                <svg width="8" height="12" viewBox="0 0 8 12" fill="currentColor" style={{ color: "hsl(220, 15%, 30%)", flexShrink: 0 }}>
+
+                {/* Icône drag (tout à gauche) */}
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="currentColor" style={{ color: "hsl(220, 15%, 30%)", flexShrink: 0, cursor: editingSongId === song.id ? "default" : "grab" }}>
                   <circle cx="2" cy="2" r="1" />
                   <circle cx="6" cy="2" r="1" />
                   <circle cx="2" cy="6" r="1" />
@@ -298,6 +336,39 @@ export function SetlistSidebar() {
                   <circle cx="2" cy="10" r="1" />
                   <circle cx="6" cy="10" r="1" />
                 </svg>
+
+                {/* Input tonalité (très discret) */}
+                <input
+                  type="text"
+                  value={song.tonality ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value.slice(0, 4);
+                    updateSetlistSong(song.id, { tonality: val || undefined });
+                  }}
+                  placeholder="ton"
+                  title="Tonalité (ex: C, D#, Fm)"
+                  style={{
+                    width: "38px",
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: song.tonality ? "1px solid hsl(220, 15%, 25%)" : "1px solid transparent",
+                    color: "hsl(220, 15%, 40%)",
+                    fontSize: "10px",
+                    fontFamily: "monospace",
+                    textAlign: "center",
+                    flexShrink: 0,
+                    outline: "none",
+                    transition: "all 0.15s",
+                  }}
+                  onFocus={(e) => {
+                    (e.target as HTMLInputElement).style.borderBottomColor = "hsl(var(--tl-accent-princ))";
+                    (e.target as HTMLInputElement).style.color = "hsl(220, 15%, 60%)";
+                  }}
+                  onBlur={(e) => {
+                    (e.target as HTMLInputElement).style.borderBottomColor = song.tonality ? "hsl(220, 15%, 25%)" : "transparent";
+                    (e.target as HTMLInputElement).style.color = "hsl(220, 15%, 40%)";
+                  }}
+                />
 
                 {/* Titre (éditable) + Temps */}
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
@@ -435,6 +506,15 @@ export function SetlistSidebar() {
           Importer
         </button>
       </div>
+
+      {/* Poignée redimensionnement */}
+      <div
+        onMouseDown={demarrerRedimensionnement}
+        className="absolute top-0 right-0 h-full transition-colors"
+        style={{ width: "4px", cursor: "col-resize", background: "transparent", zIndex: 10 }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "hsl(var(--tl-accent-princ) / 0.3)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+      />
     </div>
   );
 }

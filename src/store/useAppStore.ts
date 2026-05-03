@@ -149,6 +149,7 @@ export function useAppStore() {
     rechercheSelectionnee: null,
     sidebarOuverte: true,
     setlistSidebarOuverte: true,
+    setlistSidebarWidth: 220, // largeur sauvegardée en px
     ongletActif: "stack",
     vueActive: "home",
     modifie: false,
@@ -980,6 +981,7 @@ export function useAppStore() {
   const toggleSetlistSidebar = useCallback(() => {
     mettreAJourEtat({ setlistSidebarOuverte: !state.setlistSidebarOuverte });
   }, [state.setlistSidebarOuverte, mettreAJourEtat]);
+const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEtat({ setlistSidebarWidth: width });  }, [mettreAJourEtat]);
 
 
   return {
@@ -993,6 +995,7 @@ export function useAppStore() {
     rechercheSelectionnee: state.rechercheSelectionnee,
     sidebarOuverte: state.sidebarOuverte,
     setlistSidebarOuverte: state.setlistSidebarOuverte,
+    setlistSidebarWidth: state.setlistSidebarWidth,
     ongletActif: state.ongletActif,
     vueActive: state.vueActive,
     modifie: state.modifie,
@@ -1020,6 +1023,7 @@ export function useAppStore() {
     // Actions entries (rétrocompat)
     ajouterEntree,
     modifierEntree,
+    setSetlistSidebarWidth,
     supprimerEntree,
     selectionnerEntree,
     // UI
