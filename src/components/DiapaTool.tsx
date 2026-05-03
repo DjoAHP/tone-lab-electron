@@ -63,7 +63,7 @@ export function DiapaTool() {
           </div>
         </div>
 
-        {/* ─── SECTION 2: CONTRÔLES ─────────────── */}
+        {/* ─── SECTION 2: VOLUME ─────────────── */}
         <div style={{
           display: "flex",
           gap: "20px",
@@ -71,38 +71,6 @@ export function DiapaTool() {
           flexWrap: "wrap",
           alignItems: "flex-start",
         }}>
-          {/* Timbre */}
-          <div style={{ flex: "1 1 200px", minWidth: "200px" }}>
-            <div style={sectionTitle}>Timbre</div>
-            <div style={{ display: "flex", gap: "4px" }}>
-              {oscTypes.map(({ type, label }) => {
-                const isActive = oscType === type;
-                return (
-                  <button
-                    key={type}
-                    onClick={() => setOscType(type)}
-                    className="px-3 py-2 rounded-lg text-[10px] font-semibold transition-all uppercase tracking-wider"
-                    style={{
-                      background: isActive
-                        ? "hsl(var(--tl-accent-dim))"
-                        : "hsl(222, 18%, 17%)",
-                      border: isActive
-                        ? "1px solid hsl(var(--tl-accent-border))"
-                        : "1px solid hsl(220, 15%, 22%)",
-                      color: isActive
-                        ? "hsl(var(--tl-accent-text))"
-                        : "hsl(220, 15%, 50%)",
-                      flex: 1,
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Volume */}
           <div style={{ flex: "1 1 200px", minWidth: "200px" }}>
             <div style={sectionTitle}>Volume</div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}>
@@ -139,7 +107,38 @@ export function DiapaTool() {
           </div>
         </div>
 
-        {/* ─── SECTION 3: CLAVIER ─────────────── */}
+        {/* ─── SECTION 3: TIMBRE ─────────────── */}
+        <div style={{ marginBottom: "20px" }}>
+          <div style={sectionTitle}>Timbre</div>
+          <div style={{ display: "flex", gap: "4px" }}>
+            {oscTypes.map(({ type, label }) => {
+              const isActive = oscType === type;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setOscType(type)}
+                  className="px-3 py-2 rounded-lg text-[10px] font-semibold transition-all uppercase tracking-wider"
+                  style={{
+                    background: isActive
+                      ? "hsl(var(--tl-accent-dim))"
+                      : "hsl(222, 18%, 17%)",
+                    border: isActive
+                      ? "1px solid hsl(var(--tl-accent-border))"
+                      : "1px solid hsl(220, 15%, 22%)",
+                    color: isActive
+                      ? "hsl(var(--tl-accent-text))"
+                      : "hsl(220, 15%, 50%)",
+                    flex: 1,
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ─── SECTION 4: CLAVIER ─────────────── */}
         <div style={{ marginBottom: "20px" }}>
           <div style={sectionTitle}>Clavier (C4 - C6, AZERTY)</div>
           <div style={{ width: "100%", marginTop: "8px" }}>
