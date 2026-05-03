@@ -132,7 +132,7 @@ export function DiapaTool() {
 
         {/* ─── SECTION 4: CLAVIER ─────────────── */}
         <div style={{ marginBottom: "20px", maxWidth: "900px", margin: "0 auto 20px" }}>
-          <div style={{ ...sectionTitle, textAlign: "center" }}>Clavier (C4 - C6, AZERTY)</div>
+          <div style={{ ...sectionTitle }}>Clavier (C4 - C6, AZERTY)</div>
           <div style={{ width: "100%", marginTop: "8px" }}>
             <PianoKeyboard
               oscType={oscType}
