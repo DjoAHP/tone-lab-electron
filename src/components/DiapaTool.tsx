@@ -64,7 +64,7 @@ export function DiapaTool() {
         </div>
 
         {/* ─── SECTION 2: VOLUME ─────────────── */}
-        <div style={{ marginBottom: "20px", width: "100%" }}>
+        <div style={{ marginBottom: "20px", maxWidth: "580px", margin: "0 auto 20px" }}>
           <div style={sectionTitle}>Volume</div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}>
             <div className="flex-1 relative h-5 flex items-center">
@@ -100,7 +100,7 @@ export function DiapaTool() {
         </div>
 
         {/* ─── SECTION 3: TIMBRE ─────────────── */}
-        <div style={{ marginBottom: "20px", width: "100%" }}>
+        <div style={{ marginBottom: "20px", maxWidth: "580px", margin: "0 auto 20px" }}>
           <div style={sectionTitle}>Timbre</div>
           <div style={{ display: "flex", gap: "4px" }}>
             {oscTypes.map(({ type, label }) => {
