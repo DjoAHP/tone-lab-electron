@@ -25,6 +25,9 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // Maximiser la fenêtre au démarrage (plein écran avec barre des tâches)
+  mainWindow.maximize();
   
 
   // and load the index.html of the app.
@@ -39,10 +42,10 @@ const createWindow = () => {
   // Open the DevTools & Menu bar par defaut.
 
   // DEVTOOLS = Commenter pour retirer
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // MENU = Commenter pour afficher
-  // Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null);
   
 };
  
