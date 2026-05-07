@@ -6,7 +6,12 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -18,6 +23,8 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       iconUrl: join(__dirname, 'assets/app-icon.ico'),
       setupIcon: join(__dirname, 'assets/app-icon.ico'),
+      name: 'ToneLab-v' + pkg.version,
+      exe: 'ToneLab.exe',
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
