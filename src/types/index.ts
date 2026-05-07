@@ -104,5 +104,7 @@ export interface AppState {
   setlistSidebarWidth: number;
   ongletActif: "stack" | "metro" | "diapa" | "setlist";
   vueActive: "home" | "stack" | "metro" | "diapa" | "setlist";
+  // Sauvegarde la vue active par onglet pour restaurer lors du switch
+  vuesParOnglet: Record<string, string>;
   modifie: boolean;
 }

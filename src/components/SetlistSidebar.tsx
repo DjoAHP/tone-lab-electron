@@ -5,6 +5,12 @@ import type { SetlistSong } from "../types";
 const LARGEUR_MIN = 180;
 const LARGEUR_MAX = 400;
 
+// Tonalités courantes (majeures et mineures)
+const TONALITES = [
+  "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
+  "Cm", "C#m", "Dm", "D#m", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "A#m", "Bm",
+];
+
 const inputStyle = {
   background: "transparent",
   border: "1px solid hsl(220, 15%, 22%)",
@@ -244,46 +250,56 @@ export function SetlistSidebar() {
           {/* Séparateur visuel */}
           <div style={{ height: "1px", background: "hsl(220, 15%, 18%)" }} />
 
-          {/* Input Nouveau morceau */}
+          {/* Input Nouveau morceau + Bouton Ajouter */}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <label style={{ fontSize: "11px", color: "hsl(220, 15%, 50%)" }}>
               Morceau
             </label>
-            <input
-              type="text"
-              value={newSongTitle}
-              onChange={(e) => {
-                initialiserProjet();
-                setNewSongTitle(e.target.value);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleAddSong()}
-              placeholder="Titre du morceau..."
-              style={inputStyle}
-              onFocus={(e) => {
-                (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))";
-              }}
-              onBlur={(e) => {
-                (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 22%)";
-              }}
-            />
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                type="text"
+                value={newSongTitle}
+                onChange={(e) => {
+                  initialiserProjet();
+                  setNewSongTitle(e.target.value);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleAddSong()}
+                placeholder="Titre du morceau..."
+                style={{ ...inputStyle, flex: 1 }}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))";
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 22%)";
+                }}
+              />
+              <button
+                onClick={handleAddSong}
+                disabled={!newSongTitle.trim()}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  minWidth: "40px",
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: !newSongTitle.trim() ? "hsl(222, 18%, 14%)" : "hsl(var(--tl-accent-button))",
+                  border: "1px solid hsl(220, 15%, 22%)",
+                  color: !newSongTitle.trim() ? "hsl(220, 15%, 30%)" : "hsl(var(--tl-accent-text))",
+                  borderRadius: "8px",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  cursor: !newSongTitle.trim() ? "not-allowed" : "pointer",
+                  transition: "all 0.15s",
+                  opacity: !newSongTitle.trim() ? 0.5 : 1,
+                }}
+                title={!newSongTitle.trim() ? "Saisissez un titre de morceau" : "Ajouter à la setlist"}
+              >
+                +
+              </button>
+            </div>
           </div>
-
-          {/* Bouton Ajouter */}
-          <button
-            onClick={handleAddSong}
-            style={{
-              background: "hsl(var(--tl-accent-button))",
-              border: "1px solid hsl(var(--tl-accent-button-border))",
-              color: "hsl(var(--tl-accent-text))",
-              padding: "10px 16px",
-              borderRadius: "8px",
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.15s",
-            }}
-          >
-            + Ajouter à la setlist
-          </button>
 
           {/* Nombre de morceaux */}
           <div style={{
@@ -337,38 +353,35 @@ export function SetlistSidebar() {
                   <circle cx="6" cy="10" r="1" />
                 </svg>
 
-                {/* Input tonalité (très discret) */}
-                <input
-                  type="text"
+                {/* Sélecteur de tonalité */}
+                <select
                   value={song.tonality ?? ""}
                   onChange={(e) => {
-                    const val = e.target.value.slice(0, 4);
-                    updateSetlistSong(song.id, { tonality: val || undefined });
+                    const val = e.target.value || undefined;
+                    updateSetlistSong(song.id, { tonality: val });
                   }}
-                  placeholder="ton"
-                  title="Tonalité (ex: C, D#, Fm)"
+                  title="Tonalité"
                   style={{
-                    width: "38px",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: song.tonality ? "1px solid hsl(220, 15%, 25%)" : "1px solid transparent",
-                    color: "hsl(220, 15%, 40%)",
+                    width: "42px",
+                    background: "hsl(222, 18%, 14%)",
+                    border: song.tonality ? "1px solid hsl(220, 15%, 25%)" : "1px solid hsl(220, 15%, 18%)",
+                    borderRadius: "4px",
+                    color: song.tonality ? "hsl(220, 15%, 70%)" : "hsl(220, 15%, 30%)",
                     fontSize: "10px",
                     fontFamily: "monospace",
                     textAlign: "center",
                     flexShrink: 0,
                     outline: "none",
+                    cursor: "pointer",
+                    padding: "2px 0",
                     transition: "all 0.15s",
                   }}
-                  onFocus={(e) => {
-                    (e.target as HTMLInputElement).style.borderBottomColor = "hsl(var(--tl-accent-princ))";
-                    (e.target as HTMLInputElement).style.color = "hsl(220, 15%, 60%)";
-                  }}
-                  onBlur={(e) => {
-                    (e.target as HTMLInputElement).style.borderBottomColor = song.tonality ? "hsl(220, 15%, 25%)" : "transparent";
-                    (e.target as HTMLInputElement).style.color = "hsl(220, 15%, 40%)";
-                  }}
-                />
+                >
+                  <option value="">-</option>
+                  {TONALITES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
 
                 {/* Titre (éditable) + Temps */}
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>

@@ -185,7 +185,7 @@ export function SetlistTool() {
                     minHeight: 0,
                   }}
                 >
-                  {/* Tonalité (trés discrète à gauche) + Titre centré */}
+                  {/* Tonalité (gauche) + Titre centré */}
                   <div style={{ position: "relative", width: "100%", textAlign: "center" }}>
                     {song.tonality !== undefined && (
                       <span
@@ -194,8 +194,8 @@ export function SetlistTool() {
                           left: `${Math.max(10, dimensions.width * 0.02)}px`,
                           top: "50%",
                           transform: "translateY(-50%)",
-                          fontSize: `${Math.max(10, dimensions.height * 0.015)}px`,
-                          color: "#bbb",
+                          fontSize: `${Math.max(14, dimensions.height * 0.022)}px`,
+                          color: "#666",
                           fontFamily: "monospace",
                           fontStyle: "italic",
                         }}

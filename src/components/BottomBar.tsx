@@ -116,6 +116,21 @@ export function BottomBar() {
               <rect x="7" y="12" width="7" height="2" rx="1" />
             </svg>
           </button>
+        ) : ongletActif === "diapa" || ongletActif === "metro" ? (
+          // Icône grisée pour Diapa/Metro (pas de sidebar)
+          <div
+            title="Aucune sidebar disponible"
+            className="flex items-center justify-center w-7 h-7 rounded"
+            style={{ color: "hsl(220, 10%, 30%)" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <rect x="0" y="0" width="5" height="14" rx="2" opacity="0.3" />
+              <rect x="7" y="0" width="7" height="2" rx="1" opacity="0.3" />
+              <rect x="7" y="4" width="7" height="2" rx="1" opacity="0.3" />
+              <rect x="7" y="8" width="7" height="2" rx="1" opacity="0.3" />
+              <rect x="7" y="12" width="7" height="2" rx="1" opacity="0.3" />
+            </svg>
+          </div>
         ) : (
           <button
             onClick={toggleSidebar}

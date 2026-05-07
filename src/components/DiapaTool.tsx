@@ -31,7 +31,7 @@ const oscTypes: { type: OscType; label: string }[] = [
 
 // ─── Composant DiapaTool ─────────────────
 export function DiapaTool() {
-  const [oscType, setOscType] = useState<OscType>("sine");
+  const [oscType, setOscType] = useState<OscType>("triangle");
   const [volume, setVolume] = useState(0.5);
   const [activeNote, setActiveNote] = useState<string>("---");
 

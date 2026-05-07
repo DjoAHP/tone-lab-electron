@@ -152,6 +152,13 @@ export function useAppStore() {
     setlistSidebarWidth: 220, // largeur sauvegardée en px
     ongletActif: "stack",
     vueActive: "home",
+    // Sauvegarde la vue active par onglet pour restaurer lors du switch
+    vuesParOnglet: {
+      stack: "home",
+      metro: "metro",
+      diapa: "diapa",
+      setlist: "setlist",
+    } as Record<string, string>,
     modifie: false,
   }));
 
@@ -162,7 +169,19 @@ export function useAppStore() {
   }, []);
 
   const mettreAJourEtat = useCallback((modifications: any) => {
-    setState((prev) => ({ ...prev, ...modifications }));
+    setState((prev) => {
+      const newModifications = { ...modifications };
+
+      // Si on modifie vueActive sans fournir vuesParOnglet, on synchro automatiquement
+      if ('vueActive' in modifications && !('vuesParOnglet' in modifications)) {
+        newModifications.vuesParOnglet = {
+          ...prev.vuesParOnglet,
+          [prev.ongletActif]: modifications.vueActive,
+        };
+      }
+
+      return { ...prev, ...newModifications };
+    });
   }, []);
 
   const setVueActive = useCallback(
@@ -171,8 +190,26 @@ export function useAppStore() {
   );
 
   const setOngletActif = useCallback(
-    (onglet: "stack" | "metro" | "diapa" | "setlist") => mettreAJourEtat({ ongletActif: onglet }),
-    [mettreAJourEtat],
+    (onglet: "stack" | "metro" | "diapa" | "setlist") => {
+      // Sauvegarde la vue active de l'onglet actuel
+      const vuesParOnglet = { ...state.vuesParOnglet };
+      vuesParOnglet[state.ongletActif] = state.vueActive;
+
+      // Restaure la vue de l'onglet cible
+      let nouvelleVue = vuesParOnglet[onglet] || "home";
+
+      // Si pas de projet actif sur l'outil stack, force home
+      if (onglet === "stack" && !state.projet) {
+        nouvelleVue = "home";
+      }
+
+      mettreAJourEtat({
+        ongletActif: onglet,
+        vueActive: nouvelleVue,
+        vuesParOnglet,
+      });
+    },
+    [state.ongletActif, state.vueActive, state.vuesParOnglet, state.projet, mettreAJourEtat],
   );
   // ── Initialiser le projet si nécessaire ──────────────────
   const initialiserProjet = useCallback(() => {
@@ -307,6 +344,8 @@ export function useAppStore() {
       const projet = creerProjetVide(nom);
       sauvegarderDansLocalStorage(projet);
       saveProject(projet);
+      // Si on est sur l'outil stack, affiche directement la vue stack (projet)
+      const nouvelleVue = state.ongletActif === "stack" ? "stack" as const : "home" as const;
       mettreAJourEtat({
         projet,
         entreeSelectionnee: null,
@@ -314,7 +353,7 @@ export function useAppStore() {
         sousStackSelectionne: null,
         rechercheSelectionnee: null,
         modifie: false,
-        vueActive: "home",
+        vueActive: nouvelleVue,
       });
     },
     [mettreAJourEtat],
@@ -344,6 +383,8 @@ export function useAppStore() {
         const projet = migrerProjet(projetBrut);
         sauvegarderDansLocalStorage(projet);
         saveProject(projet);
+        // Si on est sur l'outil stack, affiche directement la vue stack (projet)
+        const nouvelleVue = state.ongletActif === "stack" ? "stack" as const : "home" as const;
         mettreAJourEtat({
           projet,
           entreeSelectionnee: null,
@@ -351,7 +392,7 @@ export function useAppStore() {
           sousStackSelectionne: null,
           rechercheSelectionnee: null,
           modifie: false,
-          vueActive: "home",
+          vueActive: nouvelleVue,
         });
         return true;
       } catch {

@@ -2,7 +2,7 @@
   "type": "module",
   "name": "tone-lab-ahp",
   "productName": "tone-lab-desktop-app",
-  "version": "2.1.4",
+  "version": "2.2.4",
   "description": "My Electron application description",
   "main": ".vite/build/main.cjs",
   "private": true,
