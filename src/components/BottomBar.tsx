@@ -6,6 +6,7 @@ import StackIcon from "../assets/icons/Bottombar/stack-tool.svg?react";
 import MetroIcon from "../assets/icons/Bottombar/metro-tool.svg?react";
 import DiapaIcon from "../assets/icons/Bottombar/diapa-tool.svg?react";
 import SetlistIcon from "../assets/icons/Bottombar/setlist-tool.svg?react";
+import ChronoIcon from "../assets/icons/Bottombar/chrono-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
 
 import React from "react";
@@ -14,7 +15,7 @@ import { APP_VERSION } from "@/version";
 // ─── Définition des outils ──────────────────────────────────
 // Chaque outil a : id (= ongletActif), label, icône
 const OUTILS: {
-  id: "stack" | "metro" | "diapa" | "setlist";
+  id: "stack" | "metro" | "diapa" | "setlist" | "chrono";
   label: string;
   icone: React.ReactNode;
 }[] = [
@@ -62,6 +63,17 @@ const OUTILS: {
       />
     ),
   },
+  {
+    id: "chrono",
+    label: "Chrono",
+    icone: (
+      <ChronoIcon
+        width="35"
+        height="35"
+        style={{ color: "hsl(var(--tl-accent-princ))" }}
+      />
+    ),
+  },
 ];
 
 // ─── Largeur du fond actif de chaque côté de l'icône ─────────
@@ -79,13 +91,33 @@ export function BottomBar() {
     setVueActive,
   } = useApp();
 
-  function handleOutil(id: "stack" | "metro" | "diapa" | "setlist") {
+  function handleOutil(id: "stack" | "metro" | "diapa" | "setlist" | "chrono") {
     setOngletActif(id);
+
+    // Vue active
     if (id === "metro") setVueActive("metro");
-    if (id === "stack") setVueActive("home");
-    if (id === "diapa") setVueActive("diapa");
-    if (id === "setlist") setVueActive("setlist");
+    else if (id === "stack") setVueActive("home");
+    else if (id === "diapa") setVueActive("diapa");
+    else if (id === "setlist") setVueActive("setlist");
+    else if (id === "chrono") setVueActive("chrono");
+
+    // Gestion des sidebars : utiliser requestAnimationFrame pour laisser React mettre à jour
+    requestAnimationFrame(() => {
+      if (id === "setlist") {
+        if (!setlistSidebarOuverte) toggleSetlistSidebar();
+        if (sidebarOuverte) toggleSidebar();
+      } else if (id === "stack") {
+        if (!sidebarOuverte) toggleSidebar();
+        if (setlistSidebarOuverte) toggleSetlistSidebar();
+      } else {
+        // chrono, diapa, metro : pas de sidebar → tout fermer
+        if (sidebarOuverte) toggleSidebar();
+        if (setlistSidebarOuverte) toggleSetlistSidebar();
+      }
+    });
   }
+
+  // Supprimer l'useEffect de gestion des sidebars (déplacé dans handleOutil avec requestAnimationFrame)
 
   return (
     <div
@@ -117,7 +149,7 @@ export function BottomBar() {
               <rect x="7" y="12" width="7" height="2" rx="1" />
             </svg>
           </button>
-        ) : ongletActif === "diapa" || ongletActif === "metro" ? (
+        ) : ongletActif === "diapa" || ongletActif === "metro" || ongletActif === "chrono" ? (
           // Icône grisée pour Diapa/Metro (pas de sidebar)
           <div
             title="Aucune sidebar disponible"

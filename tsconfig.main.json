@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
+    "moduleResolution": "node",
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -10,14 +11,11 @@
     "baseUrl": ".",
     "rootDir": "./src",
     "outDir": "dist",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "jsx": "react-jsx",
     "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/main.ts", "src/vite-env.d.ts"],
   "exclude": ["vite.*.config.ts"]
 }

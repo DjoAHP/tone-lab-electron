@@ -8,6 +8,7 @@ import { SoundResearchTool } from "./components/SoundResearchTool";
 import { Metronome } from "./components/Metronome";
 import { DiapaTool } from "./components/DiapaTool";
 import { SetlistTool } from "./components/SetlistTool";
+import { ChronoTool } from "./components/ChronoTool";
 import { BottomBar } from "./components/BottomBar";
 import { NewStackModal } from "./components/NewStackModal";
 import { useApp } from "./context/AppContext";
@@ -47,6 +48,8 @@ function AppInner() {
             <DiapaTool />
           ) : ongletActif === "setlist" ? (
             <SetlistTool />
+          ) : ongletActif === "chrono" ? (
+            <ChronoTool />
           ) : (
             <SoundResearchTool />
           )}

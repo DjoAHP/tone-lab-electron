@@ -1,3 +1,4 @@
+/// <reference path="./vite-env.d.ts" />
 import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
 

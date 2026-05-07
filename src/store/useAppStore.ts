@@ -158,6 +158,7 @@ export function useAppStore() {
       metro: "metro",
       diapa: "diapa",
       setlist: "setlist",
+      chrono: "chrono",
     } as Record<string, string>,
     modifie: false,
   }));
@@ -185,12 +186,12 @@ export function useAppStore() {
   }, []);
 
   const setVueActive = useCallback(
-    (vue: "home" | "stack" | "metro" | "diapa" | "setlist") => mettreAJourEtat({ vueActive: vue }),
+    (vue: "home" | "stack" | "metro" | "diapa" | "setlist" | "chrono") => mettreAJourEtat({ vueActive: vue }),
     [mettreAJourEtat],
   );
 
   const setOngletActif = useCallback(
-    (onglet: "stack" | "metro" | "diapa" | "setlist") => {
+    (onglet: "stack" | "metro" | "diapa" | "setlist" | "chrono") => {
       // Sauvegarde la vue active de l'onglet actuel
       const vuesParOnglet = { ...state.vuesParOnglet };
       vuesParOnglet[state.ongletActif] = state.vueActive;
