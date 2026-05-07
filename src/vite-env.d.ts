@@ -1,16 +1,13 @@
-/// <reference types="vite/client" />
+// Déclarations pour les variables injectées par Vite
+declare const __APP_VERSION__: string;
 
-declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
-declare const MAIN_WINDOW_VITE_NAME: string | undefined;
-
-// Déclarations pour vite-plugin-svgr (import .svg?react)
+// Déclarations pour les imports SVG (svgr)
 declare module '*.svg?react' {
-  import React from 'react';
-  export default React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  import React = require('react');
+  export const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+  export default ReactComponent;
 }
 
-// Import .svg standard = URL (comportement par défaut Vite)
-declare module '*.svg' {
-  const src: string;
-  export default src;
-}
+// Variables injectées par Electron Forge Vite plugin
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
+declare const MAIN_WINDOW_VITE_NAME: string;

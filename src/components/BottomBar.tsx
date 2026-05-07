@@ -9,6 +9,7 @@ import SetlistIcon from "../assets/icons/Bottombar/setlist-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
 
 import React from "react";
+import { APP_VERSION } from "@/version";
 
 // ─── Définition des outils ──────────────────────────────────
 // Chaque outil a : id (= ongletActif), label, icône
@@ -226,7 +227,7 @@ export function BottomBar() {
           }}
         />
         <span className="text-[11px]" style={{ color: "hsl(220, 15%, 30%)" }}>
-          ToneLab v2.1.4
+          ToneLab v{APP_VERSION}
         </span>
       </div>
     </div>

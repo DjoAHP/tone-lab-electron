@@ -1,7 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron';
 import path from 'node:path';
 
-
 let started = false;
 if (app.isPackaged) {
   try {
@@ -28,7 +27,6 @@ const createWindow = () => {
 
   // Maximiser la fenêtre au démarrage (plein écran avec barre des tâches)
   mainWindow.maximize();
-  
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -39,16 +37,16 @@ const createWindow = () => {
     );
   }
 
-  // Open the DevTools & Menu bar par defaut.
+  // Open the DevTools & Menu bar par défaut.
 
   // DEVTOOLS = Commenter pour retirer
   // mainWindow.webContents.openDevTools();
 
   // MENU = Commenter pour afficher
   Menu.setApplicationMenu(null);
-  
+
 };
- 
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
