@@ -59,9 +59,9 @@ body {
     --tl-glass: rgba(255, 255, 255, 0.04);
 
     /* Couleurs secondaires ajustables */
-    --tl-accent-h: 203;
-    --tl-accent-s: 48%;
-    --tl-accent-l: 94%;
+    --tl-accent-h: 50;
+    --tl-accent-s: 67%;
+    --tl-accent-l: 80%;
     /* Autre couleurs */
     --tl-accent-dim: var(--tl-accent-h) 40% 22%;
     --tl-accent-mid: var(--tl-accent-h) 40% 25%;
@@ -72,9 +72,9 @@ body {
   }
 
   .dark {
-    --tl-accent-princ: 203 48% 94%;
-    --tl-accent-terc: 203 80% 76%;
-    --tl-accent-overlay: 203 68% 65%;
+    --tl-accent-princ: 50 48% 94%;
+    --tl-accent-terc: 50 80% 76%;
+    --tl-accent-overlay: 50 68% 65%;
   }
 }
 
