@@ -97,7 +97,7 @@ export function ChronoTool() {
         }}>
           {/* Visuel en arrière-plan */}
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", color: "hsl(var(--tl-accent-princ))" }}>
-            <ChronoVisuel style={{ width: "85%", height: "85%", opacity: 0.15, marginTop: "-140px" }} />
+            <ChronoVisuel style={{ width: "85%", height: "85%", opacity: 0.15, marginTop: "-135px" }} />
           </div>
 
           {/* Contenu au-dessus */}
