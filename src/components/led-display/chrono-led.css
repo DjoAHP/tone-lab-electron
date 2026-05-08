@@ -1,0 +1,19 @@
+/* styles UNIQUEMENT pour l'écran LED du Chronomètre */
+
+.chrono-led {
+    position: relative;
+    width: 320px;
+    height: 320px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: hsl(222, 18%, 10%);  /* PLUS FONCÉ pour voir l'overlay */
+    border-radius: 50%;
+    overflow: hidden;
+
+    box-shadow:
+        inset 0 0 25px rgba(0, 0, 0, 0.8),
+        0 0 20px hsl(var(--tl-accent-h) 60% 30% / 0.25);
+}

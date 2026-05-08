@@ -7,14 +7,15 @@ interface Props {
   minutes: number; // 0-99
   seconds: number; // 0-59
   overlay?: React.ComponentType<SVGProps<SVGSVGElement>>;
+  className?: string; // Pour personnaliser la classe CSS
 }
 
-export function ChronoLedDisplay({ minutes, seconds, overlay: Overlay = LedOverlay }: Props) {
+export function ChronoLedDisplay({ minutes, seconds, overlay: Overlay = LedOverlay, className = "led" }: Props) {
   const minStr = minutes.toString().padStart(2, "0");
   const secStr = seconds.toString().padStart(2, "0");
 
   return (
-    <div className="led">
+    <div className={className}>
       {/* Valeur chronographe : MM:SS */}
       <div
         style={{
@@ -26,7 +27,7 @@ export function ChronoLedDisplay({ minutes, seconds, overlay: Overlay = LedOverl
           fontFamily: "DigitalLed, monospace",
           fontWeight: 700,
           fontSize: "80px",
-          letterSpacing: "6px",
+          letterSpacing: "4px",
           color: "hsl(var(--tl-accent-text))",
           textShadow: `
             0 0 6px hsl(var(--tl-accent-text)),
@@ -41,7 +42,7 @@ export function ChronoLedDisplay({ minutes, seconds, overlay: Overlay = LedOverl
         <span>{secStr}</span>
       </div>
 
-      {/* Overlay SVG */}
+      {/* Overlay SVG circulaire */}
       <div className="led__overlay">
         <Overlay />
       </div>
