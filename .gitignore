@@ -60,9 +60,19 @@ start_output.txt
 
 # Backup files
 *.backup
+*.bak
+*.old
 
-# Yarn Integrity file
-.yarn-integrity
+# Logs locaux
+error.log
+output.txt
+start_output.txt
+
+# OpenClaude
+.openclaude/
+
+# demo-test
+demo-test/
 
 # dotenv environment variables file
 .env
