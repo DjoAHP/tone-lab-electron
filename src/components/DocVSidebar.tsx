@@ -2,9 +2,10 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import { useApp } from "../context/AppContext";
 import type { DocvFileItem } from "../types";
 import DossierIcon from "../assets/icons/DocV/dossier-sidebar.svg?react";
+import DossierVideIcon from "../assets/icons/DocV/dossier-vide-sidebar.svg?react";
 import DocIcon from "../assets/icons/DocV/doc-sidebar.svg?react";
 
-const LARGEUR_MIN = 200;
+const LARGEUR_MIN = 300;
 const LARGEUR_MAX = 500;
 
 // Lit toutes les entrées d'un DirectoryReader de manière récursive
@@ -23,6 +24,21 @@ function readAllEntries(dirReader: FileSystemDirectoryReader): Promise<FileSyste
     };
     lire();
   });
+}
+
+// Récupère tous les IDs de dossiers dans l'arbre
+function getAllFolderIds(items: DocvFileItem[] | null): string[] {
+  if (!items) return [];
+  const ids: string[] = [];
+  for (const item of items) {
+    if (item.type === "folder") {
+      ids.push(item.id);
+      if (item.children) {
+        ids.push(...getAllFolderIds(item.children));
+      }
+    }
+  }
+  return ids;
 }
 
 // Parcours récursif de l'arborescence — retourne une structure arborescente propre
@@ -85,9 +101,18 @@ export function DocVSidebar() {
   } = useApp();
 
   const [dragOver, setDragOver] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const enTrainDeRedimensionner = useRef(false);
   const xDepart = useRef(0);
   const largeurDepart = useRef(0);
+
+  // Ouvrir automatiquement les nouveaux dossiers
+  useEffect(() => {
+    if (!docvFiles || docvFiles.length === 0) {
+      setExpandedFolders(new Set());
+      return;
+    }
+  }, [docvFiles]);
 
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
@@ -111,6 +136,10 @@ export function DocVSidebar() {
       );
       const fileItems = results.filter((r): r is DocvFileItem => r !== null);
       setDocvFiles(fileItems);
+
+      // Ouvrir automatiquement tous les dossiers importés
+      const allFolderIds = getAllFolderIds(fileItems);
+      setExpandedFolders(new Set(allFolderIds));
     },
     [setDocvFiles]
   );
@@ -126,150 +155,168 @@ export function DocVSidebar() {
     setDragOver(false);
   }, []);
 
-  // Fermer quand on clique sur un dossier
+  // Toggle dossier ou sélectionner fichier
   const handleFolderClick = useCallback(
     (item: DocvFileItem) => {
       if (item.type === "file") {
         setDocvSelectedFile(item.id);
+      } else {
+        // Toggle expanded/collapsed
+        setExpandedFolders(prev => {
+          const current = prev || new Set();
+          const next = new Set(current);
+          if (next.has(item.id)) {
+            next.delete(item.id);
+          } else {
+            next.add(item.id);
+          }
+          return next;
+        });
       }
     },
     [setDocvSelectedFile]
   );
 
-  // Rendu récursif de l'arbre
-  const renderTree = useCallback(
-    (items: DocvFileItem[], level: number = 0) => {
-      return items.map((item) => {
-        const isFolder = item.type === "folder";
-        const isSelected = docvSelectedFile === item.id;
-        const indent = level * 20;
+  // Rendu récursif de l'arbre (pas de useCallback pour éviter les closures obsolètes)
+  const renderTree = (items: DocvFileItem[], level: number = 0) => {
+    return items.map((item) => {
+      const isFolder = item.type === "folder";
+      const isSelected = docvSelectedFile === item.id;
+      const indent = level * 20;
 
-        if (isFolder) {
-          return (
-            <div key={item.id}>
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => handleFolderClick(item)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "4px 8px",
-                  paddingLeft: `${indent + 8}px`,
-                  margin: "2px 4px",
-                  background: isSelected
-                    ? "hsl(220, 15%, 18%)"
-                    : "transparent",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  color: isSelected
-                    ? "hsl(var(--tl-accent-princ))"
-                    : "hsl(220, 15%, 70%)",
-                  transition: "background 0.15s, color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected)
-                    e.currentTarget.style.background = "hsl(220, 15%, 14%)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected)
-                    e.currentTarget.style.background = "transparent";
-                }}
-              >
+      if (isFolder) {
+        const isExpanded = expandedFolders.has(item.id);
+        return (
+          <div key={item.id}>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => handleFolderClick(item)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "4px 8px",
+                paddingLeft: `${indent + 8}px`,
+                margin: "2px 4px",
+                background: isSelected
+                  ? "hsl(220, 15%, 18%)"
+                  : "transparent",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "13px",
+                color: isSelected
+                  ? "hsl(var(--tl-accent-princ))"
+                  : "hsl(220, 15%, 70%)",
+                transition: "background 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSelected)
+                  e.currentTarget.style.background = "hsl(220, 15%, 14%)";
+              }}
+              onMouseLeave={(e) => {
+                if (!isSelected)
+                  e.currentTarget.style.background = "transparent";
+              }}
+            >
+              {isExpanded ? (
                 <DossierIcon
                   width={16}
                   height={16}
                   style={{ marginRight: 8, flexShrink: 0 }}
                 />
-                <span
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {item.name}
-                </span>
-              </div>
-              {item.children && item.children.length > 0 && (
-                <div>{renderTree(item.children, level + 1)}</div>
+              ) : (
+                <DossierVideIcon
+                  width={16}
+                  height={16}
+                  style={{ marginRight: 8, flexShrink: 0 }}
+                />
               )}
-            </div>
-          );
-        }
-
-        // Fichier
-        return (
-          <div
-            key={item.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => setDocvSelectedFile(item.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: "4px 8px",
-              paddingLeft: `${indent + 8}px`,
-              margin: "2px 4px",
-              background: isSelected
-                ? "hsl(220, 15%, 18%)"
-                : "transparent",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "13px",
-              color: isSelected
-                ? "hsl(var(--tl-accent-princ))"
-                : "hsl(220, 15%, 70%)",
-              transition: "background 0.15s, color 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              if (!isSelected)
-                e.currentTarget.style.background = "hsl(220, 15%, 14%)";
-            }}
-            onMouseLeave={(e) => {
-              if (!isSelected)
-                e.currentTarget.style.background = "transparent";
-            }}
-          >
-            <DocIcon
-              width={16}
-              height={16}
-              style={{ marginRight: 8, flexShrink: 0 }}
-            />
-            <span
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {item.name}
-            </span>
-            {item.size != null && (
               <span
                 style={{
-                  fontSize: "11px",
-                  color: "hsl(220, 15%, 50%)",
-                  marginLeft: 8,
-                  flexShrink: 0,
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {item.size < 1024
-                  ? `${item.size} o`
-                  : item.size < 1048576
-                  ? `${(item.size / 1024).toFixed(1)} Ko`
-                  : `${(item.size / 1048576).toFixed(1)} Mo`}
+                {item.name}
               </span>
+            </div>
+            {isExpanded && item.children && item.children.length > 0 && (
+              <div>{renderTree(item.children, level + 1)}</div>
             )}
           </div>
         );
-      });
-    },
-    [docvSelectedFile, setDocvSelectedFile]
-  );
+      }
+
+      // Fichier
+      return (
+        <div
+          key={item.id}
+          role="button"
+          tabIndex={0}
+          onClick={() => setDocvSelectedFile(item.id)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "4px 8px",
+            paddingLeft: `${indent + 8}px`,
+            margin: "2px 4px",
+            background: isSelected
+              ? "hsl(220, 15%, 18%)"
+              : "transparent",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "13px",
+            color: isSelected
+              ? "hsl(var(--tl-accent-princ))"
+              : "hsl(220, 15%, 70%)",
+            transition: "background 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            if (!isSelected)
+              e.currentTarget.style.background = "hsl(220, 15%, 14%)";
+          }}
+          onMouseLeave={(e) => {
+            if (!isSelected)
+              e.currentTarget.style.background = "transparent";
+          }}
+        >
+          <DocIcon
+            width={16}
+            height={16}
+            style={{ marginRight: 8, flexShrink: 0 }}
+          />
+          <span
+            style={{
+              flex: 1,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {item.name}
+          </span>
+          {item.size != null && (
+            <span
+              style={{
+                fontSize: "11px",
+                color: "hsl(220, 15%, 50%)",
+                marginLeft: 8,
+                flexShrink: 0,
+              }}
+            >
+              {item.size < 1024
+                ? `${item.size} o`
+                : item.size < 1048576
+                ? `${(item.size / 1024).toFixed(1)} Ko`
+                : `${(item.size / 1048576).toFixed(1)} Mo`}
+            </span>
+          )}
+        </div>
+      );
+    });
+  };
 
   // Redimensionnement
   const demarrerRedimensionnement = useCallback(
@@ -380,12 +427,13 @@ export function DocVSidebar() {
           <div style={{ textAlign: "center", color: "hsl(220, 15%, 50%)" }}>
             <div
               style={{
-                fontSize: "32px",
                 marginBottom: "12px",
                 opacity: 0.5,
+                display: "flex",
+                justifyContent: "center",
               }}
             >
-              📁
+              <DossierVideIcon width={32} height={32} />
             </div>
             <div style={{ fontSize: "13px", lineHeight: 1.6 }}>
               Glissez-déposez un dossier ici

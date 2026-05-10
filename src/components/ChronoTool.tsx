@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChronoLedDisplay } from "./led-display/ChronoLedDisplay";
 import type { SVGProps } from "react";
 import { useApp } from "../context/AppContext";
@@ -8,62 +8,25 @@ import "./led-display/chrono-led.css";
 
 // Overlay personnalisé pour le chronomètre (rectangulaire, masqué en cercle par le conteneur parent)
 import LedOverlayChrono from "./led-display/assets/led-overlay-chrono.svg?react";
+import chronoService from "../services/chronoService";
 
 export function ChronoTool() {
+  const { isChronoRunning, chronoElapsedMs } = useApp();
   const [display, setDisplay] = useState({ minutes: 0, seconds: 0 });
-  const [running, setRunning] = useState(false);
   const [modalOuverte, setModalOuverte] = useState(false);
   const { projet, updateSetlistSong } = useApp();
 
-  // Refs pour le temps en millisecondes
-  const startTimeRef = useRef(0);
-  const savedMsRef = useRef(0);
-  const rafIdRef = useRef(0);
-
-  const updateDisplay = useCallback((totalMs: number) => {
-    const totalSec = Math.floor(totalMs / 1000);
-    const minutes = Math.floor(totalSec / 60);
-    const seconds = totalSec % 60;
-    setDisplay({ minutes, seconds });
-  }, []);
-
-  const tick = useCallback(() => {
-    const elapsed = Date.now() - startTimeRef.current + savedMsRef.current;
-    updateDisplay(elapsed);
-    rafIdRef.current = requestAnimationFrame(tick);
-  }, [updateDisplay]);
-
-  const start = () => {
-    startTimeRef.current = Date.now();
-    setRunning(true);
-    rafIdRef.current = requestAnimationFrame(tick);
-  };
-
-  const stop = () => {
-    cancelAnimationFrame(rafIdRef.current);
-    savedMsRef.current = Date.now() - startTimeRef.current + savedMsRef.current;
-    setRunning(false);
-  };
-
-  const reset = () => {
-    cancelAnimationFrame(rafIdRef.current);
-    savedMsRef.current = 0;
-    startTimeRef.current = 0;
-    updateDisplay(0);
-    setRunning(false);
-  };
-
-  // Formater les secondes en MM:SS
-  const formatTime = (secs: number): string => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  // Nettoyage au démontage
+  // Sync with chronoService
   useEffect(() => {
+    const listener = (state: any) => {
+      setDisplay(state.display);
+    };
+
+    chronoService.onUpdate(listener);
+
     return () => {
-      cancelAnimationFrame(rafIdRef.current);
+      chronoService.offUpdate(listener);
+      // DO NOT stop the service on unmount
     };
   }, []);
 
@@ -133,27 +96,27 @@ export function ChronoTool() {
 
           {/* Boutons de contrôle centrés */}
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-            {!running ? (
-              <button onClick={start} style={{ ...buttonStyle, background: "hsl(var(--tl-accent-button))", borderColor: "hsl(var(--tl-accent-button-border))" }}>
+            {!isChronoRunning ? (
+              <button onClick={() => chronoService.start()} style={{ ...buttonStyle, background: "hsl(var(--tl-accent-button))", borderColor: "hsl(var(--tl-accent-button-border))" }}>
                 ▶ Start
               </button>
             ) : (
-              <button onClick={stop} style={{ ...buttonStyle, background: "hsl(0, 60%, 35%)", borderColor: "hsl(0, 60%, 45%)" }}>
+              <button onClick={() => chronoService.stop()} style={{ ...buttonStyle, background: "hsl(0, 60%, 35%)", borderColor: "hsl(0, 60%, 45%)" }}>
                 ⏸ Stop
               </button>
             )}
-            <button onClick={reset} style={{ ...buttonStyle, background: "hsl(220, 15%, 20%)", borderColor: "hsl(220, 15%, 30%)" }}>
+            <button onClick={() => chronoService.reset()} style={{ ...buttonStyle, background: "hsl(220, 15%, 20%)", borderColor: "hsl(220, 15%, 30%)" }}>
               ↺ Reset
             </button>
 
             {/* Bouton Setlist pour transferer le temps */}
             <button
               onClick={() => setModalOuverte(true)}
-              disabled={running || savedMsRef.current === 0 || !projet?.setlistSongs?.length}
+              disabled={isChronoRunning || chronoElapsedMs === 0 || !projet?.setlistSongs?.length}
               title={
-                running
+                isChronoRunning
                   ? "Arrêtez le chronomètre d'abord"
-                  : savedMsRef.current === 0
+                  : chronoElapsedMs === 0
                   ? "Aucun temps mesuré"
                   : !projet?.setlistSongs?.length
                   ? "Aucun morceau dans la setlist"
@@ -161,7 +124,7 @@ export function ChronoTool() {
               }
               style={{
                 ...buttonStyle,
-                background: (running || savedMsRef.current === 0 || !projet?.setlistSongs?.length)
+                background: (isChronoRunning || chronoElapsedMs === 0 || !projet?.setlistSongs?.length)
                   ? "hsl(220, 15%, 16%)"
                   : "hsl(var(--tl-accent-button))",
                 borderColor: "hsl(220, 15%, 25%)",
@@ -170,10 +133,10 @@ export function ChronoTool() {
                 alignItems: "center",
                 gap: "6px",
                 padding: "10px 16px",
-                cursor: (running || savedMsRef.current === 0 || !projet?.setlistSongs?.length)
+                cursor: (isChronoRunning || chronoElapsedMs === 0 || !projet?.setlistSongs?.length)
                   ? "not-allowed"
                   : "pointer",
-                opacity: (running || savedMsRef.current === 0 || !projet?.setlistSongs?.length)
+                opacity: (isChronoRunning || chronoElapsedMs === 0 || !projet?.setlistSongs?.length)
                   ? 0.5
                   : 1,
               }}
@@ -245,7 +208,7 @@ export function ChronoTool() {
                   Temps mesuré :&nbsp;
                 </span>
                 <span style={{ fontSize: "14px", color: "hsl(var(--tl-accent-princ))", fontFamily: "monospace" }}>
-                  {formatTime(Math.floor(savedMsRef.current / 1000))}
+                  {`${Math.floor(Math.floor(chronoElapsedMs / 1000) / 60).toString().padStart(2, '0')}:${(Math.floor(chronoElapsedMs / 1000) % 60).toString().padStart(2, '0')}`}
                 </span>
               </div>
 
@@ -298,13 +261,13 @@ export function ChronoTool() {
                             textAlign: "right",
                           }}
                         >
-                          {song.time ? formatTime(song.time) : "Non définie"}
+                          {song.time ? `${Math.floor(song.time / 60).toString().padStart(2, '0')}:${(song.time % 60).toString().padStart(2, '0')}` : "Non définie"}
                         </span>
 
                         {/* Bouton valider */}
                         <button
                           onClick={() => {
-                            const newTime = Math.floor(savedMsRef.current / 1000);
+                            const newTime = Math.floor(chronoElapsedMs / 1000);
                             updateSetlistSong(song.id, { time: newTime });
                             setModalOuverte(false);
                           }}

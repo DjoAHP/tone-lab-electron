@@ -112,6 +112,23 @@ export interface AppState {
   docvSelectedFile: string | null;
   docvSidebarOuverte: boolean;
   docvSidebarWidth: number;
+  // Métronome (synchronisé avec metronomeService)
+  isMetronomePlaying: boolean;
+  metronomeCurrentBeat: number;
+  metronomeCurrentSub: number;
+  metronomeBpm: number;
+  metronomeNumerator: number;
+  metronomeDenominator: number;
+  metronomeSubdivision: SubdivisionType;
+  metronomeSound: SoundType;
+  metronomeMasterVolume: number;
+  metronomeAccentVolume: number;
+  metronomeWeakVolume: number;
+  metronomeBeats: BeatConfig[];
+  metronomePolyTracks: PolyTrack[];
+  // Chrono (synchronisé avec chronoService)
+  isChronoRunning: boolean;
+  chronoElapsedMs: number;
 }
 
 // Types pour DocV
@@ -125,4 +142,47 @@ export interface DocvFileItem {
   size?: number; // taille en bytes (optionnel)
   // Pour stocker l'objet File réel (seulement en mémoire, pas dans le state persistant)
   _file?: File; // Prive, utilisé uniquement pour la création d'URL objet
+}
+
+// Types pour Métronome (extraits de Metronome.tsx)
+export type SoundType = "click" | "woodblock" | "beep" | "sine" | "rimshot";
+export type SubdivisionType = "none" | "8th" | "triplet" | "16th";
+
+export interface BeatConfig {
+  // 0 = muet, 1 = faible, 2 = fort
+  accent: 0 | 1 | 2;
+}
+
+export interface PolyTrack {
+  id: string;
+  label: string;
+  numerator: number;
+  beats: BeatConfig[];
+  sound: SoundType;
+  volume: number;
+  active: boolean;
+}
+
+// État du service métronome
+export interface MetronomeServiceState {
+  isPlaying: boolean;
+  currentBeat: number;
+  currentSub: number;
+  bpm: number;
+  numerator: number;
+  denominator: number;
+  subdivision: SubdivisionType;
+  beats: BeatConfig[];
+  sound: SoundType;
+  masterVolume: number;
+  accentVolume: number;
+  weakVolume: number;
+  polyTracks: PolyTrack[];
+}
+
+// État du service chrono
+export interface ChronoServiceState {
+  isRunning: boolean;
+  elapsedMs: number;
+  display: { minutes: number; seconds: number };
 }

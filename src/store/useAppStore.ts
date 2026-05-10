@@ -12,6 +12,12 @@ import type {
   RechercheInstrument,
   SetlistSong,
   DocvFileItem,
+  SoundType,
+  SubdivisionType,
+  BeatConfig,
+  PolyTrack,
+  MetronomeServiceState,
+  ChronoServiceState,
 } from "../types";
 import {
   fetchPlugins,
@@ -20,6 +26,8 @@ import {
   saveProject,
 } from "../services/firebaseService";
 import { uploadImageCloudinary } from "../lib/cloudinary";
+import metronomeService from "../services/metronomeService";
+import chronoService from "../services/chronoService";
 
 function genererID(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -166,13 +174,75 @@ export function useAppStore() {
     docvFiles: null,
     docvSelectedFile: null,
     docvSidebarOuverte: false,
-    docvSidebarWidth: 220,
+    docvSidebarWidth: 300,
+    // Métronome (synchronisé avec metronomeService)
+    isMetronomePlaying: false,
+    metronomeCurrentBeat: -1,
+    metronomeCurrentSub: -1,
+    metronomeBpm: 120,
+    metronomeNumerator: 4,
+    metronomeDenominator: 4,
+    metronomeSubdivision: 'none' as SubdivisionType,
+    metronomeSound: 'click' as SoundType,
+    metronomeMasterVolume: 0.8,
+    metronomeAccentVolume: 1.0,
+    metronomeWeakVolume: 0.65,
+    metronomeBeats: Array(4).fill(null).map((_, i) => ({ accent: i === 0 ? 2 : 1 } as BeatConfig)),
+    metronomePolyTracks: [],
+    // Chrono (synchronisé avec chronoService)
+    isChronoRunning: false,
+    chronoElapsedMs: 0,
   }));
 
   useEffect(() => {
     fetchPlugins().then((plugins) => {
       setState((prev) => ({ ...prev, plugins, pluginsLoading: false }));
     });
+  }, []);
+
+  // Sync store avec metronomeService
+  useEffect(() => {
+    const handleMetronomeState = (serviceState: MetronomeServiceState) => {
+      setState((prev) => ({
+        ...prev,
+        isMetronomePlaying: serviceState.isPlaying,
+        metronomeCurrentBeat: serviceState.currentBeat,
+        metronomeCurrentSub: serviceState.currentSub,
+        metronomeBpm: serviceState.bpm,
+        metronomeNumerator: serviceState.numerator,
+        metronomeDenominator: serviceState.denominator,
+        metronomeSubdivision: serviceState.subdivision,
+        metronomeSound: serviceState.sound,
+        metronomeMasterVolume: serviceState.masterVolume,
+        metronomeAccentVolume: serviceState.accentVolume,
+        metronomeWeakVolume: serviceState.weakVolume,
+        metronomeBeats: serviceState.beats,
+        metronomePolyTracks: serviceState.polyTracks,
+      }));
+    };
+
+    metronomeService.onStateChange(handleMetronomeState);
+
+    return () => {
+      metronomeService.offStateChange(handleMetronomeState);
+    };
+  }, []);
+
+  // Sync store avec chronoService
+  useEffect(() => {
+    const handleChronoState = (serviceState: ChronoServiceState) => {
+      setState((prev) => ({
+        ...prev,
+        isChronoRunning: serviceState.isRunning,
+        chronoElapsedMs: serviceState.elapsedMs,
+      }));
+    };
+
+    chronoService.onUpdate(handleChronoState);
+
+    return () => {
+      chronoService.offUpdate(handleChronoState);
+    };
   }, []);
 
   const mettreAJourEtat = useCallback((modifications: any) => {
@@ -1093,6 +1163,23 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     docvSelectedFile: state.docvSelectedFile,
     docvSidebarOuverte: state.docvSidebarOuverte,
     docvSidebarWidth: state.docvSidebarWidth,
+    // Métronome (synchronisé avec metronomeService)
+    isMetronomePlaying: state.isMetronomePlaying,
+    metronomeCurrentBeat: state.metronomeCurrentBeat,
+    metronomeCurrentSub: state.metronomeCurrentSub,
+    metronomeBpm: state.metronomeBpm,
+    metronomeNumerator: state.metronomeNumerator,
+    metronomeDenominator: state.metronomeDenominator,
+    metronomeSubdivision: state.metronomeSubdivision,
+    metronomeSound: state.metronomeSound,
+    metronomeMasterVolume: state.metronomeMasterVolume,
+    metronomeAccentVolume: state.metronomeAccentVolume,
+    metronomeWeakVolume: state.metronomeWeakVolume,
+    metronomeBeats: state.metronomeBeats,
+    metronomePolyTracks: state.metronomePolyTracks,
+    // Chrono (synchronisé avec chronoService)
+    isChronoRunning: state.isChronoRunning,
+    chronoElapsedMs: state.chronoElapsedMs,
     // Actions projet
     nouveauProjet,
     renommerProjet,

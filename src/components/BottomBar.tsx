@@ -9,6 +9,7 @@ import SetlistIcon from "../assets/icons/Bottombar/setlist-tool.svg?react";
 import ChronoIcon from "../assets/icons/Bottombar/chrono-tool.svg?react";
 import DocvIcon from "../assets/icons/Bottombar/docv-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
+import type { SubdivisionType } from "../types";
 
 import React from "react";
 import { APP_VERSION } from "@/version";
@@ -103,6 +104,10 @@ export function BottomBar() {
     ongletActif,
     setOngletActif,
     setVueActive,
+    isMetronomePlaying,
+    metronomeBpm,
+    isChronoRunning,
+    chronoElapsedMs,
   } = useApp();
 
   function handleOutil(id: "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv") {
@@ -265,8 +270,39 @@ export function BottomBar() {
             >
               <div className="flex flex-col items-center justify-center gap-1">
                 {/* Icône */}
-                <div style={{ transform: "translateY(-4px)" }}>
+                <div style={{ transform: "translateY(-4px)", position: "relative" }}>
                   {outil.icone}
+                  {/* Indicateur Metronome */}
+                  {outil.id === "metro" && isMetronomePlaying && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: -2,
+                        right: -2,
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "#22c55e",
+                        animation: "pulse 1.5s infinite",
+                      }}
+                    />
+                  )}
+                  {/* Indicateur Chrono */}
+                  {outil.id === "chrono" && isChronoRunning && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: -2,
+                        right: -2,
+                        fontSize: "9px",
+                        color: "#4ade80",
+                        fontFamily: "monospace",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {`${Math.floor(chronoElapsedMs / 60000).toString().padStart(2, '0')}:${Math.floor((chronoElapsedMs / 1000) % 60).toString().padStart(2, '0')}`}
+                    </div>
+                  )}
                 </div>
                 {/* Label */}
                 <span

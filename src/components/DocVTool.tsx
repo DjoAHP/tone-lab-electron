@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from "react"
 import { useApp } from "../context/AppContext";
 import type { DocvFileItem } from "../types";
 import DocIcon from "../assets/icons/DocV/doc-sidebar.svg?react";
+import DocVideIcon from "../assets/icons/DocV/doc-vide.svg?react";
 
 export function DocVTool() {
   const {
@@ -170,8 +171,8 @@ export function DocVTool() {
         style={{ background: "hsl(222, 25%, 8%)", overflow: "hidden" }}
       >
         <div style={{ textAlign: "center", color: "hsl(220, 15%, 50%)" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>
-            📄
+          <div style={{ marginBottom: "16px", opacity: 0.3, display: "flex", justifyContent: "center" }}>
+            <DocVideIcon width={48} height={48} />
           </div>
           <div style={{ fontSize: "14px" }}>
             Sélectionnez un fichier dans la barre latérale
