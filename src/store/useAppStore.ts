@@ -11,6 +11,7 @@ import type {
   SousStack,
   RechercheInstrument,
   SetlistSong,
+  DocvFileItem,
 } from "../types";
 import {
   fetchPlugins,
@@ -161,6 +162,11 @@ export function useAppStore() {
       chrono: "chrono",
     } as Record<string, string>,
     modifie: false,
+    // DocV
+    docvFiles: null,
+    docvSelectedFile: null,
+    docvSidebarOuverte: false,
+    docvSidebarWidth: 220,
   }));
 
   useEffect(() => {
@@ -185,13 +191,18 @@ export function useAppStore() {
     });
   }, []);
 
+  // ── Toggles DocV Sidebar ───────────────────────────────────────
+  const toggleDocvSidebar = useCallback(() => {
+    mettreAJourEtat({ docvSidebarOuverte: !state.docvSidebarOuverte });
+  }, [state.docvSidebarOuverte, mettreAJourEtat]);
+
   const setVueActive = useCallback(
-    (vue: "home" | "stack" | "metro" | "diapa" | "setlist" | "chrono") => mettreAJourEtat({ vueActive: vue }),
+    (vue: "home" | "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv") => mettreAJourEtat({ vueActive: vue }),
     [mettreAJourEtat],
   );
 
   const setOngletActif = useCallback(
-    (onglet: "stack" | "metro" | "diapa" | "setlist" | "chrono") => {
+    (onglet: "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv") => {
       // Sauvegarde la vue active de l'onglet actuel
       const vuesParOnglet = { ...state.vuesParOnglet };
       vuesParOnglet[state.ongletActif] = state.vueActive;
@@ -338,6 +349,42 @@ export function useAppStore() {
     },
     [state.projet, mettreAJourEtat],
   );
+
+  // ── Actions DocV ────────────────────────────────────────
+  const setDocvFiles = useCallback(
+    (files: DocvFileItem[] | null) => {
+      mettreAJourEtat({ docvFiles: files, modifie: true });
+    },
+    [mettreAJourEtat],
+  );
+
+  const setDocvSelectedFile = useCallback(
+    (fileId: string | null) => {
+      mettreAJourEtat({ docvSelectedFile: fileId, modifie: true });
+    },
+    [mettreAJourEtat],
+  );
+
+  const setDocvSidebarWidth = useCallback(
+    (width: number) => {
+      mettreAJourEtat({ docvSidebarWidth: width, modifie: true });
+    },
+    [mettreAJourEtat],
+  );
+
+  const addDocvFiles = useCallback(
+    (files: DocvFileItem[]) => {
+      mettreAJourEtat((state: AppState) => ({
+        docvFiles: files,
+        modifie: true,
+      }));
+    },
+    [mettreAJourEtat],
+  );
+
+  const clearDocvFiles = useCallback(() => {
+    mettreAJourEtat({ docvFiles: null, docvSelectedFile: null, modifie: true });
+  }, [mettreAJourEtat]);
 
   // ── Projet ───────────────────────────────────────────────────
   const nouveauProjet = useCallback(
@@ -1041,6 +1088,11 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     ongletActif: state.ongletActif,
     vueActive: state.vueActive,
     modifie: state.modifie,
+    // DocV
+    docvFiles: state.docvFiles,
+    docvSelectedFile: state.docvSelectedFile,
+    docvSidebarOuverte: state.docvSidebarOuverte,
+    docvSidebarWidth: state.docvSidebarWidth,
     // Actions projet
     nouveauProjet,
     renommerProjet,
@@ -1080,6 +1132,13 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     deleteSetlistSong,
     reorderSetlistSong,
     importerSetlist,
+    // DocV
+    toggleDocvSidebar,
+    setDocvFiles,
+    setDocvSelectedFile,
+    setDocvSidebarWidth,
+    addDocvFiles,
+    clearDocvFiles,
     // Plugins
     ajouterPlugin,
     supprimerPlugin,

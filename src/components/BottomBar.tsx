@@ -7,6 +7,7 @@ import MetroIcon from "../assets/icons/Bottombar/metro-tool.svg?react";
 import DiapaIcon from "../assets/icons/Bottombar/diapa-tool.svg?react";
 import SetlistIcon from "../assets/icons/Bottombar/setlist-tool.svg?react";
 import ChronoIcon from "../assets/icons/Bottombar/chrono-tool.svg?react";
+import DocvIcon from "../assets/icons/Bottombar/docv-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
 
 import React from "react";
@@ -15,7 +16,7 @@ import { APP_VERSION } from "@/version";
 // ─── Définition des outils ──────────────────────────────────
 // Chaque outil a : id (= ongletActif), label, icône
 const OUTILS: {
-  id: "stack" | "metro" | "diapa" | "setlist" | "chrono";
+  id: "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv";
   label: string;
   icone: React.ReactNode;
 }[] = [
@@ -74,6 +75,17 @@ const OUTILS: {
       />
     ),
   },
+  {
+    id: "docv",
+    label: "DocV",
+    icone: (
+      <DocvIcon
+        width="35"
+        height="35"
+        style={{ color: "hsl(var(--tl-accent-princ))" }}
+      />
+    ),
+  },
 ];
 
 // ─── Largeur du fond actif de chaque côté de l'icône ─────────
@@ -86,12 +98,14 @@ export function BottomBar() {
     toggleSidebar,
     toggleSetlistSidebar,
     setlistSidebarOuverte,
+    docvSidebarOuverte,
+    toggleDocvSidebar,
     ongletActif,
     setOngletActif,
     setVueActive,
   } = useApp();
 
-  function handleOutil(id: "stack" | "metro" | "diapa" | "setlist" | "chrono") {
+  function handleOutil(id: "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv") {
     setOngletActif(id);
 
     // Vue active
@@ -100,6 +114,7 @@ export function BottomBar() {
     else if (id === "diapa") setVueActive("diapa");
     else if (id === "setlist") setVueActive("setlist");
     else if (id === "chrono") setVueActive("chrono");
+    else if (id === "docv") setVueActive("docv");
 
     // Gestion des sidebars : utiliser requestAnimationFrame pour laisser React mettre à jour
     requestAnimationFrame(() => {
@@ -109,10 +124,14 @@ export function BottomBar() {
       } else if (id === "stack") {
         if (!sidebarOuverte) toggleSidebar();
         if (setlistSidebarOuverte) toggleSetlistSidebar();
+      } else if (id === "docv") {
+        if (!docvSidebarOuverte) toggleDocvSidebar();
+        if (sidebarOuverte) toggleSidebar();
       } else {
         // chrono, diapa, metro : pas de sidebar → tout fermer
         if (sidebarOuverte) toggleSidebar();
         if (setlistSidebarOuverte) toggleSetlistSidebar();
+        if (docvSidebarOuverte) toggleDocvSidebar();
       }
     });
   }
@@ -164,6 +183,25 @@ export function BottomBar() {
               <rect x="7" y="12" width="7" height="2" rx="1" opacity="0.3" />
             </svg>
           </div>
+        ) : ongletActif === "docv" ? (
+          <button
+            onClick={toggleDocvSidebar}
+            title={docvSidebarOuverte ? "Masquer la sidebar" : "Afficher la sidebar"}
+            className="flex items-center justify-center w-7 h-7 rounded transition-colors"
+            style={{
+              color: docvSidebarOuverte
+                ? "hsl(var(--tl-accent-princ))"
+                : "hsl(220, 15%, 40%)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <rect x="0" y="0" width="5" height="14" rx="1" opacity={docvSidebarOuverte ? "1" : "0.4"} />
+              <rect x="7" y="0" width="7" height="2" rx="1" />
+              <rect x="7" y="4" width="7" height="2" rx="1" />
+              <rect x="7" y="8" width="7" height="2" rx="1" />
+              <rect x="7" y="12" width="7" height="2" rx="1" />
+            </svg>
+          </button>
         ) : (
           <button
             onClick={toggleSidebar}

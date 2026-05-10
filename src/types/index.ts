@@ -102,9 +102,27 @@ export interface AppState {
   sidebarOuverte: boolean;
   setlistSidebarOuverte: boolean;
   setlistSidebarWidth: number;
-  ongletActif: "stack" | "metro" | "diapa" | "setlist" | "chrono";
-  vueActive: "home" | "stack" | "metro" | "diapa" | "setlist" | "chrono";
+  ongletActif: "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv";
+  vueActive: "home" | "stack" | "metro" | "diapa" | "setlist" | "chrono" | "docv";
   // Sauvegarde la vue active par onglet pour restaurer lors du switch
   vuesParOnglet: Record<string, string>;
   modifie: boolean;
+  // DocV
+  docvFiles: DocvFileItem[] | null;
+  docvSelectedFile: string | null;
+  docvSidebarOuverte: boolean;
+  docvSidebarWidth: number;
+}
+
+// Types pour DocV
+export interface DocvFileItem {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  path: string; // chemin relatif ou ID pour la hiérarchie
+  extension?: string; // pour les fichiers: jpg, png, pdf
+  children?: DocvFileItem[]; // pour les dossiers
+  size?: number; // taille en bytes (optionnel)
+  // Pour stocker l'objet File réel (seulement en mémoire, pas dans le state persistant)
+  _file?: File; // Prive, utilisé uniquement pour la création d'URL objet
 }

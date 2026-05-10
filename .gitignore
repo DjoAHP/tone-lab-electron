@@ -106,3 +106,5 @@ demo-test/
 
 #Models infos
 .openclaude-profile.json
+*.dist
+dist/
