@@ -160,7 +160,6 @@ export interface PolyTrack {
   beats: BeatConfig[];
   sound: SoundType;
   volume: number;
-  active: boolean;
 }
 
 // État du service métronome

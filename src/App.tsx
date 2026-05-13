@@ -43,21 +43,17 @@ function AppInner() {
 
         <main
           className="flex-1 flex min-w-0 setlist-full-height"
-          style={{ background: "hsl(222, 22%, 9%)" }}
+          style={{ background: "hsl(222, 22%, 9%)", position: "relative" }}
         >
-          {ongletActif === "metro" ? (
+          {/* Metronome toujours monté pour continuer le son quand on change d'outil */}
+          <div style={{ display: ongletActif === "metro" ? "block" : "none", width: "100%", height: "100%" }}>
             <Metronome />
-          ) : ongletActif === "diapa" ? (
-            <DiapaTool />
-          ) : ongletActif === "setlist" ? (
-            <SetlistTool />
-          ) : ongletActif === "chrono" ? (
-            <ChronoTool />
-          ) : ongletActif === "docv" ? (
-            <DocVTool />
-          ) : (
-            <SoundResearchTool />
-          )}
+          </div>
+          {ongletActif === "diapa" && projet && <DiapaTool />}
+          {ongletActif === "setlist" && projet && <SetlistTool />}
+          {ongletActif === "chrono" && projet && <ChronoTool />}
+          {ongletActif === "docv" && projet && <DocVTool />}
+          {ongletActif === "stack" && projet && <SoundResearchTool />}
         </main>
       </div>
 
