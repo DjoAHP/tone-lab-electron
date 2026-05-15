@@ -293,7 +293,7 @@ export function BottomBar() {
                       style={{
                         position: "absolute",
                         top: -2,
-                        right: -2,
+                        right: 6,
                         fontSize: "9px",
                         color: "#4ade80",
                         fontFamily: "monospace",
