@@ -250,6 +250,7 @@ export function BottomBar() {
                   ? "2px solid hsl(var(--tl-accent-princ))"
                   : "2px solid transparent",
                 filter: estActif ? "none" : "grayscale(1) opacity(0.4)",
+                position: "relative",
               }}
               onMouseEnter={(e) => {
                 if (!estActif) {
@@ -287,23 +288,7 @@ export function BottomBar() {
                       }}
                     />
                   )}
-                  {/* Indicateur Chrono */}
-                  {outil.id === "chrono" && isChronoRunning && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: -4,
-                        right: -8,
-                        fontSize: "9px",
-                        color: "#4ade80",
-                        fontFamily: "monospace",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {`${Math.floor(chronoElapsedMs / 60000).toString().padStart(2, '0')}:${Math.floor((chronoElapsedMs / 1000) % 60).toString().padStart(2, '0')}`}
-                    </div>
-                  )}
-                </div>
+                  </div>
                 {/* Label */}
                 <span
                   className="text-[11px]"
@@ -318,6 +303,23 @@ export function BottomBar() {
                   {outil.label}
                 </span>
               </div>
+              {/* Indicateur Chrono — dans le coin supérieur droit de l'onglet */}
+              {outil.id === "chrono" && isChronoRunning && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    fontSize: "9px",
+                    color: "#4ade80",
+                    fontFamily: "monospace",
+                    fontWeight: "bold",
+                    padding: "1px 3px 0 0",
+                  }}
+                >
+                  {`${Math.floor(chronoElapsedMs / 60000).toString().padStart(2, '0')}:${Math.floor((chronoElapsedMs / 1000) % 60).toString().padStart(2, '0')}`}
+                </div>
+              )}
             </button>
           );
         })}
