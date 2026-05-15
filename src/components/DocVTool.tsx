@@ -256,7 +256,7 @@ export function DocVTool() {
             left: 0,
             right: 0,
             height: 48,
-            background: "rgba(0,0,0,0.6)",
+            background: "transparent",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
