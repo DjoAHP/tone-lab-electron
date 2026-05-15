@@ -3,6 +3,7 @@ import { useApp } from "../context/AppContext";
 import type { DocvFileItem } from "../types";
 import DocIcon from "../assets/icons/DocV/doc-sidebar.svg?react";
 import DocVideIcon from "../assets/icons/DocV/doc-vide.svg?react";
+import FullscreenIcon from "../assets/icons/DocV/fullscreen.svg?react";
 
 export function DocVTool() {
   const {
@@ -15,6 +16,7 @@ export function DocVTool() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Calcul des dimensions A4 responsives
   const updateDimensions = useCallback(() => {
@@ -147,6 +149,23 @@ export function DocVTool() {
     [allFiles, currentIndex, setDocvSelectedFile]
   );
 
+  // Plein écran
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen?.() ?? document.documentElement.requestFullscreen();
+    }
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   // Raccourcis clavier
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -157,11 +176,14 @@ export function DocVTool() {
       } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
         navigateFile("next");
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [navigateFile]);
+  }, [navigateFile, toggleFullscreen]);
 
   if (!selectedItem) {
     return (
@@ -207,6 +229,157 @@ export function DocVTool() {
     );
   }
 
+  // ── Mode plein écran total ──────────────────────────────────
+  if (isFullscreen) {
+    return (
+      <div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          background: "#000",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: 9999,
+          overflow: "hidden",
+        }}
+      >
+        {/* Barre flottante en haut */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 48,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 20px",
+            zIndex: 10,
+          }}
+        >
+          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px" }}>
+            {selectedItem.name}
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => navigateFile("prev")}
+              disabled={allFiles.length <= 1}
+              style={{
+                background: "none",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: allFiles.length > 1 ? "white" : "rgba(255,255,255,0.2)",
+                cursor: allFiles.length > 1 ? "pointer" : "default",
+                fontSize: "18px",
+                padding: "4px 12px",
+                borderRadius: "6px",
+              }}
+            >
+              ◀
+            </button>
+            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
+              {currentIndex + 1} / {allFiles.length}
+            </span>
+            <button
+              onClick={() => navigateFile("next")}
+              disabled={allFiles.length <= 1}
+              style={{
+                background: "none",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: allFiles.length > 1 ? "white" : "rgba(255,255,255,0.2)",
+                cursor: allFiles.length > 1 ? "pointer" : "default",
+                fontSize: "18px",
+                padding: "4px 12px",
+                borderRadius: "6px",
+              }}
+            >
+              ▶
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                border: "none",
+                color: "white",
+                cursor: "pointer",
+                padding: "6px 14px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                marginLeft: 8,
+              }}
+            >
+              ✕ Quitter
+            </button>
+          </div>
+        </div>
+
+        {/* Document en plein écran */}
+        {error ? (
+          <div style={{ textAlign: "center", color: "hsl(0, 60%, 50%)" }}>
+            <div style={{ fontSize: "14px", marginBottom: 8 }}>⚠ Erreur de chargement</div>
+            <div style={{ fontSize: "12px", opacity: 0.7 }}>{error}</div>
+          </div>
+        ) : isImage && objectUrl ? (
+          <img
+            src={objectUrl}
+            alt={selectedItem.name}
+            style={{
+              maxWidth: "100vw",
+              maxHeight: "100vh",
+              objectFit: "contain",
+            }}
+            onError={() => setError("Impossible de charger l'image")}
+          />
+        ) : isPdf && objectUrl ? (
+          <iframe
+            src={objectUrl}
+            title={selectedItem.name}
+            style={{
+              width: "100vw",
+              height: "100vh",
+              border: "none",
+              background: "white",
+            }}
+            onError={() => setError("Impossible de charger le PDF")}
+          />
+        ) : (
+          <div style={{ textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
+            <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.3 }}>
+              📄
+            </div>
+            <div style={{ fontSize: "13px" }}>Chargement...</div>
+          </div>
+        )}
+
+        {/* Nom du fichier en bas */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 10,
+            left: "50%",
+            transform: "translateX(-50%)",
+            color: "rgba(255,255,255,0.35)",
+            fontSize: "12px",
+            textAlign: "center",
+            maxWidth: "80vw",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {selectedItem.name}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Mode normal (pas plein écran) ───────────────────────────
   return (
     <div className="flex-1 flex flex-col relative" style={{ background: "hsl(222, 25%, 8%)", overflow: "hidden" }}>
       {/* Barre d'info en haut */}
@@ -275,6 +448,28 @@ export function DocVTool() {
           >
             ▶
           </button>
+          {/* Bouton plein écran */}
+          <button
+            onClick={toggleFullscreen}
+            title="Plein écran (F)"
+            style={{
+              background: "none",
+              border: "none",
+              color: "hsl(220, 15%, 45%)",
+              cursor: "pointer",
+              padding: "4px 6px",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: 0.7,
+              transition: "opacity 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.7"; }}
+          >
+            <FullscreenIcon style={{ width: 14, height: 14 }} />
+          </button>
         </div>
       </div>
 
@@ -329,6 +524,3 @@ export function DocVTool() {
     </div>
   );
 }
-
-
-
