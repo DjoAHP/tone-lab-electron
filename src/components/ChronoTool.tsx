@@ -30,6 +30,22 @@ export function ChronoTool() {
     };
   }, []);
 
+  // Raccourci Espace pour démarrer/arrêter le chrono
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.code === "Space" && e.target === document.body) {
+        e.preventDefault();
+        if (isChronoRunning) {
+          chronoService.stop();
+        } else {
+          chronoService.start();
+        }
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isChronoRunning]);
+
   // ESC pour fermer la modal
   useEffect(() => {
     if (!modalOuverte) return;

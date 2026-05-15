@@ -239,6 +239,7 @@ export function BottomBar() {
               key={outil.id}
               title={outil.label}
               onClick={() => handleOutil(outil.id)}
+              onMouseDown={(e) => e.preventDefault()}
               className="flex items-center justify-center h-full transition-all duration-150"
               style={{
                 paddingLeft: `${PADDING_FOND_ACTIF}px`,
@@ -250,6 +251,7 @@ export function BottomBar() {
                   ? "2px solid hsl(var(--tl-accent-princ))"
                   : "2px solid transparent",
                 filter: estActif ? "none" : "grayscale(1) opacity(0.4)",
+                outline: "none",
                 position: "relative",
               }}
               onMouseEnter={(e) => {

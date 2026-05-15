@@ -2,6 +2,7 @@
 // Métronome premium — Web Audio API, pas de dépendances externes
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useApp } from "../context/AppContext";
 import { LedDisplay } from "./led-display/LedDisplay";
 import metronomeService from "../services/metronomeService";
 import type { MetronomeServiceState } from "../types";
@@ -398,9 +399,12 @@ export function Metronome() {
     });
   }, [numerator]);
 
-  // ── Raccourci clavier Espace ──────────────────────────────
+  const { ongletActif } = useApp();
+
+  // ── Raccourci clavier Espace (uniquement si onglet Metro actif) ──────────
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (ongletActif !== "metro") return;
       if (e.code === "Space" && e.target === document.body) {
         e.preventDefault();
         metronomeService.toggle();
@@ -408,7 +412,7 @@ export function Metronome() {
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  }, [ongletActif]);
 
   // ── Tap Tempo ─────────────────────────────────────────────
   function handleTap() {
