@@ -135,11 +135,11 @@ export function DocVSidebar() {
         entries.map((entry) => traverseFileTree(entry, ""))
       );
       const fileItems = results.filter((r): r is DocvFileItem => r !== null);
-      setDocvFiles(fileItems);
 
-      // Ouvrir automatiquement tous les dossiers importés
-      const allFolderIds = getAllFolderIds(fileItems);
-      setExpandedFolders(new Set(allFolderIds));
+      // Ajouter les nouveaux fichiers/dossiers sans remplacer les existants
+      const existingIds = new Set(docvFiles?.map((f: DocvFileItem) => f.id) ?? []);
+      const filtered = fileItems.filter((f: DocvFileItem) => !existingIds.has(f.id));
+      setDocvFiles([...(docvFiles ?? []), ...filtered]);
     },
     [setDocvFiles]
   );
