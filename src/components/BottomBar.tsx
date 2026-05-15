@@ -292,8 +292,8 @@ export function BottomBar() {
                     <div
                       style={{
                         position: "absolute",
-                        top: -2,
-                        right: 6,
+                        top: -4,
+                        right: -8,
                         fontSize: "9px",
                         color: "#4ade80",
                         fontFamily: "monospace",
