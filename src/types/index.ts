@@ -125,7 +125,6 @@ export interface AppState {
   metronomeAccentVolume: number;
   metronomeWeakVolume: number;
   metronomeBeats: BeatConfig[];
-  metronomePolyTracks: PolyTrack[];
   // Chrono (synchronisé avec chronoService)
   isChronoRunning: boolean;
   chronoElapsedMs: number;
@@ -153,15 +152,6 @@ export interface BeatConfig {
   accent: 0 | 1 | 2;
 }
 
-export interface PolyTrack {
-  id: string;
-  label: string;
-  numerator: number;
-  beats: BeatConfig[];
-  sound: SoundType;
-  volume: number;
-}
-
 // État du service métronome
 export interface MetronomeServiceState {
   isPlaying: boolean;
@@ -171,12 +161,11 @@ export interface MetronomeServiceState {
   numerator: number;
   denominator: number;
   subdivision: SubdivisionType;
-  beats: BeatConfig[];
   sound: SoundType;
   masterVolume: number;
   accentVolume: number;
   weakVolume: number;
-  polyTracks: PolyTrack[];
+  beats: BeatConfig[];
 }
 
 // État du service chrono

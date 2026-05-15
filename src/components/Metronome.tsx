@@ -15,16 +15,6 @@ interface BeatConfig {
   accent: 0 | 1 | 2;
 }
 
-interface PolyTrack {
-  id: string;
-  label: string;
-  numerator: number;
-  beats: BeatConfig[];
-  sound: SoundType;
-  volume: number;
-
-}
-
 // ─── Constantes ───────────────────────────────────────────────
 const BPM_MIN = 20;
 const BPM_MAX = 300;
@@ -366,21 +356,6 @@ export function Metronome() {
     );
   });
 
-  // Poly tracks
-  const [polyEnabled, setPolyEnabled] = useState(false);
-  const [polyTracks, setPolyTracks] = useState<PolyTrack[]>(
-    initialState.polyTracks ?? [
-      {
-        id: "track-b",
-        label: "Piste B",
-        numerator: 4,
-        beats: Array(4).fill({ accent: 1 }) as BeatConfig[],
-        sound: "click",
-        volume: 0.7,
-      },
-    ],
-  );
-
   // État local synchronisé avec le service
   const [isPlaying, setIsPlaying] = useState(metronomeService.getState().isPlaying);
   const [currentBeat, setCurrentBeat] = useState(metronomeService.getState().currentBeat);
@@ -407,9 +382,6 @@ export function Metronome() {
   useEffect(() => { metronomeService.setMasterVolume(masterVolume); }, [masterVolume]);
   useEffect(() => { metronomeService.setAccentVolume(accentVolume); }, [accentVolume]);
   useEffect(() => { metronomeService.setWeakVolume(weakVolume); }, [weakVolume]);
-  useEffect(() => { metronomeService.setPolyTracks(polyEnabled ? polyTracks : []); }, [polyTracks, polyEnabled]);
-
-
   // Tap tempo
   const tapTimesRef = useRef<number[]>([]);
   const [tapFlash, setTapFlash] = useState(false);
@@ -498,39 +470,6 @@ export function Metronome() {
     if (b < 176) return "Vivace";
     if (b < 200) return "Presto";
     return "Prestissimo";
-  }
-
-  // ── Poly track helpers ─────────────────────────────────────
-  function updatePolyTrack(id: string, patch: Partial<PolyTrack>) {
-    setPolyTracks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-    );
-  }
-
-  function updatePolyBeat(trackId: string, beatIdx: number, accent: 0 | 1 | 2) {
-    setPolyTracks((prev) =>
-      prev.map((t) =>
-        t.id === trackId
-          ? {
-              ...t,
-              beats: t.beats.map((b, i) => (i === beatIdx ? { accent } : b)),
-            }
-          : t,
-      ),
-    );
-  }
-
-  function setPolyNumerator(trackId: string, n: number) {
-    setPolyTracks((prev) =>
-      prev.map((t) => {
-        if (t.id !== trackId) return t;
-        const newBeats = Array.from({ length: n }, (_, i) =>
-          i < t.beats.length ? t.beats[i] : ({ accent: 1 } as BeatConfig),
-        );
-        if (newBeats[0]?.accent !== 2) newBeats[0] = { accent: 2 };
-        return { ...t, numerator: n, beats: newBeats };
-      }),
-    );
   }
 
   // ── Styles réutilisables ──────────────────────────────────
@@ -1024,172 +963,6 @@ export function Metronome() {
                   Tout muet
                 </button>
               </div>
-            </div>
-
-            {/* ══════════ POLYMÈTRE ══════════ */}
-            <div style={{ ...card, marginTop: "1px" }}>
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <p style={{ ...sectionTitle, marginBottom: 0 }}>Polymètre</p>
-                  <span
-                    className="text-[9px] px-1.5 py-0.5 rounded-full"
-                    style={{
-                      background: "hsl(var(--tl-accent-dim))",
-                      color: "hsl(var(--tl-accent-text))",
-                      border: "1px solid hsl(var(--tl-accent-border))",
-                    }}
-                  >
-                    Piste B indépendante
-                  </span>
-                </div>
-                {/* Toggle */}
-                <button
-                  onClick={() => setPolyEnabled(!polyEnabled)}
-                  className="relative w-9 h-6 rounded-full transition-all"
-                  style={{
-                    background: polyEnabled
-                      ? "hsl(var(--tl-accent-button))"
-                      : "hsl(222, 18%, 22%)",
-                    border: polyEnabled
-                      ? "1px solid hsl(var(--tl-accent-button-border))"
-                      : "1px solid hsl(220, 15%, 28%)",
-                  }}
-                >
-                  <div
-                    className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
-                    style={{
-                      left: polyEnabled ? "calc(100% - 18px)" : "2px",
-                      background: polyEnabled
-                        ? "hsl(var(--tl-accent-text))"
-                        : "hsl(220, 15%, 40%)",
-                    }}
-                  />
-                </button>
-              </div>
-
-              {polyEnabled &&
-                polyTracks.map((track) => (
-                  <div
-                    key={track.id}
-                    className="rounded-xl p-3 mt-2"
-                    style={{
-                      background: "hsl(222, 18%, 15%)",
-                      border: "1px solid hsl(220, 15%, 20%)",
-                    }}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <span
-                        className="text-xs font-bold"
-                        style={{ color: "hsl(215, 15%, 65%)" }}
-                      >
-                        {track.label}
-                      </span>
-
-                      {/* Nombre de temps */}
-                      <div className="flex items-center gap-1">
-                        <span
-                          className="text-[10px]"
-                          style={{ color: "hsl(220, 15%, 40%)" }}
-                        >
-                          Temps :
-                        </span>
-                        {[2, 3, 4, 5, 6, 7].map((n) => (
-                          <button
-                            key={n}
-                            onClick={() => setPolyNumerator(track.id, n)}
-                            className="w-6 h-6 rounded text-[10px] font-bold transition-all"
-                            style={{
-                              background:
-                                track.numerator === n
-                                  ? "hsl(var(--tl-accent-dim))"
-                                  : "hsl(222, 18%, 20%)",
-                              border:
-                                track.numerator === n
-                                  ? "1px solid hsl(var(--tl-accent-border))"
-                                  : "1px solid transparent",
-                              color:
-                                track.numerator === n
-                                  ? "hsl(var(--tl-accent-text))"
-                                  : "hsl(220, 15%, 45%)",
-                            }}
-                          >
-                            {n}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Son piste B */}
-                      <div className="flex items-center gap-1 ml-auto">
-                        <span
-                          className="text-[10px]"
-                          style={{ color: "hsl(220, 15%, 40%)" }}
-                        >
-                          Son :
-                        </span>
-                        {(Object.keys(SOUND_LABELS) as SoundType[]).map((s) => (
-                          <button
-                            key={s}
-                            onClick={() =>
-                              updatePolyTrack(track.id, { sound: s })
-                            }
-                            className="px-1.5 py-0.5 rounded text-[9px] font-semibold transition-all"
-                            style={{
-                              background:
-                                track.sound === s
-                                  ? "hsl(var(--tl-accent-dim))"
-                                  : "transparent",
-                              color:
-                                track.sound === s
-                                  ? "hsl(var(--tl-accent-text))"
-                                  : "hsl(220, 15%, 40%)",
-                            }}
-                          >
-                            {SOUND_LABELS[s]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Beats piste B */}
-                    <div className="flex gap-1.5 flex-wrap mb-2">
-                      {track.beats.map((b, i) => (
-                        <BeatBtn
-                          key={i}
-                          index={i}
-                          accent={b.accent}
-                          isActive={
-                            isPlaying &&
-                            currentBeat % track.numerator === i
-                          }
-                          onChange={(a) => updatePolyBeat(track.id, i, a)}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Volume piste B */}
-                    <Slider
-                      value={Math.round(track.volume * 100)}
-                      min={0}
-                      max={100}
-                      onChange={(v) =>
-                        updatePolyTrack(track.id, { volume: v / 100 })
-                      }
-                      label="Volume piste B"
-                      showValue
-                      color="hsl(200, 60%, 60%)"
-                    />
-                  </div>
-                ))}
-
-              {!polyEnabled && (
-                <p
-                  className="text-xs text-center py-3"
-                  style={{ color: "hsl(220, 15%, 32%)" }}
-                >
-                  Activez pour superposer une deuxième pulsation avec une
-                  signature différente
-                </p>
-              )}
             </div>
           </div>
         </div>

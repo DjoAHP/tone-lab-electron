@@ -1,4 +1,4 @@
-import type { SoundType, SubdivisionType, BeatConfig, PolyTrack, MetronomeServiceState } from '../types';
+import type { SoundType, SubdivisionType, BeatConfig, MetronomeServiceState } from '../types';
 import { SUBDIVISIONS, createAudioContext, playSound } from '../constants/audio';
 
 class MetronomeService {
@@ -23,7 +23,6 @@ class MetronomeService {
   private _masterVolume = 0.8;
   private _accentVolume = 1.0;
   private _weakVolume = 0.65;
-  private _polyTracks: PolyTrack[] = [];
 
   private listeners = new Set<(state: MetronomeServiceState) => void>();
 
@@ -50,7 +49,6 @@ class MetronomeService {
       masterVolume: this._masterVolume,
       accentVolume: this._accentVolume,
       weakVolume: this._weakVolume,
-      polyTracks: this._polyTracks,
     };
   }
 
@@ -120,8 +118,6 @@ class MetronomeService {
   setAccentVolume(v: number) { this._accentVolume = v; this.notifyListeners(); }
   setWeakVolume(v: number) { this._weakVolume = v; this.notifyListeners(); }
   setBeats(beats: BeatConfig[]) { this._beats = beats; this.notifyListeners(); }
-  setPolyTracks(tracks: PolyTrack[]) { this._polyTracks = tracks; this.notifyListeners(); }
-
   private scheduler() {
     if (!this._isPlaying) return;
     const ctx = this.audioCtx;
@@ -173,19 +169,6 @@ class MetronomeService {
       this._currentSub = this.currentSubCounter;
     }
     this.notifyListeners();
-
-    if (isMainBeat && this._isPlaying) {
-      this._polyTracks.forEach((track) => {
-        if (!this._isPlaying) return;
-        const tBeat = this._beats.length > 0 ? this.currentBeatCounter % track.numerator : 0;
-        const tCfg = track.beats[tBeat % track.beats.length];
-        const isAccent = tCfg?.accent === 2;
-        const isMuted = tCfg?.accent === 0;
-        if (!isMuted) {
-          playSound(ctx, track.sound, isAccent, false, track.volume * this._masterVolume, this.nextNoteTime);
-        }
-      });
-    }
   }
 }
 

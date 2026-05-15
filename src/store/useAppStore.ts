@@ -15,7 +15,6 @@ import type {
   SoundType,
   SubdivisionType,
   BeatConfig,
-  PolyTrack,
   MetronomeServiceState,
   ChronoServiceState,
 } from "../types";
@@ -188,7 +187,6 @@ export function useAppStore() {
     metronomeAccentVolume: 1.0,
     metronomeWeakVolume: 0.65,
     metronomeBeats: Array(4).fill(null).map((_, i) => ({ accent: i === 0 ? 2 : 1 } as BeatConfig)),
-    metronomePolyTracks: [],
     // Chrono (synchronisé avec chronoService)
     isChronoRunning: false,
     chronoElapsedMs: 0,
@@ -217,7 +215,6 @@ export function useAppStore() {
         metronomeAccentVolume: serviceState.accentVolume,
         metronomeWeakVolume: serviceState.weakVolume,
         metronomeBeats: serviceState.beats,
-        metronomePolyTracks: serviceState.polyTracks,
       }));
     };
 
@@ -1176,7 +1173,6 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     metronomeAccentVolume: state.metronomeAccentVolume,
     metronomeWeakVolume: state.metronomeWeakVolume,
     metronomeBeats: state.metronomeBeats,
-    metronomePolyTracks: state.metronomePolyTracks,
     // Chrono (synchronisé avec chronoService)
     isChronoRunning: state.isChronoRunning,
     chronoElapsedMs: state.chronoElapsedMs,
