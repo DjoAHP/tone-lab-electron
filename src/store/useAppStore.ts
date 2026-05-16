@@ -147,50 +147,59 @@ function sauvegarderDansLocalStorage(projet: ToneLabProject): void {
 
 // ─────────────────────────────────────────────────────────────────
 export function useAppStore() {
-  const [state, setState] = useState<AppState>(() => ({
-    projet: chargerDepuisLocalStorage(),
-    plugins: [],
-    pluginsLoading: true,
-    entreeSelectionnee: null,
-    stackSelectionne: null,
-    sousStackSelectionne: null,
-    rechercheSelectionnee: null,
-    sidebarOuverte: true,
-    setlistSidebarOuverte: true,
-    setlistSidebarWidth: 220, // largeur sauvegardée en px
-    ongletActif: "stack",
-    vueActive: "home",
-    // Sauvegarde la vue active par onglet pour restaurer lors du switch
-    vuesParOnglet: {
-      stack: "home",
-      metro: "metro",
-      diapa: "diapa",
-      setlist: "setlist",
-      chrono: "chrono",
-    } as Record<string, string>,
-    modifie: false,
-    // DocV
-    docvFiles: null,
-    docvSelectedFile: null,
-    docvSidebarOuverte: false,
-    docvSidebarWidth: 300,
-    // Métronome (synchronisé avec metronomeService)
-    isMetronomePlaying: false,
-    metronomeCurrentBeat: -1,
-    metronomeCurrentSub: -1,
-    metronomeBpm: 120,
-    metronomeNumerator: 4,
-    metronomeDenominator: 4,
-    metronomeSubdivision: 'none' as SubdivisionType,
-    metronomeSound: 'click' as SoundType,
-    metronomeMasterVolume: 0.8,
-    metronomeAccentVolume: 1.0,
-    metronomeWeakVolume: 0.65,
-    metronomeBeats: Array(4).fill(null).map((_, i) => ({ accent: i === 0 ? 2 : 1 } as BeatConfig)),
-    // Chrono (synchronisé avec chronoService)
-    isChronoRunning: false,
-    chronoElapsedMs: 0,
-  }));
+  const [state, setState] = useState<AppState>(() => {
+    // Charger le projet ou créer un projet par défaut "Nouveau projet"
+    let projet = chargerDepuisLocalStorage();
+    if (!projet) {
+      projet = creerProjetVide("Nouveau projet");
+      sauvegarderDansLocalStorage(projet);
+    }
+
+    return {
+      projet,
+      plugins: [],
+      pluginsLoading: true,
+      entreeSelectionnee: null,
+      stackSelectionne: null,
+      sousStackSelectionne: null,
+      rechercheSelectionnee: null,
+      sidebarOuverte: true,
+      setlistSidebarOuverte: true,
+      setlistSidebarWidth: 220, // largeur sauvegardée en px
+      ongletActif: "stack",
+      vueActive: "home",
+      // Sauvegarde la vue active par onglet pour restaurer lors du switch
+      vuesParOnglet: {
+        stack: "home",
+        metro: "metro",
+        diapa: "diapa",
+        setlist: "setlist",
+        chrono: "chrono",
+      } as Record<string, string>,
+      modifie: false,
+      // DocV
+      docvFiles: null,
+      docvSelectedFile: null,
+      docvSidebarOuverte: false,
+      docvSidebarWidth: 300,
+      // Métronome (synchronisé avec metronomeService)
+      isMetronomePlaying: false,
+      metronomeCurrentBeat: -1,
+      metronomeCurrentSub: -1,
+      metronomeBpm: 120,
+      metronomeNumerator: 4,
+      metronomeDenominator: 4,
+      metronomeSubdivision: 'none' as SubdivisionType,
+      metronomeSound: 'click' as SoundType,
+      metronomeMasterVolume: 0.8,
+      metronomeAccentVolume: 1.0,
+      metronomeWeakVolume: 0.65,
+      metronomeBeats: Array(4).fill(null).map((_, i) => ({ accent: i === 0 ? 2 : 1 } as BeatConfig)),
+      // Chrono (synchronisé avec chronoService)
+      isChronoRunning: false,
+      chronoElapsedMs: 0,
+    };
+  });
 
   useEffect(() => {
     fetchPlugins().then((plugins) => {
