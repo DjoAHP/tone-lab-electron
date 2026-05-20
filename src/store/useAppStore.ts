@@ -1,4 +1,4 @@
-// src/store/useAppStore.ts
+﻿// src/store/useAppStore.ts
 
 import { useState, useCallback, useEffect } from "react";
 import type {
@@ -46,19 +46,41 @@ function creerProjetVide(nom: string): ToneLabProject {
     date_modification: maintenant(),
     stacks: [],
     entries: [],
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
   };
 }
 
-// ── Migration : garantit que chaque SousStack a un tableau `recherches` ──
+// â”€â”€ Migration : garantit que chaque SousStack a un tableau `recherches` â”€â”€
 function migrerSousStack(ss: SousStack): SousStack {
   if (ss.recherches && ss.recherches.length > 0) return ss;
-  // Ancien format : entry seule → on crée une RechercheInstrument par défaut
+  // Ancien format : entry seule â†’ on crÃ©e une RechercheInstrument par dÃ©faut
   const rechercheDefaut: RechercheInstrument = {
     id: genererID(),
     label: ss.entry.instrument
       ? labelInstrument(ss.entry.instrument)
       : "Recherche principale",
     entry: ss.entry,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
   };
   return { ...ss, recherches: [rechercheDefaut] };
 }
@@ -70,12 +92,23 @@ function labelInstrument(instr: InstrumentType | ""): string {
     trompette: "Trompette",
     micro: "Micro",
     rhodes: "Rhodes",
-    synthetiseur: "Synthétiseur",
+    synthetiseur: "SynthÃ©tiseur",
     drum: "Drum",
     tom: "Tom",
     cordes: "Cordes",
     voix: "Voix",
     autre: "Autre",
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
   };
   return map[instr] ?? "Recherche";
 }
@@ -99,14 +132,47 @@ function migrerProjet(projet: ToneLabProject): ToneLabProject {
             ? labelInstrument(entry.instrument)
             : "Recherche principale",
           entry,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
         };
         return {
           id: genererID(),
           titre: entry.titre_morceau || "Sans titre",
           entry,
           recherches: [rechercheDefaut],
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
         };
       }),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
     return { ...projet, stacks: [stackDefaut] };
   }
@@ -145,10 +211,10 @@ function sauvegarderDansLocalStorage(projet: ToneLabProject): void {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function useAppStore() {
   const [state, setState] = useState<AppState>(() => {
-    // Charger le projet ou créer un projet par défaut "Nouveau projet"
+    // Charger le projet ou crÃ©er un projet par dÃ©faut "Nouveau projet"
     let projet = chargerDepuisLocalStorage();
     if (!projet) {
       projet = creerProjetVide("Nouveau projet");
@@ -165,7 +231,7 @@ export function useAppStore() {
       rechercheSelectionnee: null,
       sidebarOuverte: true,
       setlistSidebarOuverte: true,
-      setlistSidebarWidth: 220, // largeur sauvegardée en px
+      setlistSidebarWidth: 220, // largeur sauvegardÃ©e en px
       ongletActif: "stack",
       vueActive: "home",
       // Sauvegarde la vue active par onglet pour restaurer lors du switch
@@ -182,7 +248,7 @@ export function useAppStore() {
       docvSelectedFile: null,
       docvSidebarOuverte: false,
       docvSidebarWidth: 300,
-      // Métronome (synchronisé avec metronomeService)
+      // MÃ©tronome (synchronisÃ© avec metronomeService)
       isMetronomePlaying: false,
       metronomeCurrentBeat: -1,
       metronomeCurrentSub: -1,
@@ -195,9 +261,30 @@ export function useAppStore() {
       metronomeAccentVolume: 1.0,
       metronomeWeakVolume: 0.65,
       metronomeBeats: Array(4).fill(null).map((_, i) => ({ accent: i === 0 ? 2 : 1 } as BeatConfig)),
-      // Chrono (synchronisé avec chronoService)
+      // Chrono (synchronisÃ© avec chronoService)
       isChronoRunning: false,
       chronoElapsedMs: 0,
+
+      // DocV Audio Player
+
+      docvAudioUrl: null,
+
+      docvAudioPlaying: false,
+
+      docvAudioCurrentTime: 0,
+
+      docvAudioDuration: 0,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
   });
 
@@ -225,12 +312,34 @@ export function useAppStore() {
         metronomeWeakVolume: serviceState.weakVolume,
         metronomeBeats: serviceState.beats,
       }));
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
 
     metronomeService.onStateChange(handleMetronomeState);
 
     return () => {
       metronomeService.offStateChange(handleMetronomeState);
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
   }, []);
 
@@ -242,12 +351,34 @@ export function useAppStore() {
         isChronoRunning: serviceState.isRunning,
         chronoElapsedMs: serviceState.elapsedMs,
       }));
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
 
     chronoService.onUpdate(handleChronoState);
 
     return () => {
       chronoService.offUpdate(handleChronoState);
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
   }, []);
 
@@ -260,6 +391,17 @@ export function useAppStore() {
         newModifications.vuesParOnglet = {
           ...prev.vuesParOnglet,
           [prev.ongletActif]: modifications.vueActive,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
         };
       }
 
@@ -267,7 +409,7 @@ export function useAppStore() {
     });
   }, []);
 
-  // ── Toggles DocV Sidebar ───────────────────────────────────────
+  // â”€â”€ Toggles DocV Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleDocvSidebar = useCallback(() => {
     mettreAJourEtat({ docvSidebarOuverte: !state.docvSidebarOuverte });
   }, [state.docvSidebarOuverte, mettreAJourEtat]);
@@ -299,7 +441,7 @@ export function useAppStore() {
     },
     [state.ongletActif, state.vueActive, state.vuesParOnglet, state.projet, mettreAJourEtat],
   );
-  // ── Initialiser le projet si nécessaire ──────────────────
+  // â”€â”€ Initialiser le projet si nÃ©cessaire â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const initialiserProjet = useCallback(() => {
     if (state.projet) return;
     const nouveauProjet: ToneLabProject = {
@@ -311,12 +453,23 @@ export function useAppStore() {
       date_modification: maintenant(),
       stacks: [],
       entries: [],
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
     sauvegarderDansLocalStorage(nouveauProjet);
     mettreAJourEtat({ projet: nouveauProjet, modifie: true });
   }, [state.projet, mettreAJourEtat]);
 
-  // ─── Actions Setlist ──────────────────────────────────────
+  // â”€â”€â”€ Actions Setlist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const setBandName = useCallback(
     (name: string) => {
       if (!state.projet) return;
@@ -324,6 +477,17 @@ export function useAppStore() {
         ...state.projet,
         bandName: name,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       mettreAJourEtat({ projet: projetMisAJour, modifie: true });
@@ -338,11 +502,33 @@ export function useAppStore() {
         id: genererID(),
         title,
         position: (state.projet.setlistSongs?.length ?? 0) + 1,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       const projetMisAJour: ToneLabProject = {
         ...state.projet,
         setlistSongs: [...(state.projet.setlistSongs ?? []), newSong],
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       mettreAJourEtat({ projet: projetMisAJour, modifie: true });
@@ -359,6 +545,17 @@ export function useAppStore() {
           s.id === songId ? { ...s, ...updates } : s
         ),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       mettreAJourEtat({ projet: projetMisAJour, modifie: true });
@@ -375,6 +572,17 @@ export function useAppStore() {
           .filter((s) => s.id !== songId)
           .map((s, i) => ({ ...s, position: i + 1 })),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       mettreAJourEtat({ projet: projetMisAJour, modifie: true });
@@ -396,6 +604,17 @@ export function useAppStore() {
         ...state.projet,
         setlistSongs: songs.map((s, i) => ({ ...s, position: i + 1 })),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       mettreAJourEtat({ projet: projetMisAJour, modifie: true });
@@ -403,7 +622,7 @@ export function useAppStore() {
     [state.projet, mettreAJourEtat],
   );
 
-  // ── NOUVEAU : Importer une setlist depuis un fichier .tl ──
+  // â”€â”€ NOUVEAU : Importer une setlist depuis un fichier .tl â”€â”€
   const importerSetlist = useCallback(
     (contenuJSON: string): boolean => {
       try {
@@ -415,6 +634,17 @@ export function useAppStore() {
           bandName: data.bandName ?? state.projet.bandName,
           setlistSongs: data.setlistSongs ?? state.projet.setlistSongs ?? [],
           date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
         };
         sauvegarderDansLocalStorage(projetMisAJour);
         mettreAJourEtat({ projet: projetMisAJour, modifie: true });
@@ -426,7 +656,7 @@ export function useAppStore() {
     [state.projet, mettreAJourEtat],
   );
 
-  // ── Actions DocV ────────────────────────────────────────
+  // â”€â”€ Actions DocV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const setDocvFiles = useCallback(
     (files: DocvFileItem[] | null) => {
       mettreAJourEtat({ docvFiles: files, modifie: true });
@@ -462,7 +692,7 @@ export function useAppStore() {
     mettreAJourEtat({ docvFiles: null, docvSelectedFile: null, modifie: true });
   }, [mettreAJourEtat]);
 
-  // ── Projet ───────────────────────────────────────────────────
+  // â”€â”€ Projet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const nouveauProjet = useCallback(
     (nom: string) => {
       const projet = creerProjetVide(nom);
@@ -490,6 +720,17 @@ export function useAppStore() {
         ...state.projet,
         nom: nouveauNom,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -531,6 +772,17 @@ export function useAppStore() {
     const projetMisAJour: ToneLabProject = {
       ...state.projet,
       date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
     const blob = new Blob([JSON.stringify(projetMisAJour, null, 2)], {
       type: "application/json",
@@ -551,13 +803,24 @@ export function useAppStore() {
     const projetMisAJour: ToneLabProject = {
       ...state.projet,
       date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
     };
     sauvegarderDansLocalStorage(projetMisAJour);
     saveProject(projetMisAJour);
     mettreAJourEtat({ projet: projetMisAJour, modifie: false });
   }, [state.projet, mettreAJourEtat]);
 
-  // ── Stacks ───────────────────────────────────────────────────
+  // â”€â”€ Stacks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const ajouterStack = useCallback(
     (nom: string) => {
       if (!state.projet) return;
@@ -567,11 +830,33 @@ export function useAppStore() {
         sousStacks: [],
         date_creation: maintenant(),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       const projetMisAJour: ToneLabProject = {
         ...state.projet,
         stacks: [...state.projet.stacks, nouveauStack],
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -592,6 +877,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -607,6 +903,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: state.projet.stacks.filter((s) => s.id !== stackId),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -625,7 +932,7 @@ export function useAppStore() {
     [state.projet, state.stackSelectionne, state.vueActive, mettreAJourEtat],
   );
 
-  // ── Sous-Stacks (titres musicaux) ────────────────────────────
+  // â”€â”€ Sous-Stacks (titres musicaux) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const ajouterSousStack = useCallback(
     (
       stackId: string,
@@ -659,22 +966,55 @@ export function useAppStore() {
         tags: [],
         date_creation: maintenant(),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
-      // La première recherche = instrument choisi (ou "Recherche principale")
+      // La premiÃ¨re recherche = instrument choisi (ou "Recherche principale")
       const premiereRecherche: RechercheInstrument = {
         id: genererID(),
         label: data.instrument
           ? labelInstrument(data.instrument)
           : "Recherche principale",
         entry: nouvelleEntry,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       const nouveauSousStack: SousStack = {
         id: genererID(),
         titre: data.titre_morceau,
-        entry: nouvelleEntry, // rétrocompat
+        entry: nouvelleEntry, // rÃ©trocompat
         recherches: [premiereRecherche],
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       const stacksMisAJour = state.projet.stacks.map((s) =>
@@ -691,6 +1031,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       sauvegarderDansLocalStorage(projetMisAJour);
@@ -708,7 +1059,7 @@ export function useAppStore() {
     [state.projet, mettreAJourEtat],
   );
 
-  // ── NOUVEAU : ajouter une recherche instrument dans un sous-stack existant ──
+  // â”€â”€ NOUVEAU : ajouter une recherche instrument dans un sous-stack existant â”€â”€
   const ajouterRechercheInstrument = useCallback(
     (
       stackId: string,
@@ -720,12 +1071,12 @@ export function useAppStore() {
         reglages_plugin: string;
         notes: string;
         captureUrl?: string;
-        labelCustom?: string; // label personnalisé optionnel
+        labelCustom?: string; // label personnalisÃ© optionnel
       },
     ) => {
       if (!state.projet) return;
 
-      // Récupère les infos du sous-stack parent pour pré-remplir l'entry
+      // RÃ©cupÃ¨re les infos du sous-stack parent pour prÃ©-remplir l'entry
       let parentEntry: SoundEntry | null = null;
       for (const s of state.projet.stacks) {
         const ss = s.sousStacks.find((ss) => ss.id === sousStackId);
@@ -750,6 +1101,17 @@ export function useAppStore() {
         tags: [],
         date_creation: maintenant(),
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       const nouvelleRecherche: RechercheInstrument = {
@@ -760,6 +1122,17 @@ export function useAppStore() {
             ? labelInstrument(data.instrument)
             : "Nouvelle recherche"),
         entry: nouvelleEntry,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       const stacksMisAJour = state.projet.stacks.map((s) =>
@@ -782,6 +1155,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       sauvegarderDansLocalStorage(projetMisAJour);
@@ -799,7 +1183,7 @@ export function useAppStore() {
     [state.projet, mettreAJourEtat],
   );
 
-  // ── NOUVEAU : supprimer une recherche instrument ──────────────
+  // â”€â”€ NOUVEAU : supprimer une recherche instrument â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const supprimerRechercheInstrument = useCallback(
     (sousStackId: string, rechercheId: string) => {
       if (!state.projet) return;
@@ -820,6 +1204,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       sauvegarderDansLocalStorage(projetMisAJour);
@@ -850,7 +1245,7 @@ export function useAppStore() {
     ],
   );
 
-  // ── NOUVEAU : renommer le label d'une recherche ───────────────
+  // â”€â”€ NOUVEAU : renommer le label d'une recherche â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const renommerRechercheInstrument = useCallback(
     (sousStackId: string, rechercheId: string, nouveauLabel: string) => {
       if (!state.projet) return;
@@ -873,6 +1268,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
 
       sauvegarderDansLocalStorage(projetMisAJour);
@@ -905,6 +1311,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -924,6 +1341,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -973,7 +1401,7 @@ export function useAppStore() {
     [mettreAJourEtat],
   );
 
-  // ── NOUVEAU : sélectionner une recherche instrument ──────────
+  // â”€â”€ NOUVEAU : sÃ©lectionner une recherche instrument â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const selectionnerRecherche = useCallback(
     (
       rechercheId: string,
@@ -1010,7 +1438,7 @@ export function useAppStore() {
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
         sousStacks: s.sousStacks.map((ss) => {
-          // Vérifie dans les recherches
+          // VÃ©rifie dans les recherches
           const recherchesMisAJour = ss.recherches.map((r) => {
             if (r.entry.id === id) {
               trouve = true;
@@ -1021,11 +1449,22 @@ export function useAppStore() {
                   ...modifications,
                   date_modification: maintenant(),
                 },
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
               };
             }
             return r;
           });
-          // Vérifie aussi l'entry directe (rétrocompat)
+          // VÃ©rifie aussi l'entry directe (rÃ©trocompat)
           const entryMisAJour =
             ss.entry.id === id
               ? {
@@ -1038,6 +1477,17 @@ export function useAppStore() {
             ...ss,
             recherches: recherchesMisAJour,
             entry: entryMisAJour,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
           };
         }),
       }));
@@ -1047,6 +1497,17 @@ export function useAppStore() {
         ...state.projet,
         stacks: stacksMisAJour,
         date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
       };
       sauvegarderDansLocalStorage(projetMisAJour);
       saveProject(projetMisAJour);
@@ -1074,6 +1535,17 @@ export function useAppStore() {
           sousStacks: [],
           date_creation: maintenant(),
           date_modification: maintenant(),
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
         };
         setState((prev) => ({
           ...prev,
@@ -1105,7 +1577,7 @@ export function useAppStore() {
     [state.projet, supprimerRechercheInstrument],
   );
 
-  // ── Plugins ──────────────────────────────────────────────────
+  // â”€â”€ Plugins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const ajouterPlugin = useCallback(
     async (data: {
       nom: string;
@@ -1138,19 +1610,68 @@ export function useAppStore() {
     }));
   }, []);
 
-  // ── Sidebar ──────────────────────────────────────────────────
+  // â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleSidebar = useCallback(() => {
     mettreAJourEtat({ sidebarOuverte: !state.sidebarOuverte });
   }, [state.sidebarOuverte, mettreAJourEtat]);
-  // ── Setlist Sidebar ────────────────────────────────
+  // â”€â”€ Setlist Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleSetlistSidebar = useCallback(() => {
     mettreAJourEtat({ setlistSidebarOuverte: !state.setlistSidebarOuverte });
   }, [state.setlistSidebarOuverte, mettreAJourEtat]);
+
+  // ── DocV Audio Player ───────────────────────────────
+  const [youtubePlayerRef, setYoutubePlayerRef] = useState<any>(null);
+
+  const setDocvAudioUrl = useCallback(
+    (url: string | null) => {
+      mettreAJourEtat({ docvAudioUrl: url, modifie: true });
+    },
+    [mettreAJourEtat],
+  );
+
+  const setDocvAudioPlaying = useCallback(
+    (playing: boolean) => {
+      mettreAJourEtat({ docvAudioPlaying: playing });
+    },
+    [mettreAJourEtat],
+  );
+
+  const setDocvAudioTime = useCallback(
+    (time: number, duration?: number) => {
+      const updates: any = { docvAudioCurrentTime: time };
+      if (duration !== undefined) updates.docvAudioDuration = duration;
+      mettreAJourEtat(updates);
+    },
+    [mettreAJourEtat],
+  );
+
+  const registerYouTubePlayer = useCallback((player: any) => {
+    setYoutubePlayerRef(player);
+  }, []);
+
+  const seekYouTubeAudio = useCallback((delta: number) => {
+    if (!youtubePlayerRef) return;
+    const currentTime = youtubePlayerRef.getCurrentTime();
+    const duration = youtubePlayerRef.getDuration();
+    const newTime = Math.max(0, Math.min(duration, currentTime + delta));
+    youtubePlayerRef.seekTo(newTime, true);
+  }, [youtubePlayerRef]);
+
+  const playPauseYouTubeAudio = useCallback(() => {
+    if (!youtubePlayerRef) return;
+    const state = youtubePlayerRef.getPlayerState();
+    if (state === 1) {
+      youtubePlayerRef.pauseVideo();
+    } else {
+      youtubePlayerRef.playVideo();
+    }
+  }, [youtubePlayerRef]);
+
 const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEtat({ setlistSidebarWidth: width });  }, [mettreAJourEtat]);
 
 
   return {
-    // État
+    // Ã‰tat
     projet: state.projet,
     plugins: state.plugins,
     pluginsLoading: state.pluginsLoading,
@@ -1169,7 +1690,7 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     docvSelectedFile: state.docvSelectedFile,
     docvSidebarOuverte: state.docvSidebarOuverte,
     docvSidebarWidth: state.docvSidebarWidth,
-    // Métronome (synchronisé avec metronomeService)
+    // MÃ©tronome (synchronisÃ© avec metronomeService)
     isMetronomePlaying: state.isMetronomePlaying,
     metronomeCurrentBeat: state.metronomeCurrentBeat,
     metronomeCurrentSub: state.metronomeCurrentSub,
@@ -1182,7 +1703,7 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     metronomeAccentVolume: state.metronomeAccentVolume,
     metronomeWeakVolume: state.metronomeWeakVolume,
     metronomeBeats: state.metronomeBeats,
-    // Chrono (synchronisé avec chronoService)
+    // Chrono (synchronisÃ© avec chronoService)
     isChronoRunning: state.isChronoRunning,
     chronoElapsedMs: state.chronoElapsedMs,
     // Actions projet
@@ -1206,7 +1727,7 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     supprimerRechercheInstrument,
     renommerRechercheInstrument,
     selectionnerRecherche,
-    // Actions entries (rétrocompat)
+    // Actions entries (rÃ©trocompat)
     ajouterEntree,
     modifierEntree,
     setSetlistSidebarWidth,
@@ -1234,5 +1755,18 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     // Plugins
     ajouterPlugin,
     supprimerPlugin,
+    // DocV Audio Player
+    docvAudioUrl: state.docvAudioUrl,
+    docvAudioPlaying: state.docvAudioPlaying,
+    docvAudioCurrentTime: state.docvAudioCurrentTime,
+    docvAudioDuration: state.docvAudioDuration,
+    setDocvAudioUrl,
+    setDocvAudioPlaying,
+    setDocvAudioTime,
+    registerYouTubePlayer,
+    seekYouTubeAudio,
+    playPauseYouTubeAudio,
   };
 }
+
+

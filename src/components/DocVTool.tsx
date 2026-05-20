@@ -10,6 +10,9 @@ export function DocVTool() {
     docvSelectedFile,
     docvFiles,
     setDocvSelectedFile,
+    docvAudioUrl,
+    playPauseYouTubeAudio,
+    seekYouTubeAudio,
   } = useApp();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -166,24 +169,56 @@ export function DocVTool() {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  // Raccourcis clavier
+  // Raccourcis clavier (MODIFIÉ)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+
+      // Si lecteur audio actif (URL chargée)
+      const audioActif = docvAudioUrl !== null;
+
+      if (audioActif) {
+        // Espace = play/pause audio
+        if (e.key === " ") {
+          e.preventDefault();
+          playPauseYouTubeAudio();
+          return;
+        }
+        // Flèches gauche/droite = seek audio
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          seekYouTubeAudio(-10);
+          return;
+        }
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          seekYouTubeAudio(10);
+          return;
+        }
+      }
+
+      // Flèches haut/bas = navigation fichiers (NOUVEAU)
+      if (e.key === "ArrowUp") {
         e.preventDefault();
         navigateFile("prev");
-      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        return;
+      }
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         navigateFile("next");
-      } else if (e.key === "f" || e.key === "F") {
+        return;
+      }
+
+      // Espace pour plein écran (si pas d'audio chargé)
+      if (!audioActif && (e.key === "f" || e.key === "F")) {
         e.preventDefault();
         toggleFullscreen();
       }
     };
+
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [navigateFile, toggleFullscreen]);
+  }, [docvAudioUrl, navigateFile, toggleFullscreen, playPauseYouTubeAudio, seekYouTubeAudio]);
 
   if (!selectedItem) {
     return (
