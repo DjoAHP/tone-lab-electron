@@ -35,10 +35,18 @@ function AppInner() {
       <MenuBar />
 
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar gauche : fichiers (DocV) */}
+        {/* GAUCHE : Sidebar Stack (outil Stack) */}
+        {ongletActif === "stack" && (
+          <Sidebar onOuvrirModalStack={handleOuvrirModalStack} />
+        )}
+
+        {/* GAUCHE : Sidebar Setlist (outil Setlist) */}
+        {ongletActif === "setlist" && setlistSidebarOuverte && <SetlistSidebar />}
+
+        {/* GAUCHE : Sidebar fichiers DocV (outil DocV) */}
         {ongletActif === "docv" && docvSidebarOuverte && <DocVSidebar />}
 
-        {/* Zone centrale : partitions */}
+        {/* CENTRE : Zone principale */}
         <main
           className="flex-1 flex min-w-0 setlist-full-height"
           style={{ background: "hsl(222, 22%, 9%)", position: "relative" }}
@@ -54,14 +62,8 @@ function AppInner() {
           {ongletActif === "stack" && projet && <SoundResearchTool />}
         </main>
 
-        {/* Sidebar droite : lecteur audio YouTube (toujours visible en mode docv) */}
+        {/* DROITE : Sidebar lecteur audio YouTube (uniquement outil DocV) */}
         {ongletActif === "docv" && <DocVAudioSidebar />}
-
-        {/* Sidebars autres outils */}
-        {ongletActif === "stack" && (
-          <Sidebar onOuvrirModalStack={handleOuvrirModalStack} />
-        )}
-        {ongletActif === "setlist" && setlistSidebarOuverte && <SetlistSidebar />}
       </div>
 
       <BottomBar />
