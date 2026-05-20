@@ -15,6 +15,7 @@ export function DocVAudioSidebar() {
     setDocvAudioUrl,
     setDocvAudioPlaying,
     setDocvAudioTime,
+    registerYouTubePlayer,
   } = useApp();
 
   const [inputUrl, setInputUrl] = useState("");
@@ -26,7 +27,8 @@ export function DocVAudioSidebar() {
 
   const handleRegisterPlayer = useCallback((player: any) => {
     playerRef.current = player;
-  }, []);
+    registerYouTubePlayer(player);
+  }, [registerYouTubePlayer]);
 
   // Charger la vidéo
   const handleLoadVideo = () => {
