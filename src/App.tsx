@@ -11,7 +11,6 @@ import { DiapaTool } from "./components/DiapaTool";
 import { SetlistTool } from "./components/SetlistTool";
 import { ChronoTool } from "./components/ChronoTool";
 import { DocVTool } from "./components/DocVTool";
-import { DocVAudioSidebar } from "./components/DocVAudioSidebar";
 import { BottomBar } from "./components/BottomBar";
 import { NewStackModal } from "./components/NewStackModal";
 import { useApp } from "./context/AppContext";
@@ -35,18 +34,13 @@ function AppInner() {
       <MenuBar />
 
       <div className="flex flex-1 min-h-0">
-        {/* GAUCHE : Sidebar Stack (outil Stack) */}
+        {/* Sidebar visible sur l'outil Stack, Setlist et DocV */}
         {ongletActif === "stack" && (
           <Sidebar onOuvrirModalStack={handleOuvrirModalStack} />
         )}
-
-        {/* GAUCHE : Sidebar Setlist (outil Setlist) */}
         {ongletActif === "setlist" && setlistSidebarOuverte && <SetlistSidebar />}
-
-        {/* GAUCHE : Sidebar fichiers DocV (outil DocV) */}
         {ongletActif === "docv" && docvSidebarOuverte && <DocVSidebar />}
 
-        {/* CENTRE : Zone principale */}
         <main
           className="flex-1 flex min-w-0 setlist-full-height"
           style={{ background: "hsl(222, 22%, 9%)", position: "relative" }}
@@ -61,9 +55,6 @@ function AppInner() {
           {ongletActif === "docv" && projet && <DocVTool />}
           {ongletActif === "stack" && projet && <SoundResearchTool />}
         </main>
-
-        {/* DROITE : Sidebar lecteur audio YouTube (uniquement outil DocV) */}
-        {ongletActif === "docv" && <DocVAudioSidebar />}
       </div>
 
       <BottomBar />

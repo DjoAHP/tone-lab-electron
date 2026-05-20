@@ -46,17 +46,7 @@ function creerProjetVide(nom: string): ToneLabProject {
     date_modification: maintenant(),
     stacks: [],
     entries: [],
-    // DocV Audio Player
-    docvAudioUrl: state.docvAudioUrl,
-    docvAudioPlaying: state.docvAudioPlaying,
-    docvAudioCurrentTime: state.docvAudioCurrentTime,
-    docvAudioDuration: state.docvAudioDuration,
-    setDocvAudioUrl,
-    setDocvAudioPlaying,
-    setDocvAudioTime,
-    registerYouTubePlayer,
-    seekYouTubeAudio,
-    playPauseYouTubeAudio,  };
+  };
 }
 
 // â”€â”€ Migration : garantit que chaque SousStack a un tableau `recherches` â”€â”€
@@ -69,17 +59,7 @@ function migrerSousStack(ss: SousStack): SousStack {
       ? labelInstrument(ss.entry.instrument)
       : "Recherche principale",
     entry: ss.entry,
-    // DocV Audio Player
-    docvAudioUrl: state.docvAudioUrl,
-    docvAudioPlaying: state.docvAudioPlaying,
-    docvAudioCurrentTime: state.docvAudioCurrentTime,
-    docvAudioDuration: state.docvAudioDuration,
-    setDocvAudioUrl,
-    setDocvAudioPlaying,
-    setDocvAudioTime,
-    registerYouTubePlayer,
-    seekYouTubeAudio,
-    playPauseYouTubeAudio,  };
+    };
   return { ...ss, recherches: [rechercheDefaut] };
 }
 
@@ -96,17 +76,7 @@ function labelInstrument(instr: InstrumentType | ""): string {
     cordes: "Cordes",
     voix: "Voix",
     autre: "Autre",
-    // DocV Audio Player
-    docvAudioUrl: state.docvAudioUrl,
-    docvAudioPlaying: state.docvAudioPlaying,
-    docvAudioCurrentTime: state.docvAudioCurrentTime,
-    docvAudioDuration: state.docvAudioDuration,
-    setDocvAudioUrl,
-    setDocvAudioPlaying,
-    setDocvAudioTime,
-    registerYouTubePlayer,
-    seekYouTubeAudio,
-    playPauseYouTubeAudio,  };
+  };
   return map[instr] ?? "Recherche";
 }
 
@@ -229,20 +199,10 @@ export function useAppStore() {
       isChronoRunning: false,
       chronoElapsedMs: 0,
 
-
       // DocV Audio Player
       docvAudioUrl: null,
       docvAudioPlaying: false,
       docvAudioCurrentTime: 0,
-      docvAudioDuration: 0,
-      // DocV Audio Player
-
-      docvAudioUrl: null,
-
-      docvAudioPlaying: false,
-
-      docvAudioCurrentTime: 0,
-
       docvAudioDuration: 0,
     };
   });
