@@ -6,6 +6,10 @@ class MetronomeService {
 
   private audioCtx: AudioContext | null = null;
   private schedulerTimer: ReturnType<typeof setTimeout> | null = null;
+  private animationFrame: number | null = null;
+
+  // File des notes programmées : le visuel est déclenché quand le son devient audible
+  private noteQueue: { beat: number; sub: number; time: number }[] = [];
 
   private _isPlaying = false;
   private _currentBeat = -1;
@@ -74,11 +78,14 @@ class MetronomeService {
     this.currentBeatCounter = 0;
     this.currentSubCounter = 0;
     this.nextNoteTime = this.audioCtx!.currentTime + 0.05;
-    this._currentBeat = 0;
-    this._currentSub = this._subdivision !== 'none' ? 0 : -1;
+    // Le visuel du 1er temps est allumé par la boucle draw() quand le son devient audible
+    this._currentBeat = -1;
+    this._currentSub = -1;
     this._isPlaying = true;
+    this.noteQueue = [];
 
     this.scheduler();
+    this.draw();
     this.notifyListeners();
   }
 
@@ -88,6 +95,11 @@ class MetronomeService {
       clearTimeout(this.schedulerTimer);
       this.schedulerTimer = null;
     }
+    if (this.animationFrame !== null) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
+    }
+    this.noteQueue = [];
     this._isPlaying = false;
     this._currentBeat = -1;
     this._currentSub = -1;
@@ -162,13 +174,35 @@ class MetronomeService {
       playSound(ctx, this._sound, false, true, this._masterVolume * 0.3, this.nextNoteTime);
     }
 
-    if (isMainBeat) {
-      this._currentBeat = this.currentBeatCounter % this._numerator;
-      this._currentSub = this.currentSubCounter;
-    } else {
-      this._currentSub = this.currentSubCounter;
+    // On n'actualise PAS le visuel ici (le son est programmé dans le futur) :
+    // on empile la note pour la déclencher au moment où elle devient audible.
+    this.noteQueue.push({
+      beat: this.currentBeatCounter % this._numerator,
+      sub: this.currentSubCounter,
+      time: this.nextNoteTime,
+    });
+  }
+
+  // Boucle visuelle : synchronise les ronds sur le son réellement audible
+  private draw() {
+    const ctx = this.audioCtx;
+    if (!ctx || !this._isPlaying) return;
+
+    // outputLatency = délai entre l'émission du contexte et le haut-parleur
+    const latency = (ctx.outputLatency || ctx.baseLatency || 0);
+    const audibleTime = ctx.currentTime - latency;
+
+    let changed = false;
+    while (this.noteQueue.length > 0 && this.noteQueue[0].time <= audibleTime) {
+      const note = this.noteQueue.shift()!;
+      this._currentBeat = note.beat;
+      this._currentSub = note.sub;
+      changed = true;
     }
-    this.notifyListeners();
+
+    if (changed) this.notifyListeners();
+
+    this.animationFrame = requestAnimationFrame(() => this.draw());
   }
 }
 

@@ -40,23 +40,27 @@ export async function deletePlugin(id: string): Promise<void> {
 
 // ── Projects ──────────────────────────────────────────────────
 
-export async function saveProject(projet: ToneLabProject): Promise<void> {
+export async function saveProject(projet: ToneLabProject): Promise<boolean> {
     try {
-        const slug = projet.nom
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/\s+/g, '_')
-            .toLowerCase();
-        await setDoc(doc(db, 'projects', slug), projet);
+        const id =
+            projet.id ||
+            projet.nom
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, '_')
+                .toLowerCase();
+        await setDoc(doc(db, 'projects', id), { ...projet, id });
+        return true;
     } catch (err) {
         console.error('saveProject error:', err);
+        return false;
     }
 }
 
 export async function fetchProjects(): Promise<ToneLabProject[]> {
     try {
         const snap = await getDocs(projetsCol);
-        return snap.docs.map((d) => d.data() as ToneLabProject);
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ToneLabProject));
     } catch (err) {
         console.error('fetchProjects error:', err);
         return [];

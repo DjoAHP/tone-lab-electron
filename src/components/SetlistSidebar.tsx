@@ -355,18 +355,18 @@ export function SetlistSidebar() {
 
                 {/* Sélecteur de tonalité */}
                 <select
-                  value={song.tonality ?? ""}
+                  value={song.tonalite ?? ""}
                   onChange={(e) => {
                     const val = e.target.value || undefined;
-                    updateSetlistSong(song.id, { tonality: val });
+                    updateSetlistSong(song.id, { tonalite: val });
                   }}
                   title="Tonalité"
                   style={{
                     width: "42px",
                     background: "hsl(222, 18%, 14%)",
-                    border: song.tonality ? "1px solid hsl(220, 15%, 25%)" : "1px solid hsl(220, 15%, 18%)",
+                    border: song.tonalite ? "1px solid hsl(220, 15%, 25%)" : "1px solid hsl(220, 15%, 18%)",
                     borderRadius: "4px",
-                    color: song.tonality ? "hsl(220, 15%, 70%)" : "hsl(220, 15%, 30%)",
+                    color: song.tonalite ? "hsl(220, 15%, 70%)" : "hsl(220, 15%, 30%)",
                     fontSize: "10px",
                     fontFamily: "monospace",
                     textAlign: "center",

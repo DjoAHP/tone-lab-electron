@@ -187,7 +187,7 @@ export function SetlistTool() {
                 >
                   {/* Tonalité (gauche) + Titre centré */}
                   <div style={{ position: "relative", width: "100%", textAlign: "center" }}>
-                    {song.tonality !== undefined && (
+                    {song.tonalite !== undefined && (
                       <span
                         style={{
                           position: "absolute",
@@ -200,7 +200,7 @@ export function SetlistTool() {
                           fontStyle: "italic",
                         }}
                       >
-                        ({song.tonality})
+                        ({song.tonalite})
                       </span>
                     )}
                     <span

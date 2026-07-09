@@ -1,6 +1,6 @@
 ﻿// src/store/useAppStore.ts
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type {
   AppState,
   ToneLabProject,
@@ -216,21 +216,40 @@ export function useAppStore() {
   // Sync store avec metronomeService
   useEffect(() => {
     const handleMetronomeState = (serviceState: MetronomeServiceState) => {
-      setState((prev) => ({
-        ...prev,
-        isMetronomePlaying: serviceState.isPlaying,
-        metronomeCurrentBeat: serviceState.currentBeat,
-        metronomeCurrentSub: serviceState.currentSub,
-        metronomeBpm: serviceState.bpm,
-        metronomeNumerator: serviceState.numerator,
-        metronomeDenominator: serviceState.denominator,
-        metronomeSubdivision: serviceState.subdivision,
-        metronomeSound: serviceState.sound,
-        metronomeMasterVolume: serviceState.masterVolume,
-        metronomeAccentVolume: serviceState.accentVolume,
-        metronomeWeakVolume: serviceState.weakVolume,
-        metronomeBeats: serviceState.beats,
-      }));
+      setState((prev) => {
+        // Ignore les notifications ne changeant aucun champ visible (évite les re-renders inutiles)
+        if (
+          prev.isMetronomePlaying === serviceState.isPlaying &&
+          prev.metronomeCurrentBeat === serviceState.currentBeat &&
+          prev.metronomeCurrentSub === serviceState.currentSub &&
+          prev.metronomeBpm === serviceState.bpm &&
+          prev.metronomeNumerator === serviceState.numerator &&
+          prev.metronomeDenominator === serviceState.denominator &&
+          prev.metronomeSubdivision === serviceState.subdivision &&
+          prev.metronomeSound === serviceState.sound &&
+          prev.metronomeMasterVolume === serviceState.masterVolume &&
+          prev.metronomeAccentVolume === serviceState.accentVolume &&
+          prev.metronomeWeakVolume === serviceState.weakVolume &&
+          prev.metronomeBeats === serviceState.beats
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          isMetronomePlaying: serviceState.isPlaying,
+          metronomeCurrentBeat: serviceState.currentBeat,
+          metronomeCurrentSub: serviceState.currentSub,
+          metronomeBpm: serviceState.bpm,
+          metronomeNumerator: serviceState.numerator,
+          metronomeDenominator: serviceState.denominator,
+          metronomeSubdivision: serviceState.subdivision,
+          metronomeSound: serviceState.sound,
+          metronomeMasterVolume: serviceState.masterVolume,
+          metronomeAccentVolume: serviceState.accentVolume,
+          metronomeWeakVolume: serviceState.weakVolume,
+          metronomeBeats: serviceState.beats,
+        };
+      });
     };
 
     metronomeService.onStateChange(handleMetronomeState);
@@ -241,8 +260,15 @@ export function useAppStore() {
   }, []);
 
   // Sync store avec chronoService
+  // Throttle : le chrono notifie ~60 fps, on ne pousse dans le store qu'~5x/s
+  // (l'affichage visuel est géré localement par ChronoTool via son propre listener)
+  const chronoThrottleRef = useRef(0);
   useEffect(() => {
     const handleChronoState = (serviceState: ChronoServiceState) => {
+      const now = Date.now();
+      // mise à jour immédiate sur play/pause, sinon au plus ~5x/s
+      if (serviceState.isRunning && now - chronoThrottleRef.current < 200) return;
+      chronoThrottleRef.current = now;
       setState((prev) => ({
         ...prev,
         isChronoRunning: serviceState.isRunning,
@@ -259,13 +285,14 @@ export function useAppStore() {
 
   const mettreAJourEtat = useCallback((modifications: any) => {
     setState((prev) => {
-      const newModifications = { ...modifications };
+      const mods = typeof modifications === "function" ? modifications(prev) : modifications;
+      const newModifications = { ...mods };
 
       // Si on modifie vueActive sans fournir vuesParOnglet, on synchro automatiquement
-      if ('vueActive' in modifications && !('vuesParOnglet' in modifications)) {
+      if ('vueActive' in mods && !('vuesParOnglet' in mods)) {
         newModifications.vuesParOnglet = {
           ...prev.vuesParOnglet,
-          [prev.ongletActif]: modifications.vueActive,
+          [prev.ongletActif]: mods.vueActive,
         };
       }
 
@@ -532,7 +559,7 @@ export function useAppStore() {
     [mettreAJourEtat],
   );
 
-  const sauvegarderProjet = useCallback(() => {
+  const sauvegarderProjet = useCallback(async () => {
     if (!state.projet) return;
     const projetMisAJour: ToneLabProject = {
       ...state.projet,
@@ -548,19 +575,20 @@ export function useAppStore() {
     lien.click();
     URL.revokeObjectURL(url);
     sauvegarderDansLocalStorage(projetMisAJour);
-    saveProject(projetMisAJour);
-    mettreAJourEtat({ projet: projetMisAJour, modifie: false });
+    const cloudOk = await saveProject(projetMisAJour);
+    mettreAJourEtat({ projet: projetMisAJour, modifie: !cloudOk });
   }, [state.projet, mettreAJourEtat]);
 
-  const enregistrerProjet = useCallback(() => {
+  const enregistrerProjet = useCallback(async () => {
     if (!state.projet) return;
     const projetMisAJour: ToneLabProject = {
       ...state.projet,
       date_modification: maintenant(),
     };
     sauvegarderDansLocalStorage(projetMisAJour);
-    saveProject(projetMisAJour);
-    mettreAJourEtat({ projet: projetMisAJour, modifie: false });
+    const cloudOk = await saveProject(projetMisAJour);
+    // n'abaisse « modifie » que si la sauvegarde cloud a réussi
+    mettreAJourEtat({ projet: projetMisAJour, modifie: !cloudOk });
   }, [state.projet, mettreAJourEtat]);
 
   // â”€â”€ Stacks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -683,32 +711,36 @@ export function useAppStore() {
         recherches: [premiereRecherche],
       };
 
-      const stacksMisAJour = state.projet.stacks.map((s) =>
-        s.id === stackId
-          ? {
-              ...s,
-              sousStacks: [...s.sousStacks, nouveauSousStack],
-              date_modification: maintenant(),
-            }
-          : s,
-      );
+      mettreAJourEtat((prev: AppState) => {
+        if (!prev.projet) return prev;
+        const stacksMisAJour = prev.projet.stacks.map((s: Stack) =>
+          s.id === stackId
+            ? {
+                ...s,
+                sousStacks: [...s.sousStacks, nouveauSousStack],
+                date_modification: maintenant(),
+              }
+            : s,
+        );
 
-      const projetMisAJour: ToneLabProject = {
-        ...state.projet,
-        stacks: stacksMisAJour,
-        date_modification: maintenant(),
-      };
+        const projetMisAJour: ToneLabProject = {
+          ...prev.projet,
+          stacks: stacksMisAJour,
+          date_modification: maintenant(),
+        };
 
-      sauvegarderDansLocalStorage(projetMisAJour);
-      saveProject(projetMisAJour);
-      mettreAJourEtat({
-        projet: projetMisAJour,
-        entreeSelectionnee: nouvelleEntry.id,
-        stackSelectionne: stackId,
-        sousStackSelectionne: nouveauSousStack.id,
-        rechercheSelectionnee: premiereRecherche.id,
-        modifie: true,
-        vueActive: "stack",
+        sauvegarderDansLocalStorage(projetMisAJour);
+        saveProject(projetMisAJour);
+
+        return {
+          projet: projetMisAJour,
+          entreeSelectionnee: nouvelleEntry.id,
+          stackSelectionne: stackId,
+          sousStackSelectionne: nouveauSousStack.id,
+          rechercheSelectionnee: premiereRecherche.id,
+          modifie: true,
+          vueActive: "stack",
+        };
       });
     },
     [state.projet, mettreAJourEtat],

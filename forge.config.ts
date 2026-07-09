@@ -16,6 +16,7 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    executableName: 'tone-lab-ahp',
     icon: join(__dirname, 'assets/app-icon'),
   },
   rebuildConfig: {},

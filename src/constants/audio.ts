@@ -10,12 +10,14 @@ export const SUBDIVISIONS: { id: SubdivisionType; label: string; ratio: number }
   { id: "16th", label: "♬", ratio: 4 },
 ];
 
-export function createAudioContext(): AudioContext {
+export function createAudioContext(
+  latencyHint: AudioContextLatencyCategory = "playback",
+): AudioContext {
   return new (
     window.AudioContext ||
     (window as unknown as { webkitAudioContext: typeof AudioContext })
       .webkitAudioContext
-  )();
+  )({ latencyHint });
 }
 
 export const TIME_SIGS = [

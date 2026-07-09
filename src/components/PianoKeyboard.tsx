@@ -54,13 +54,7 @@ const BLACK_KEY_MAP: Record<string, string> = {
 export type OscType = "sine" | "triangle" | "square" | "sawtooth";
 
 // ─── Initialisation AudioContext ────────────────────────
-function createAudioContext(): AudioContext {
-  return new (
-    window.AudioContext ||
-    (window as unknown as { webkitAudioContext: typeof AudioContext })
-      .webkitAudioContext
-  )();
-}
+import { createAudioContext } from "../constants/audio";
 
 // ─── Props du composant ────────────────────────
 interface PianoKeyboardProps {
@@ -81,10 +75,10 @@ export function PianoKeyboard({
   const activeOscsRef = useRef<Map<string, { osc: OscillatorNode, gain: GainNode }>>(new Map());
   const pressedKeysRef = useRef<Set<string>>(new Set());
 
-  // Obtenir ou créer le contexte audio
+  // Obtenir ou créer le contexte audio (latence faible pour un instrument interactif)
   const getAudioContext = useCallback(() => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = createAudioContext();
+      audioCtxRef.current = createAudioContext("interactive");
     }
     if (audioCtxRef.current.state === "suspended") {
       audioCtxRef.current.resume();
@@ -92,7 +86,7 @@ export function PianoKeyboard({
     return audioCtxRef.current;
   }, []);
 
-  // Jouer une note
+  // Jouer une note (soutenue jusqu'à la relâche)
   const playNote = useCallback(
     (frequency: number, note: string) => {
       const ctx = getAudioContext();
@@ -113,46 +107,37 @@ export function PianoKeyboard({
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(volume, now + 0.01);
 
-      // Arrêt automatique après 0.5s
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(now);
-      osc.stop(now + 0.5);
 
-      // Nettoyage après arrêt
-      setTimeout(() => {
-        activeOscsRef.current.delete(note);
-        if (activeNote === note) {
-          setActiveNote(null);
-        }
-      }, 600);
+      // Enregistrement pour la polyphonie + arrêt à la relâche
+      activeOscsRef.current.set(note, { osc, gain });
     },
-    [getAudioContext, oscType, volume, onNotePlay, activeNote],
+    [getAudioContext, oscType, volume, onNotePlay],
   );
 
-  // Arrêter une note
+  // Arrêter une note (relâche clavier/souris)
   const stopNote = useCallback(
     (note: string) => {
       const entry = activeOscsRef.current.get(note);
       if (!entry) return;
 
       const now = entry.gain.context.currentTime;
-      entry.gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-      entry.osc.stop(now + 0.1);
+      entry.gain.gain.cancelScheduledValues(now);
+      entry.gain.gain.setValueAtTime(entry.gain.gain.value, now);
+      entry.gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      entry.osc.stop(now + 0.08);
 
       activeOscsRef.current.delete(note);
-      if (activeNote === note) {
-        setActiveNote(null);
-      }
+      setActiveNote((current) => (current === note ? null : current));
 
       if (onNoteStop) {
         onNoteStop(note);
       }
     },
-    [activeNote, onNoteStop],
+    [onNoteStop],
   );
 
   // Gestion du clavier physique (AZERTY)
@@ -179,7 +164,7 @@ export function PianoKeyboard({
       if (!note) return;
 
       pressedKeysRef.current.delete(key);
-      // On ne fait rien d'autre, la note s'arrête après 0.5s
+      stopNote(note);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -188,7 +173,7 @@ export function PianoKeyboard({
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [playNote]);
+  }, [playNote, stopNote]);
 
   // Nettoyage au démontage
   useEffect(() => {

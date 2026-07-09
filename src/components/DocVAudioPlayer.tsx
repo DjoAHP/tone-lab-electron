@@ -18,6 +18,7 @@ export function DocVAudioPlayer({
   onTimeUpdate,
 }: DocVAudioPlayerProps) {
   const playerRef = useRef<any>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -43,7 +44,22 @@ export function DocVAudioPlayer({
     const dur = event.target.getDuration();
     setDuration(dur);
     onTimeUpdate(0, dur);
+
+    // Démarrage du polling de position (une fois le player prêt)
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      const p = playerRef.current;
+      if (p) {
+        const time = p.getCurrentTime();
+        setCurrentTime(time);
+        onTimeUpdate(time);
+      }
+    }, 500);
   }, [onRegisterPlayer, onTimeUpdate]);
+
+  const onError = useCallback((event: any) => {
+    console.error("[DocV] YouTube onError code =", event?.data);
+  }, []);
 
   const onStateChange = useCallback((event: any) => {
     // YT.PlayerState: UNSTARTED=-1, ENDED=0, PLAYING=1, PAUSED=2, BUFFERING=3, CUED=5
@@ -52,20 +68,12 @@ export function DocVAudioPlayer({
     onPlayingChange(playing);
   }, [onPlayingChange]);
 
-  // Polling pour la position (toutes les 500ms)
+  // Nettoyage de l'intervalle de polling au démontage
   useEffect(() => {
-    if (!playerRef.current) return;
-
-    const interval = setInterval(() => {
-      if (playerRef.current) {
-        const time = playerRef.current.getCurrentTime();
-        setCurrentTime(time);
-        onTimeUpdate(time);
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [onTimeUpdate]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   // Contrôles
   const handlePlayPause = () => {
@@ -100,6 +108,7 @@ export function DocVAudioPlayer({
           opts={opts}
           onReady={onReady}
           onStateChange={onStateChange}
+          onError={onError}
         />
       </div>
 
