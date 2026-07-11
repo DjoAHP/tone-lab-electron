@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --config vite.renderer.config.ts",
     "build": "tsc -b && vite build",
-    "lint": "eslint --ext .ts,.tsx .",
+    "lint": "eslint .",
     "preview": "vite preview",
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -42,6 +42,7 @@
     "autoprefixer": "^10.4.27",
     "electron": "41.2.1",
     "eslint": "^9.39.4",
+    "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
