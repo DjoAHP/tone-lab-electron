@@ -49,16 +49,27 @@ export function DiapaTool() {
       className="flex-1 overflow-y-auto"
       style={{ background: "hsl(222, 22%, 9%)" }}
     >
-      <div style={{ width: "100%", padding: "16px 24px", maxWidth: "1400px", margin: "0 auto" }}>
+      <div
+        style={{
+          ...card,
+          width: "100%",
+          maxWidth: "1400px",
+          margin: "0 auto",
+          padding: "24px",
+        }}
+      >
         {/* ─── SECTION 1: LED ─────────────── */}
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
           <div style={sectionTitle}>Note actuelle</div>
-          <div style={{
-            ...card,
-            display: "inline-block",
-            padding: "20px 40px",
-            marginBottom: "8px",
-          }}>
+          <div
+            style={{
+              display: "inline-block",
+              padding: "20px 40px",
+              marginBottom: "8px",
+              background: "hsl(222, 22%, 9%)",
+              borderRadius: "8px",
+            }}
+          >
             <LedDisplay value={activeNote} digits={3} overlay={LedOverlayDiapa} />
           </div>
         </div>
