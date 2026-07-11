@@ -1,4 +1,5 @@
-// Certificat auto-signé pour le serveur HTTPS local (hôte "tonelab.local").
+// Certificat auto-signé pour le serveur HTTPS local (hôtes "tonelab.local",
+// "localhost" et 127.0.0.1).
 //
 // Pourquoi ? Depuis octobre 2025, YouTube exige que les vidéos intégrées soient
 // chargées depuis une origine HTTPS avec un Referer https valide et cohérent
@@ -6,57 +7,62 @@
 // (mappé sur 127.0.0.1), la page a une vraie origine https et un Referer https
 // cohérent → l'intégration YouTube fonctionne comme sur la PWA.
 //
+// Le SAN "localhost" permet aussi de servir Vite en HTTPS sur localhost pour
+// `npm run dev` (ouvert dans un navigateur), sans dépendre du certificat
+// auto-généré par Vite (qui déclenche ERR_SSL_VERSION_OR_CIPHER_MISMATCH sur
+// Windows/Chrome).
+//
 // Ce certificat n'est utilisé QUE localement (localhost) et son erreur de
-// validation est explicitement acceptée dans main.ts (événement certificate-error).
+// validation est explicitement acceptée dans main.ts (événement certificate-error)
+// et dans le navigateur (avertissement auto-signé à accepter une fois).
 // Il ne présente aucun risque de sécurité : il ne sert jamais de trafic réseau.
 
 export const LOCAL_CERT = `-----BEGIN CERTIFICATE-----
-MIIDKzCCAhOgAwIBAgIUfMuug3pYu8oghWe/ThoyhRmXumAwDQYJKoZIhvcNAQEL
-BQAwGDEWMBQGA1UEAwwNdG9uZWxhYi5sb2NhbDAeFw0yNjA3MDkxNzE5MThaFw0z
-NjA3MDYxNzE5MThaMBgxFjAUBgNVBAMMDXRvbmVsYWIubG9jYWwwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCS0aEb5ZCu9i8Eyi4sGLP1q/uswuxagW34
-cRf/pkt01Aku4h5+ToUR3EbCJlBmz7Z3+nGbTOhvTffhry1pmm2Byde/hJMjCOyS
-9GUUVpHzm0GDIP98qTme8uGe5GNzeUIFQHrLAsEe6pFEaPd3u3tpQV/K61mcM+6I
-CxsG1aDYYhiLj8oA38trxbapz+j6oypUWn0zIrHb4d4jzdfLzEdU9ezHqjdfdEjw
-aTGY+qVdIlCuiXexW3IAGaY4CLDsNMZf3u2Au4rXyY0KHzucVJEdvjfLOxXp8vys
-IX8E6m88PAFAszOKtzKStN9ucHlumcnIPwBt0jCpteMPubVVGvtjAgMBAAGjbTBr
-MB0GA1UdDgQWBBStkV+ySlGvNzQ3EBfdeLzYPXpMKzAfBgNVHSMEGDAWgBStkV+y
-SlGvNzQ3EBfdeLzYPXpMKzAPBgNVHRMBAf8EBTADAQH/MBgGA1UdEQQRMA+CDXRv
-bmVsYWIubG9jYWwwDQYJKoZIhvcNAQELBQADggEBADMzKHm9FVrlThmjp4wodtkT
-7SGelhCsY4wAGVB6JOwjdl8Ov0j/kdtnYBcmO5lCeNbxHSpnyOK/XhqtrvqwEb/D
-y8ExmIhGj4z2u+NBR9sW1Qcd2f+OksrlvmpGt79TDSlCm4hN6kYsihYaeWJ+/8ql
-nZ4qH0/K+uX8dNsPd5P9Y6qxoXiWX2Xp6xmPNeiM4tUBN5KiDEotk3d23pt6hmCU
-00kqymOYd3cfas4lLOgPxN4Azg21czsoVW8A9cad777atPd9aa4fspqzlabcC93m
-ywOmbtYSivA93Q4Aisv5Rx77rJbqBdfnN4JADIVmq270vxfyY3i7akNMXL8tjwU=
------END CERTIFICATE-----
-`;
+MIIDNzCCAh+gAwIBAgIUVbE0kH6kiGMKEXWqyQhHmYxhqJIwDQYJKoZIhvcNAQEL
+BQAwGDEWMBQGA1UEAwwNdG9uZWxhYi5sb2NhbDAeFw0yNjA3MTExMTM2MzFaFw0z
+NjA3MDgxMTM2MzFaMBgxFjAUBgNVBAMMDXRvbmVsYWIubG9jYWwwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC5pdBpPMUou3UhcsdcQltH9GuxORjdxsSL
+YRw1aNnYKG2wjJsVs0UNCJqWG5K6MPHmwXiY/GBETKk0rFaXgpacuYvsDXDm1cZi
+N6VIBpKWs2FRq57NjbfLrxEAJdoJ0AVteECngKlC0GD2GSB9t6K1bh1mSuEL7V9M
+EBCMsKzaoegFUkDY1SY3hEglkbGY3XRjAXKZKOLQiBfY3JEUQOXbgEknjH5+REZc
+hJK0FSyO9lU+5pHoLveobL5CtdkMBBMPFd3SEmpFMEp/nCZmNEkY0KkVpImA+FgX
+cVqINaM+Mwaw6Wy7/l7g/KzbkvCTSwyCNyrS3f65YTwB2lmUt7t1AgMBAAGjeTB3
+MCkGA1UdEQQiMCCCDXRvbmVsYWIubG9jYWyCCWxvY2FsaG9zdIcEfwAAATAJBgNV
+HRMEAjAAMAsGA1UdDwQEAwIFoDATBgNVHSUEDDAKBggrBgEFBQcDATAdBgNVHQ4E
+FgQUOF8lMGJuS63OuiiALpCmsy3ekq4wDQYJKoZIhvcNAQELBQADggEBABMeKroI
+bMm5ErIUY9cV+iTlrz3fwFby+zXpMt0Y1fB7kDObCvn/kAzhOu5JNVuk5b/pMXib
+Uxp5EwePFrhZbdc8IaFwWG2LAIir1TBEbhuDrz1CrZ4MlHLOLh8Cu9ppt29ALeR3
+DoquLbncdMxKzP/ZzIm7xQuTCqsYVzUTqXEalAv4hsvimwRlY6mX+iPI1twlrNWj
+8EO+QTqu0xNtRW2XjiU1QvLirrgrcTKEstpG/0NunMCxs7gz4uQ6BT7xoikCS73j
+U8dPaXLCB8HFrDTHUF8tewB34tqm2hwcPq5lUaTD69qn0tWQjQxydcRqqm8/WxP2
+pgPh7F4UMkVAXC0=
+-----END CERTIFICATE-----`;
 
 export const LOCAL_KEY = `-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCS0aEb5ZCu9i8E
-yi4sGLP1q/uswuxagW34cRf/pkt01Aku4h5+ToUR3EbCJlBmz7Z3+nGbTOhvTffh
-ry1pmm2Byde/hJMjCOyS9GUUVpHzm0GDIP98qTme8uGe5GNzeUIFQHrLAsEe6pFE
-aPd3u3tpQV/K61mcM+6ICxsG1aDYYhiLj8oA38trxbapz+j6oypUWn0zIrHb4d4j
-zdfLzEdU9ezHqjdfdEjwaTGY+qVdIlCuiXexW3IAGaY4CLDsNMZf3u2Au4rXyY0K
-HzucVJEdvjfLOxXp8vysIX8E6m88PAFAszOKtzKStN9ucHlumcnIPwBt0jCpteMP
-ubVVGvtjAgMBAAECggEARZGLc7qNmjoRAYYD5uU1sL1zneMnN6OIxmZgZsUXkB5A
-07RVmqf+Kf5kkO6yvmTCI4vKdTo2ETeys3/cVuPT6+IGlztstPcvklq34rE6q2Hv
-4wCpzxoosYaJHk8+SKM2g2KQTM3bUJj5iJ7sVBHEYpWVnIN0jK2W42PPxKdJdf4d
-dIg+p/5dzQdbMZJNVGRjjpbmySJHZEujiflM1HVmHK8JXKVAqFooNq3OE7yPn5WV
-mP4tVue98l5/uEJUTvHsSAIQsXolrf//dM1t2WYqIYUjgjlmT8vQJiirNrjpTy5C
-BCRMs4vBOBABq8vjdrqtbP0wOmyExFwXXf2W/HpFkQKBgQDNhLElUNelIWdaLwO2
-ULW3fYTHmLCXBoE/OAaZDaU6QvpvoLx+qxye/1JXFk8HmCDY5NX2Tl+5B1+0iBga
-yMWKlOMLIEdffJ6oyEAiynQHASL8jiQ5hUAmHgBXgLNujssB0o6sBQMAY4VJ9Tx6
-JfP3u204pK2KQjenwv+EWRQotQKBgQC24dMw9eWko3T/IwXY0XM+jK/orlZV76Zd
-J+reJSGKIGY+lcB8XSJBpumKOHSNueIdmNWZQGJALxTnhld2lmY4qS6PkHVMJftY
-r06+i2B4HC8IVKzgHBINqAZEwO/b9ZPPL057nqEMP5BzGUyrIH/uYNFXegfJiB1W
-XxHldIGatwKBgQCmRogIF9sQx/DVfxoyxCPxO8VUs02UMvgYzNxRsj+O3qe97r7y
-gMBcR1g4C12PWF6i/Km7aHd7vOKKrl1KNkvUrlbvJoN4VtwK1FFHlKLBFANZcCsQ
-uqVG8Zj3MrJ5bWADrnYt6LQf+WTajGYMsW4sbWCVpm6dYKukuFiAnI15zQKBgAWl
-48fXUEhNZAedJUkU7uI3phchizkMNa8a1H4X13lUltPH/DHbDnvIk93Y8ICQBRO0
-7KPXATHKQnMECx92daG6V93HMFgxtBmBEIWB+HC9LharxssFEumpDsiAzOeWJgJ4
-C4x10bN3Ixbq6Rs/3bOW+eAhvKvUsFNCjGLxvi7xAoGAE3fEiiQY6fow6gKzQToD
-XXt9SXoY1fmoeREjcRFjy5N8BWQhLk7R0km0W2r8L5oElr/Ii0xNX1Q3I5RF/B3Y
-GnigvVsxCO/F2/PE61H+xG3HOXT03QOQrmQZRjseOTGCwG60tgaqraC+otASX6RN
-8/fwoDFAjNsFPpCrF4OiW0I=
------END PRIVATE KEY-----
-`;
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5pdBpPMUou3Uh
+csdcQltH9GuxORjdxsSLYRw1aNnYKG2wjJsVs0UNCJqWG5K6MPHmwXiY/GBETKk0
+rFaXgpacuYvsDXDm1cZiN6VIBpKWs2FRq57NjbfLrxEAJdoJ0AVteECngKlC0GD2
+GSB9t6K1bh1mSuEL7V9MEBCMsKzaoegFUkDY1SY3hEglkbGY3XRjAXKZKOLQiBfY
+3JEUQOXbgEknjH5+REZchJK0FSyO9lU+5pHoLveobL5CtdkMBBMPFd3SEmpFMEp/
+nCZmNEkY0KkVpImA+FgXcVqINaM+Mwaw6Wy7/l7g/KzbkvCTSwyCNyrS3f65YTwB
+2lmUt7t1AgMBAAECggEABXf6lBF+5towpGtd1qiYhDtCmcnKZ/YL+r4uHp9riYjG
+umlZ642l9v/JCasaa1CaP52wJprFhzE4xFNL69xVd03OZSN8OOzZzWyQNXdVVGyD
+iti7cpiqgcCBwrKCIiO2C1+P2xV2eqebYSIGqTmzrYrTFTC03rb/lFhoL3kXBJWs
+5pSMG5fQzaitjCLoVa36TXiiqqanpPcf+oSAh47aZR/3dSkwn1l7Cp7rx7QuEkXJ
+N64m4FCCeQyGlJBMf5vWMibbQxbvDH9eo2NWWnumP8tLCdn/BeoqS4KejlFE437O
+kfZmb+vMbuVDAe6gc3u1G0L9GdytHpoNKGfrlWbcHQKBgQDl1l8omjgaq0BRMBP2
+y37AznXRV/x7ITyauk47fWHiqv4K6GWC7vYSKSJwLifDUHyX5+ho1XaxSjR1HYiI
+DOMNtETBEXF2jtGr9Lj3Mi+1tmK5qUkunKl+JjvIRPbhsU1PhEKotm0pahwc/8yB
+4yIrC69JT48QdMppoBnOnvmi0wKBgQDOx7kdtrvMPgvItEp4p/61KbmA2cUbYowA
+75IAD5++1uF1T+MLxKPYhrnLjZfb//8YnNEVFwD7KFygw+QmldYqX6UX9yT3yU6r
+Efb03DZWmkF+afxaz9TJIliKMTvnOJ76I+IMbsiuybbn9EjDayxxrkDWfvEElIcQ
+PN4DYlvrlwKBgDpgls7zTOjJMo7sjUWULl++kQJZPNHxgTkztQc7M4+lKt2OZao6
+E9pNBGhF8OeVG/BhgRCPl5Q0atqMY89appkmfogjbBRW9j6c7BYtcxzOdIj/zIzA
+UfSutWSKz8JHjIFz8JJ1s4hfYUCkYEdlb5pLX3xZbtcZMwhdF/D5RCLtAoGBALQz
+d45+hfC7DZfuDoxRkvYcE45Hua9g1TOnk+u7sfIk3zxVzz6dMlBrMJVEotfVo2C2
+oLspXfCCvx5XOIerwoUQ7xYQikXqSEVrFXVUR4J3UaYyBPq67ewOo2xi9ZpOTLUe
++krtbLRuE5jW2WZ8CrJTMiv7Wl0sdvven3gBiqunAoGAJ5XMFACw2+OfKrNRi1bD
+XPK05SBQHw7WAVhg6EJnNxsyUGgI9/D9/ANiPOgca2Y6jrLWgbBMiWFhiNHfd8df
+QKAxjOYzr1rM2z4EBoS67rrF7d0wrjWO+FUx/0j4i6gjyYXLavxgOKxrpaUda/Pb
+Z4CaHLibQzaabqJQ8i4Zl4E=
+-----END PRIVATE KEY-----`;
