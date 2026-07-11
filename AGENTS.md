@@ -22,6 +22,7 @@ ToneLab — une application de bureau Electron pour musiciens (React 19 + TypeSc
 - `.env` est requis pour les fonctionnalités plugins/Cloudinary (copier depuis `.env.example`). Toutes les variables doivent être préfixées par `VITE_` pour atteindre le renderer. `.env` est dans le `.gitignore`.
 - Firebase est utilisé **uniquement** pour le CRUD de la galerie de plugins. Les projets utilisateur vivent dans le **localStorage**, pas dans le cloud.
 - L'application démarre sans `.env`, mais les fonctionnalités plugins/images échoueront.
+- **Logs SSL `net_error -202` en dev/prod** : Chromium (Electron) affiche `handshake failed … net_error -202` (`ERR_CERT_AUTHORITY_INVALID`) pour `https://tonelab.local`. C'est **attendu et bénin** : le renderer est servi via un serveur HTTPS local avec un certificat **auto-signé** (origine HTTPS requise par l'API YouTube du DocV). Le handler `certificate-error` de `main.ts` accepte explicitement `tonelab.local` → la connexion aboutit. Aucune action requise ; ne pas chercher de panne côté réseau/Firebase/Cloudinary.
 
 ## Notes d'architecture (non évidentes)
 - Points d'entrée : `src/main.ts` (processus principal), `src/preload.ts`, `src/renderer.tsx`, `src/App.tsx` (routage par onglets via l'état `ongletActif`).
