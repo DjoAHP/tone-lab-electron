@@ -575,6 +575,25 @@ interface PluginGroupe {
   plugins: Plugin[];
 }
 
+// ── Grille de cartes plugins (réutilisée) ───────────────────
+function GrillePlugins({ plugins }: { plugins: Plugin[] }) {
+  const { supprimerPlugin } = useApp();
+  return (
+    <div
+      className="grid gap-4"
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))" }}
+    >
+      {plugins.map((plugin) => (
+        <PluginCard
+          key={plugin.id}
+          plugin={plugin}
+          onSupprimer={() => supprimerPlugin(plugin.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Composant principal PluginGallery ─────────────────────────
 export function PluginGallery() {
   const { plugins, pluginsLoading, supprimerPlugin } = useApp();
@@ -763,21 +782,32 @@ export function PluginGallery() {
                   : 'Essayez le filtre "Tous"'}
               </p>
             </div>
-          ) : (
-            <div
-              className="grid gap-4"
-              style={{
-                gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
-              }}
-            >
-              {pluginsFiltres.map((plugin) => (
-                <PluginCard
-                  key={plugin.id}
-                  plugin={plugin}
-                  onSupprimer={() => supprimerPlugin(plugin.id)}
-                />
+          ) : filtre === "tous" ? (
+            <div className="flex flex-col">
+              {groupes.map((g) => (
+                <div key={g.key}>
+                  {/* Séparateur : libellé à gauche + ligne à droite */}
+                  <div className="flex items-center my-4">
+                    <span
+                      className="text-xs font-medium whitespace-nowrap pr-3"
+                      style={{ color: "hsl(220, 30%, 55%)" }}
+                    >
+                      {g.label}
+                    </span>
+                    <div className="flex-1" style={{ borderTop: "1px solid hsl(220, 15%, 18%)" }} />
+                  </div>
+                  {g.plugins.length === 0 ? (
+                    <p className="text-xs mb-2" style={{ color: "hsl(220, 15%, 40%)" }}>
+                      Aucun plugin
+                    </p>
+                  ) : (
+                    <GrillePlugins plugins={g.plugins} />
+                  )}
+                </div>
               ))}
             </div>
+          ) : (
+            <GrillePlugins plugins={pluginsFiltres} />
           )}
         </div>
       </div>
