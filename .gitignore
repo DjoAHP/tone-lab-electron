@@ -118,3 +118,7 @@ demo-test/
 .openclaude-profile.json
 *.dist
 dist/
+
+# Superpowers (planning internes : specs/plans) & docs générés localement
+.superpowers/
+docs/
