@@ -176,6 +176,7 @@ export function useAppStore() {
         chrono: "chrono",
       } as Record<string, string>,
       modifie: false,
+      demandeEditionNomProjet: false,
       // DocV
       docvFiles: null,
       docvSelectedFile: null,
@@ -530,6 +531,12 @@ export function useAppStore() {
     [state.projet, mettreAJourEtat],
   );
 
+  // Déclenche l'édition inline du nom de projet dans la Sidebar (depuis le menu)
+  const setDemandeEditionNomProjet = useCallback(
+    (v: boolean) => mettreAJourEtat({ demandeEditionNomProjet: v }),
+    [mettreAJourEtat],
+  );
+
   const ouvrirProjet = useCallback(
     (contenuJSON: string): boolean => {
       try {
@@ -574,8 +581,8 @@ export function useAppStore() {
     lien.click();
     URL.revokeObjectURL(url);
     sauvegarderDansLocalStorage(projetMisAJour);
-    const cloudOk = await saveProject(projetMisAJour);
-    mettreAJourEtat({ projet: projetMisAJour, modifie: !cloudOk });
+    saveProject(projetMisAJour); // synchro cloud best-effort (ne bloque pas le témoin)
+    mettreAJourEtat({ projet: projetMisAJour, modifie: false });
   }, [state.projet, mettreAJourEtat]);
 
   const enregistrerProjet = useCallback(async () => {
@@ -585,9 +592,8 @@ export function useAppStore() {
       date_modification: maintenant(),
     };
     sauvegarderDansLocalStorage(projetMisAJour);
-    const cloudOk = await saveProject(projetMisAJour);
-    // n'abaisse « modifie » que si la sauvegarde cloud a réussi
-    mettreAJourEtat({ projet: projetMisAJour, modifie: !cloudOk });
+    saveProject(projetMisAJour); // synchro cloud best-effort
+    mettreAJourEtat({ projet: projetMisAJour, modifie: false });
   }, [state.projet, mettreAJourEtat]);
 
   // â”€â”€ Stacks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -1248,6 +1254,7 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     ongletActif: state.ongletActif,
     vueActive: state.vueActive,
     modifie: state.modifie,
+    demandeEditionNomProjet: state.demandeEditionNomProjet,
     // DocV
     docvFiles: state.docvFiles,
     docvSelectedFile: state.docvSelectedFile,
@@ -1272,6 +1279,7 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     // Actions projet
     nouveauProjet,
     renommerProjet,
+    setDemandeEditionNomProjet,
     ouvrirProjet,
     enregistrerProjet,
     sauvegarderProjet,

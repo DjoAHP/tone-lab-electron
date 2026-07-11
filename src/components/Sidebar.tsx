@@ -469,7 +469,15 @@ function ProjetAccordeon({
   const [survol, setSurvol] = useState(false);
   // État local pour l'édition inline du nom de projet
   const [editingNom, setEditingNom] = useState(false);
-  const { renommerProjet } = useApp();
+  const { renommerProjet, demandeEditionNomProjet, setDemandeEditionNomProjet } = useApp();
+
+  // Ouvre l'édition inline du nom quand le menu « Renommer le projet » le demande
+  useEffect(() => {
+    if (demandeEditionNomProjet) {
+      setEditingNom(true);
+      setDemandeEditionNomProjet(false);
+    }
+  }, [demandeEditionNomProjet, setDemandeEditionNomProjet]);
 
   const totalRecherches = projet.stacks.reduce(
     (acc, s) =>

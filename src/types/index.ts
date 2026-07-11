@@ -107,6 +107,7 @@ export interface AppState {
 	  // Sauvegarde la vue active par onglet pour restaurer lors du switch
 	  vuesParOnglet: Record<string, string>;
 	  modifie: boolean;
+  demandeEditionNomProjet: boolean; // demande d'ouverture de l'édition inline du nom (depuis le menu)
 	  // DocV
 	  docvFiles: DocvFileItem[] | null;
 	  docvSelectedFile: string | null;

@@ -1,9 +1,10 @@
 // src/components/MenuBar.tsx
-// La barre de menu en haut avec Fichier, Projet, Outils, Exporter
+// La barre de menu en haut avec Fichier, Projet, Exporter
 
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
+import { DialogModal } from "./DialogModal";
 
 // ─── Composant Menu déroulant ────────────────
 // Props = les "paramètres" qu'on passe à un composant
@@ -99,39 +100,69 @@ export function MenuBar() {
     modifie,
     nouveauProjet,
     ouvrirProjet,
-    enregistrerProjet,
     sauvegarderProjet,
-    setVueActive, // ← ajoute
-    selectionnerEntree, // ← ajoute
+    renommerProjet,
+    importerSetlist,
+    setDemandeEditionNomProjet,
     ongletActif,
   } = useApp();
+
+  // Libellés contextuels selon l'outil actif
+  const estSetlist = ongletActif === "setlist";
+  const estStack = ongletActif === "stack";
+  const libNouveau = estSetlist ? "Nouvelle Setlist" : estStack ? "Nouveau Stack" : "Nouveau projet";
+  const libOuvrir = estSetlist ? "Ouvrir une Setlist" : estStack ? "Ouvrir un Stack" : "Ouvrir le projet (.tl)…";
+  const libExporterProjet = estSetlist ? "Exporter la Setlist" : estStack ? "Exporter le Stack" : "Exporter le projet (.tl)…";
   // Raccourci clavier Ctrl+S
   useEffect(() => {
     function gererTouche(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        if (projet) enregistrerProjet();
+        if (projet) sauvegarderProjet();
       }
     }
     document.addEventListener("keydown", gererTouche);
     return () => document.removeEventListener("keydown", gererTouche);
-  }, [projet, enregistrerProjet]);
+  }, [projet, sauvegarderProjet]);
+
+  // ─── Dialogues in-app (remplacent window.confirm/prompt, désactivés en sandbox) ──
+  const [dialog, setDialog] = useState<{
+    title: string;
+    message?: string;
+    inputMode?: boolean;
+    inputDefault?: string;
+    onConfirm?: (value?: string) => void;
+  } | null>(null);
+
+  function ouvrirDialog(opts: {
+    title: string;
+    message?: string;
+    inputMode?: boolean;
+    inputDefault?: string;
+    onConfirm?: (value?: string) => void;
+  }) {
+    setDialog(opts);
+  }
 
   // ─── Créer un nouveau projet ─────────────
   function handleNouveauProjet() {
-    // Si des modifications non sauvegardées, on avertit
+    const nomDefaut =
+      ongletActif === "setlist"
+        ? "Nouvelle Setlist"
+        : ongletActif === "stack"
+          ? "Nouveau Stack"
+          : "Nouveau projet";
+    const creer = () => nouveauProjet(nomDefaut);
+
+    // Avertissement si des modifications non sauvegardées (modale in-app)
     if (modifie && projet) {
-      if (
-        !window.confirm(
-          "Des modifications non sauvegardées seront perdues. Continuer ?",
-        )
-      ) {
-        return;
-      }
-    }
-    const nom = window.prompt("Nom du nouveau projet :", "Nouveau projet");
-    if (nom && nom.trim()) {
-      nouveauProjet(nom.trim());
+      ouvrirDialog({
+        title: "Nouveau projet",
+        message: "Des modifications non sauvegardées seront perdues. Continuer ?",
+        onConfirm: creer,
+      });
+    } else {
+      creer();
     }
   }
 
@@ -154,8 +185,9 @@ export function MenuBar() {
   }
 
   // ── Imprimer ────────────────────────────
+  // window.print() est désactivé en sandbox → on génère un PDF fiable via jsPDF
   function handleImprimer() {
-    window.print();
+    handleExporterFormat("pdf");
   }
 
   // ── Exporter en PDF/JPG/PNG (utilise html2canvas) ──
@@ -197,33 +229,14 @@ export function MenuBar() {
       document.body.removeChild(clone);
 
       if (format === "pdf") {
-        // Pour PDF : ouvre une nouvelle fenêtre avec l'image et lance l'impression
+        // PDF fiable via jsPDF (window.print() est désactivé en sandbox)
+        const { jsPDF } = await import("jspdf");
         const imgData = canvas.toDataURL("image/png");
-        const printWindow = window.open("", "_blank");
-        if (printWindow) {
-          printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>${projet?.bandName || "Setlist"}</title>
-                <style>
-                  body { margin: 0; display: flex; justify-content: center; }
-                  img { width: 210mm; height: 297mm; object-fit: contain; }
-                </style>
-              </head>
-              <body>
-                <img src="${imgData}" alt="Setlist" />
-                <script>
-                  window.onload = function() {
-                    window.print();
-                    window.onafterprint = function() { window.close(); };
-                  };
-                </script>
-              </body>
-            </html>
-          `);
-          printWindow.document.close();
-        }
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const pageL = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, "PNG", 0, 0, pageL, pageH);
+        pdf.save(`${(projet?.bandName || "setlist").replace(/\s+/g, "_")}.pdf`);
       } else {
         // JPG ou PNG : téléchargement direct
         const link = document.createElement("a");
@@ -232,43 +245,107 @@ export function MenuBar() {
         link.click();
       }
     } catch {
-      window.alert("Erreur lors de l'exportation. Vérifiez que html2canvas est installé.");
+      ouvrirDialog({
+        title: "Export impossible",
+        message: "Erreur lors de l'exportation. Vérifiez que html2canvas est installé.",
+      });
     }
   }
 
   // ─── Ouvrir un fichier .tl ───────────────
   function handleOuvrirFichier() {
-    if (modifie && projet) {
-      if (
-        !window.confirm(
-          "Des modifications non sauvegardées seront perdues. Continuer ?",
-        )
-      ) {
-        return;
-      }
-    }
+    const lancerInput = () => {
+      // Crée un input file invisible et le déclenche
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".tl,.json"; // Accepte .tl et .json (car c'est du JSON)
+      input.onchange = (e) => {
+        const fichier = (e.target as HTMLInputElement).files?.[0];
+        if (!fichier) return;
 
-    // Crée un input file invisible et le déclenche
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".tl,.json"; // Accepte .tl et .json (car c'est du JSON)
-    input.onchange = (e) => {
-      const fichier = (e.target as HTMLInputElement).files?.[0];
-      if (!fichier) return;
-
-      const lecteur = new FileReader();
-      lecteur.onload = (e) => {
-        const contenu = e.target?.result as string;
-        const succes = ouvrirProjet(contenu);
-        if (!succes) {
-          window.alert(
-            "Fichier invalide ou corrompu. Vérifiez que c'est bien un fichier ToneLab (.tl)",
-          );
-        }
+        const lecteur = new FileReader();
+        lecteur.onload = (e) => {
+          const contenu = e.target?.result as string;
+          const succes = ouvrirProjet(contenu);
+          if (!succes) {
+            ouvrirDialog({
+              title: "Ouverture impossible",
+              message:
+                "Fichier invalide ou corrompu. Vérifiez que c'est bien un fichier ToneLab (.tl)",
+            });
+          }
+        };
+        lecteur.readAsText(fichier); // Lit le fichier comme du texte
       };
-      lecteur.readAsText(fichier); // Lit le fichier comme du texte
+      input.click();
     };
-    input.click();
+
+    if (modifie && projet) {
+      ouvrirDialog({
+        title: "Ouvrir un fichier",
+        message: "Des modifications non sauvegardées seront perdues. Continuer ?",
+        onConfirm: lancerInput,
+      });
+    } else {
+      lancerInput();
+    }
+  }
+
+  // ── Renommer le projet actif ────────────
+  function handleRenommerProjet() {
+    if (!projet) return;
+    if (ongletActif === "stack") {
+      // Ouvre l'édition inline du nom directement dans la Sidebar
+      setDemandeEditionNomProjet(true);
+    } else {
+      // Modale in-app (prompt désactivé en sandbox)
+      ouvrirDialog({
+        title: "Renommer le projet",
+        inputMode: true,
+        inputDefault: projet.nom,
+        onConfirm: (nom) => {
+          if (nom && nom.trim()) renommerProjet(nom.trim());
+        },
+      });
+    }
+  }
+
+  // ── Importer une setlist (.tl) dans le projet courant ──
+  function handleImporterSetlist() {
+    const lancerInput = () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".tl,.json";
+      input.onchange = (e) => {
+        const fichier = (e.target as HTMLInputElement).files?.[0];
+        if (!fichier) return;
+
+        const lecteur = new FileReader();
+        lecteur.onload = (ev) => {
+          const contenu = (ev.target as FileReader).result as string;
+          const succes = importerSetlist(contenu);
+          if (!succes) {
+            ouvrirDialog({
+              title: "Import impossible",
+              message:
+                "Fichier invalide. Vérifiez que c'est un fichier Setlist (.tl)",
+            });
+          }
+        };
+        lecteur.readAsText(fichier);
+      };
+      input.click();
+    };
+
+    if (modifie && projet) {
+      ouvrirDialog({
+        title: "Importer une setlist",
+        message: "Des modifications non sauvegardées seront perdues. Continuer ?",
+        onConfirm: lancerInput,
+      });
+    } else {
+      lancerInput();
+    }
   }
 
   return (
@@ -296,10 +373,10 @@ export function MenuBar() {
 
       {/* ── Menu Fichier ── */}
       <Menu label="Fichier">
-        <MenuItem onClick={handleNouveauProjet}>Nouveau projet</MenuItem>
-        <MenuItem onClick={handleOuvrirFichier}>Ouvrir (.tl)…</MenuItem>
+        <MenuItem onClick={handleNouveauProjet}>{libNouveau}</MenuItem>
+        <MenuItem onClick={handleOuvrirFichier}>{libOuvrir}</MenuItem>
         <MenuSeparateur />
-        <MenuItem onClick={enregistrerProjet} disabled={!projet || !modifie}>
+        <MenuItem onClick={sauvegarderProjet} disabled={!projet || !modifie}>
           <span>Enregistrer</span>
           <span
             style={{
@@ -312,7 +389,7 @@ export function MenuBar() {
           </span>
         </MenuItem>
         <MenuItem onClick={sauvegarderProjet} disabled={!projet}>
-          Exporter le fichier .tl…
+          {libExporterProjet}…
         </MenuItem>
       </Menu>
 
@@ -331,31 +408,34 @@ export function MenuBar() {
               {projet.entries.length} entrée
               {projet.entries.length !== 1 ? "s" : ""}
             </div>
+            <MenuSeparateur />
+            {ongletActif !== "setlist" && (
+              <MenuItem onClick={handleRenommerProjet}>
+                Renommer le projet…
+              </MenuItem>
+            )}
           </>
         ) : (
-          <div className="px-4 py-2 text-sm text-gray-500">
-            Aucun projet ouvert
-          </div>
+          <>
+            <div className="px-4 py-2 text-sm text-gray-500">
+              Aucun projet ouvert
+            </div>
+            <MenuSeparateur />
+            <MenuItem onClick={handleRenommerProjet} disabled>
+              Renommer le projet…
+            </MenuItem>
+          </>
         )}
-      </Menu>
-
-      {/* ── Menu Outils ── */}
-      <Menu label="Outils">
-        <MenuItem
-          onClick={() => {
-            setVueActive("home");
-            selectionnerEntree(null);
-          }}
-        >
-          Stack — Galerie plugins
-        </MenuItem>
       </Menu>
 
       {/* ── Menu Exporter (visible uniquement sur Setlist) ── */}
       {ongletActif === "setlist" && (
         <Menu label="Exporter">
           <MenuItem onClick={handleExporterTL}>
-            Exporter (.tl)
+            Exporter la Setlist (.tl)
+          </MenuItem>
+          <MenuItem onClick={handleImporterSetlist}>
+            Importer la Setlist (.tl)…
           </MenuItem>
           <MenuSeparateur />
           <MenuItem onClick={() => handleExporterFormat("pdf")}>
@@ -388,10 +468,10 @@ export function MenuBar() {
         }
       >
         {modifie ? (
-          // Point orange — modifications en attente
+          // Point cyan — modifications en attente (conforme à la charte : un seul accent cyan)
           <div
             className="w-2 h-2 rounded-full"
-            style={{ background: "hsl(38, 90%, 55%)" }}
+            style={{ background: "hsl(var(--tl-accent-princ))" }}
           />
         ) : projet ? (
           // Coche verte — tout est enregistré
@@ -406,6 +486,21 @@ export function MenuBar() {
           </svg>
         ) : null}
       </div>
+
+      {/* Modale in-app (confirm/prompt) — fonctionne en sandbox */}
+      <DialogModal
+        open={dialog !== null}
+        title={dialog?.title ?? ""}
+        message={dialog?.message}
+        inputMode={dialog?.inputMode}
+        inputDefault={dialog?.inputDefault}
+        onConfirm={(value) => {
+          const cb = dialog?.onConfirm;
+          setDialog(null);
+          cb?.(value);
+        }}
+        onCancel={() => setDialog(null)}
+      />
     </div>
   );
 }
