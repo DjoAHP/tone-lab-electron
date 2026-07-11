@@ -16,7 +16,7 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    executableName: 'tone-lab-ahp',
+    executableName: process.platform === 'win32' ? 'ToneLab-v' + pkg.version : 'tone-lab-ahp',
     icon: join(__dirname, 'assets/app-icon'),
   },
   rebuildConfig: {},
@@ -25,7 +25,7 @@ const config: ForgeConfig = {
       iconUrl: join(__dirname, 'assets/app-icon.ico'),
       setupIcon: join(__dirname, 'assets/app-icon.ico'),
       name: 'ToneLab-v' + pkg.version,
-      exe: 'tone-lab-ahp.exe',
+      exe: 'ToneLab-v' + pkg.version + '.exe',
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
