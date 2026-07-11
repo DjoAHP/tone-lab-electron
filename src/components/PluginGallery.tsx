@@ -596,7 +596,7 @@ function GrillePlugins({ plugins }: { plugins: Plugin[] }) {
 
 // ── Composant principal PluginGallery ─────────────────────────
 export function PluginGallery() {
-  const { plugins, pluginsLoading, supprimerPlugin } = useApp();
+  const { plugins, pluginsLoading } = useApp();
   const [filtre, setFiltre] = useState<InstrumentType | "tous">("tous");
   const [modalOuverte, setModalOuverte] = useState(false);
 
@@ -615,7 +615,7 @@ export function PluginGallery() {
 
     const map = new Map<InstrumentType | "__sans__", Plugin[]>();
     for (const p of plugins) {
-      const raw = (p.instrument ?? "") as InstrumentType;
+      const raw = (p.instrument ?? "") as InstrumentType | "";
       const key: InstrumentType | "__sans__" = raw ? raw : "__sans__";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(p);
@@ -796,13 +796,7 @@ export function PluginGallery() {
                     </span>
                     <div className="flex-1" style={{ borderTop: "1px solid hsl(220, 15%, 18%)" }} />
                   </div>
-                  {g.plugins.length === 0 ? (
-                    <p className="text-xs mb-2" style={{ color: "hsl(220, 15%, 40%)" }}>
-                      Aucun plugin
-                    </p>
-                  ) : (
-                    <GrillePlugins plugins={g.plugins} />
-                  )}
+                  <GrillePlugins plugins={g.plugins} />
                 </div>
               ))}
             </div>
