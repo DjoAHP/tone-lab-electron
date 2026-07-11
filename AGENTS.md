@@ -6,7 +6,7 @@ Guide compact pour travailler dans ce dépôt. Pour le détail complet, voir `CL
 ToneLab — une application de bureau Electron pour musiciens (React 19 + TypeScript + Vite + Electron Forge). Une seule application, un seul package, pas de monorepo ici.
 
 ## Pièges sur les sources de vérité (vérifier avant de croire la prose)
-- **`package.json` est la source de vérité pour la version** (actuellement 2.6.10). `CLAUDE.md` indique 2.6.5 — c'est périmé.
+- **`package.json` est la source de vérité pour la version** (actuellement 2.7.11). `CLAUDE.md` indique 2.6.5 — c'est périmé.
 - **`README.md` est périmé et partiellement faux.** Il prétend une gestion d'état Zustand + Radix/shadcn. La vraie couche d'état est un **hook personnalisé `useAppStore`** (`src/store/useAppStore.ts`), exposé via React Context (`src/context/AppContext.tsx`). Il **n'y a aucune dépendance zustand** dans `package.json`. Ignorez les affirmations du README sur l'état.
 - `CLAUDE.md` est le fichier d'instructions faisant autorité ; lui faire confiance plutôt qu'au `README.md`.
 
