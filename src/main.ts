@@ -2,6 +2,7 @@ import "./vite-env.d.ts";
 import { app, BrowserWindow, Menu, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import http from 'node:http';
 import https from 'node:https';
 import { spawn } from 'node:child_process';
 import { LOCAL_CERT, LOCAL_KEY } from './localCert';
@@ -90,6 +91,71 @@ function startRendererServer(): Promise<number> {
   });
 }
 
+// En dev (npm start), Vite sert le renderer en http://localhost:5173 (origine
+// HTTP) → l'API IFrame YouTube (DocV) est bloquée (erreurs 150/152/153). On
+// proxifie Vite à travers notre serveur HTTPS local tonelab.local pour donner
+// au renderer une VRAIE origine HTTPS, cohérente avec la prod et la PWA.
+// Le proxy gère aussi l'upgrade WebSocket afin de préserver le HMR Vite.
+function startDevProxy(targetDevUrl: string): Promise<number> {
+  const target = new URL(targetDevUrl);
+
+  const server = https.createServer(
+    { cert: LOCAL_CERT, key: LOCAL_KEY },
+    (req, res) => {
+      const proxyReq = http.request(
+        {
+          host: target.hostname,
+          port: target.port,
+          path: req.url,
+          method: req.method,
+          headers: { ...req.headers, host: target.host },
+        },
+        (proxyRes) => {
+          res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
+          proxyRes.pipe(res);
+        },
+      );
+      proxyReq.on('error', () => res.destroy());
+      req.pipe(proxyReq);
+    },
+  );
+
+  // Proxy du WebSocket HMR (ws://localhost:5173 → wss://tonelab.local:<port>)
+  server.on('upgrade', (req, clientSocket) => {
+    const proxyReq = http.request({
+      host: target.hostname,
+      port: target.port,
+      path: req.url,
+      method: req.method,
+      headers: req.headers,
+    });
+
+    proxyReq.on('upgrade', (proxyRes, proxySocket, proxyHead) => {
+      clientSocket.write(
+        'HTTP/1.1 101 Switching Protocols\r\n' +
+          'Upgrade: websocket\r\n' +
+          'Connection: Upgrade\r\n' +
+          `Sec-WebSocket-Accept: ${String(proxyRes.headers['sec-websocket-accept'])}\r\n\r\n`,
+      );
+      if (proxyHead && proxyHead.length) proxySocket.write(proxyHead);
+      proxySocket.pipe(clientSocket);
+      clientSocket.pipe(proxySocket);
+    });
+
+    proxyReq.on('error', () => clientSocket.destroy());
+    proxyReq.end();
+  });
+
+  return new Promise((resolve, reject) => {
+    server.on('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const addr = server.address();
+      if (addr && typeof addr === 'object') resolve(addr.port);
+      else reject(new Error('Impossible de déterminer le port du proxy dev'));
+    });
+  });
+}
+
 
 // Détecte l'exécution sous WSL (WSLg n'a pas de gestionnaire d'URL Linux)
 function isWSL(): boolean {
@@ -163,13 +229,10 @@ const createWindow = () => {
   mainWindow.maximize();
 
   // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    // Servi via https://tonelab.local (origine https réelle et cohérente) au
-    // lieu de file:// → nécessaire pour l'API IFrame YouTube (DocV).
-    mainWindow.loadURL(`https://${APP_HOST}:${rendererPort}/index.html`);
-  }
+  // En dev comme en prod, le renderer est servi via https://tonelab.local
+  // (proxy HTTPS vers Vite en dev, serveur statique en prod) → origine https
+  // réelle et cohérente, nécessaire pour l'API IFrame YouTube (DocV).
+  mainWindow.loadURL(`https://${APP_HOST}:${rendererPort}/index.html`);
 
   // Open the DevTools & Menu bar par défaut.
 
@@ -186,9 +249,12 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
-  // En production, on sert le renderer via un serveur HTTPS local
-  // (pas en dev où Vite sert déjà en http).
-  if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  // En dev (Vite), on proxifie le serveur Vite via le serveur HTTPS local
+  // tonelab.local (origine https → YouTube DocV fonctionnel). En prod, on sert
+  // le renderer statiquement via le même serveur HTTPS local.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    rendererPort = await startDevProxy(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
     rendererPort = await startRendererServer();
   }
   createWindow();
