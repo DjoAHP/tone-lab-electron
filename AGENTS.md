@@ -12,7 +12,7 @@ ToneLab — une application de bureau Electron pour musiciens (React 19 + TypeSc
 
 ## Commandes
 - `npm start` → `electron-forge start`. **C'est la vraie commande de dev** (lance la fenêtre Electron avec HMR). Le renderer est servi via un **proxy HTTPS local `https://tonelab.local`** (Vite proxifié) pour donner une origine https réelle → l'API YouTube du DocV fonctionne en dev. Le HMR est préservé via le proxy WebSocket.
-- `npm run dev` → `vite` seul (uniquement le renderer, sans fenêtre Electron). Inutile seul pour les fonctionnalités desktop.
+- `npm run dev` → `vite` seul (uniquement le renderer, sans fenêtre Electron). Servi en **HTTPS sur localhost** (origine https → l'API YouTube du DocV fonctionne aussi hors Electron ; accepte le certificat auto-signé dans le navigateur).
 - `npm run build` → `tsc -b && vite build`. L'ordre compte : vérification des types puis bundling.
 - `npm run lint` → `eslint --ext .ts,.tsx .`
 - `npm run make` → construit l'installeur dans `out/make/` (Squirrel .exe sous Windows, ZIP/darwin, deb/rpm).
