@@ -51,13 +51,23 @@ export function DiapaTool() {
     >
       <div
         style={{
-          ...card,
-          width: "100%",
-          maxWidth: "1400px",
-          margin: "0 auto",
-          padding: "24px",
+          minHeight: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 16px",
         }}
       >
+        <div
+          style={{
+            ...card,
+            width: "100%",
+            maxWidth: "1400px",
+            margin: "0 auto",
+            padding: "24px",
+          }}
+        >
         {/* ─── SECTION 1: LED ─────────────── */}
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
           <div style={sectionTitle}>Note actuelle</div>
@@ -152,6 +162,7 @@ export function DiapaTool() {
               onNoteStop={handleNoteStop}
             />
           </div>
+        </div>
         </div>
       </div>
     </div>
