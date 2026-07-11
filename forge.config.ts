@@ -25,7 +25,7 @@ const config: ForgeConfig = {
       iconUrl: join(__dirname, 'assets/app-icon.ico'),
       setupIcon: join(__dirname, 'assets/app-icon.ico'),
       name: 'ToneLab-v' + pkg.version,
-      exe: 'ToneLab.exe',
+      exe: 'tone-lab-ahp.exe',
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
