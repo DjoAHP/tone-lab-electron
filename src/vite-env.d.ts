@@ -13,3 +13,16 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 
 // Variable de version injectée par Vite
 declare const __APP_VERSION__: string;
+
+// API exposée par le preload (contextBridge) au renderer
+type HelpTool = "stack" | "setlist";
+
+interface ElectronAPI {
+  openHelp(tool: HelpTool): void;
+  openExternal(url: string): void;
+}
+
+// Augmentation de l'interface globale Window (fichier .d.ts script)
+interface Window {
+  electronAPI: ElectronAPI;
+}

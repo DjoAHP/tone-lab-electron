@@ -1,5 +1,5 @@
 import "./vite-env.d.ts";
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, Menu, shell, ipcMain } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -243,6 +243,69 @@ const createWindow = () => {
   Menu.setApplicationMenu(null);
 
 };
+
+// ─────────────────────────────────────────────
+// Fenêtre d'aide (séparée, non modale)
+// Fenêtre indépendante du main window : elle peut passer DERRIÈRE l'app
+// quand on clique ailleurs, sans se fermer. On la ré-affiche facilement
+// via le menu « Aide » (elle est réutilisée, pas recréée).
+// ─────────────────────────────────────────────
+let helpWindow: BrowserWindow | null = null;
+
+function createHelpWindow(tool: string) {
+  // Si la fenêtre existe déjà : on la ré-affiche, on la remet au premier plan,
+  // et on recharge son contenu si l'outil demandé diffère.
+  if (helpWindow && !helpWindow.isDestroyed()) {
+    helpWindow.loadURL(
+      `https://${APP_HOST}:${rendererPort}/index.html?win=help&tool=${tool}`,
+    );
+    helpWindow.show();
+    helpWindow.focus();
+    return;
+  }
+
+  helpWindow = new BrowserWindow({
+    width: 960,
+    height: 720,
+    minWidth: 520,
+    minHeight: 420,
+    resizable: true,
+    show: true,
+    backgroundColor: "#0c0e16",
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  helpWindow.loadURL(
+    `https://${APP_HOST}:${rendererPort}/index.html?win=help&tool=${tool}`,
+  );
+
+  // Libère la référence quand l'utilisateur ferme la fenêtre
+  helpWindow.on('closed', () => {
+    helpWindow = null;
+  });
+
+  // Les liens externes (ex : YouTube) ouvrent le navigateur système
+  helpWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https:') || url.startsWith('http:')) {
+      openExternalUrl(url);
+    }
+    return { action: 'deny' };
+  });
+}
+
+// ── Handlers IPC venant du renderer (menu Aide, liens externes) ──
+ipcMain.on('help:open', (_event, tool: string) => {
+  createHelpWindow(tool);
+});
+
+ipcMain.on('shell:openExternal', (_event, url: string) => {
+  openExternalUrl(url);
+});
 
 
 // This method will be called when Electron has finished

@@ -2,7 +2,7 @@
   "type": "module",
   "name": "tone-lab-ahp",
   "productName": "ToneLab",
-  "version": "2.8.11",
+  "version": "2.8.12",
   "description": "Logiciel/app multiOutils pour musiciens.",
   "main": ".vite/build/main.cjs",
   "private": true,

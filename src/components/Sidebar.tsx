@@ -594,7 +594,7 @@ function ProjetAccordeon({
         <div style={{ marginLeft: "16px", paddingLeft: "8px", borderLeft: "1px solid hsl(220, 15%, 18%)" }}>
           {projet.stacks.length === 0 ? (
             <p className="text-[11px] px-2 py-2" style={{ color: "hsl(220, 15%, 38%)" }}>
-              Aucun stack — cliquez sur "+"
+              Aucun sous Stack — cliquez sur "+"
             </p>
           ) : (
             projet.stacks.map((stack) => (

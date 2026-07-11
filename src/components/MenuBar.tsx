@@ -252,6 +252,21 @@ export function MenuBar() {
     }
   }
 
+  // ─── Ouvrir la fenêtre d'aide (outil donné) ──
+  function handleOuvrirAide(tool: "stack" | "setlist") {
+    if (window.electronAPI) {
+      // Mode Electron : véritable fenêtre séparée (passe derrière l'app)
+      window.electronAPI.openHelp(tool);
+    } else {
+      // Mode web / PWA : popup navigateur indépendante rechargeant l'aide
+      window.open(
+        `${window.location.pathname}?win=help&tool=${tool}`,
+        "_blank",
+        "width=960,height=720",
+      );
+    }
+  }
+
   // ─── Ouvrir un fichier .tl ───────────────
   function handleOuvrirFichier() {
     const lancerInput = () => {
@@ -453,6 +468,16 @@ export function MenuBar() {
           </MenuItem>
         </Menu>
       )}
+
+      {/* ── Menu Aide (global, tous outils) ── */}
+      <Menu label="Aide">
+        <MenuItem onClick={() => handleOuvrirAide("stack")}>
+          StackTool
+        </MenuItem>
+        <MenuItem onClick={() => handleOuvrirAide("setlist")}>
+          SetlistTool
+        </MenuItem>
+      </Menu>
 
       {/* Espace flexible pour pousser les éléments à droite */}
       <div className="flex-1" />

@@ -7,6 +7,7 @@ A desktop Electron application built with React, TypeScript, Vite, and Electron 
 - 🎵 **Music Research Tools**: Explore and analyze different musical instruments and sounds
 - 🔊 **Sound Research Tool**: Interactive interface for audio experimentation
 - 🎹 **Diapa Tool**: Virtual 2-octave piano keyboard (C4-C6) with AZERTY keyboard support, LED display, multiple timbres (sine, triangle, square, saw), volume control, and sustain mode
+- 📚 **Help System**: Integrated "Aide" menu opening dedicated step-by-step windows for StackTool and SetlistTool (separate Electron window, with web/PWA popup fallback)
 - 💾 **Firebase Integration**: Cloud storage for user data and preferences
 - ☁️ **Cloudinary Integration**: Image upload and transformation capabilities
 - 🎨 **Modern UI**: Built with Tailwind CSS and shadcn/ui components

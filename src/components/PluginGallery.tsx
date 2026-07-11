@@ -3,6 +3,7 @@
 import React, { useState, useRef, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import type { InstrumentType, Plugin } from "../types";
+import HomeIcon from "../assets/icons/Sidebar/home.svg?react";
 
 // ── Labels des filtres ────────────────────────────────────────
 const LABELS_INSTRUMENTS: Record<InstrumentType | "tous", string> = {
@@ -653,9 +654,30 @@ export function PluginGallery() {
       >
         {/* ── Header ── */}
         <div
-          className="flex items-center justify-between px-6 py-4 flex-shrink-0"
+          className="relative flex items-center justify-between px-6 py-4 flex-shrink-0"
           style={{ borderBottom: "1px solid hsl(220, 15%, 16%)" }}
         >
+          {/* Titre centré discret : indique qu'on est sur la homepage */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 pointer-events-none"
+            aria-hidden="true"
+          >
+            <HomeIcon
+              width="13"
+              height="13"
+              style={{ color: "hsl(220, 15%, 38%)" }}
+            />
+            <span
+              className="text-xs font-medium tracking-wide"
+              style={{
+                color: "hsl(220, 15%, 42%)",
+                fontFamily: "Geist Variable, sans-serif",
+              }}
+            >
+              Home (plugins)
+            </span>
+          </div>
+
           <div>
             <h1
               className="text-base font-semibold"
