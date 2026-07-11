@@ -1,6 +1,6 @@
 // src/components/PluginGallery.tsx
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import type { InstrumentType, Plugin } from "../types";
 
@@ -568,6 +568,13 @@ function AddPluginModal({ onFermer }: AddPluginModalProps) {
   );
 }
 
+// ── Groupe de plugins (vue « Tous ») ─────────────────────────
+interface PluginGroupe {
+  key: InstrumentType | "__sans__";
+  label: string;
+  plugins: Plugin[];
+}
+
 // ── Composant principal PluginGallery ─────────────────────────
 export function PluginGallery() {
   const { plugins, pluginsLoading, supprimerPlugin } = useApp();
@@ -583,6 +590,41 @@ export function PluginGallery() {
     filtre === "tous"
       ? plugins
       : plugins.filter((p) => p.instrument === filtre);
+
+  const groupes = useMemo<PluginGroupe[]>(() => {
+    if (filtre !== "tous") return [];
+
+    const map = new Map<InstrumentType | "__sans__", Plugin[]>();
+    for (const p of plugins) {
+      const raw = (p.instrument ?? "") as InstrumentType;
+      const key: InstrumentType | "__sans__" = raw ? raw : "__sans__";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    }
+
+    const list: PluginGroupe[] = [];
+    for (const [k, items] of map.entries()) {
+      const label = k === "__sans__" ? "Sans catégorie" : (LABELS_INSTRUMENTS[k] ?? k);
+      items.sort((a, b) =>
+        a.nom.localeCompare(b.nom, "fr", { sensitivity: "base" }),
+      );
+      list.push({ key: k, label, plugins: items });
+    }
+
+    // Groupes par ordre alphabétique du libellé
+    list.sort((a, b) =>
+      a.label.localeCompare(b.label, "fr", { sensitivity: "base" }),
+    );
+
+    // « Sans catégorie » toujours en dernière position
+    const sansIdx = list.findIndex((g) => g.key === "__sans__");
+    if (sansIdx !== -1) {
+      const [sans] = list.splice(sansIdx, 1);
+      list.push(sans);
+    }
+
+    return list;
+  }, [plugins, filtre]);
 
   return (
     <>
