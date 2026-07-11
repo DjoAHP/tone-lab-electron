@@ -157,7 +157,9 @@ export function DocVTool() {
     if (isFullscreen) {
       document.exitFullscreen();
     } else {
-      document.documentElement.requestFullscreen?.() ?? document.documentElement.requestFullscreen();
+      const reqFs = document.documentElement.requestFullscreen;
+      if (reqFs) reqFs();
+      else document.documentElement.requestFullscreen();
     }
   }, [isFullscreen]);
 

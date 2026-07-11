@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ChronoLedDisplay } from "./led-display/ChronoLedDisplay";
-import type { SVGProps } from "react";
 import { useApp } from "../context/AppContext";
 import SetlistChronoIcon from "../assets/icons/Bottombar/setlist-chrono-tool.svg?react";
 import ChronoVisuel from "../assets/icons/ChonoTool/chrono-visuel.svg?react";

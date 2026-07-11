@@ -1,10 +1,11 @@
-/// <reference path="./vite-env.d.ts" />
+import "./vite-env.d.ts";
 import { app, BrowserWindow, Menu, shell } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import https from 'node:https';
 import { spawn } from 'node:child_process';
 import { LOCAL_CERT, LOCAL_KEY } from './localCert';
+import squirrelStartup from "electron-squirrel-startup";
 
 // ── Serveur HTTPS local pour servir le renderer avec une VRAIE origine https ──
 // Depuis oct. 2025, YouTube exige que les vidéos intégrées viennent d'une origine
@@ -121,7 +122,7 @@ function openExternalUrl(url: string): void {
 let started = false;
 if (app.isPackaged) {
   try {
-    started = require('electron-squirrel-startup');
+    started = squirrelStartup as unknown as boolean;
   } catch (e) {
     console.error('Failed to load electron-squirrel-startup', e);
   }

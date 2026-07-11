@@ -2,7 +2,7 @@
 
 // Déclarations pour les imports SVG avec ?react
 declare module "*.svg?react" {
-  import React = require("react");
+  import type React from "react";
   export const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
   export default ReactComponent;
 }

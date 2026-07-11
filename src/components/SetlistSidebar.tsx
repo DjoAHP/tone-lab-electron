@@ -175,13 +175,6 @@ export function SetlistSidebar() {
     };
   }, [setSetlistSidebarWidth]);
 
-  // Formater les secondes en mm:ss
-  const formatTime = (secs: number): string => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
   // Extraire minutes/secondes depuis un temps en secondes
   const getMinutes = (secs: number | undefined): string => secs ? Math.floor(secs / 60).toString() : "";
   const getSeconds = (secs: number | undefined): string => secs ? (secs % 60).toString() : "";

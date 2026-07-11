@@ -374,15 +374,7 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
     renommerStack,
     supprimerStack,
     modifierSousStack,
-    projet,
   } = useApp();
-
-  // Vérifie si ce stack a une recherche sélectionnée
-  const stackEstActif = stack.sousStacks.some(
-    (ss) =>
-      ss.id === sousStackSelectionne ||
-      ss.recherches?.some((r) => r.id === rechercheSelectionnee)
-  );
 
   return (
     <div className="mb-0.5">
@@ -953,7 +945,7 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
             <ProjetAccordeon
               projet={projet}
               onOuvrirModalStack={() => setModalNouveauStack(true)}
-              onOuvrirModalSousStack={(stackId) => {
+              onOuvrirModalSousStack={() => {
                 // Délègue au parent (App.tsx) pour ouvrir la modal NewStackModal
                 onOuvrirModalStack();
                 // Stocke le stackId ciblé via l'App

@@ -1,7 +1,7 @@
 // src/components/Metronome.tsx
 // Métronome premium — Web Audio API, pas de dépendances externes
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { LedDisplay } from "./led-display/LedDisplay";
 import metronomeService from "../services/metronomeService";

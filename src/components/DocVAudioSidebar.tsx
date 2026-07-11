@@ -11,7 +11,6 @@ const SIDEBAR_WIDTH = 280;
 
 export function DocVAudioSidebar() {
   const {
-    docvAudioUrl,
     setDocvAudioUrl,
     setDocvAudioPlaying,
     setDocvAudioTime,

@@ -5,7 +5,6 @@ import type {
   AppState,
   ToneLabProject,
   SoundEntry,
-  Plugin,
   InstrumentType,
   Stack,
   SousStack,
@@ -483,7 +482,7 @@ export function useAppStore() {
 
   const addDocvFiles = useCallback(
     (files: DocvFileItem[]) => {
-      mettreAJourEtat((state: AppState) => ({
+      mettreAJourEtat(() => ({
         docvFiles: files,
         modifie: true,
       }));

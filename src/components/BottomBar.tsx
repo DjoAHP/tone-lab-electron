@@ -9,7 +9,6 @@ import SetlistIcon from "../assets/icons/Bottombar/setlist-tool.svg?react";
 import ChronoIcon from "../assets/icons/Bottombar/chrono-tool.svg?react";
 import DocvIcon from "../assets/icons/Bottombar/docv-tool.svg?react";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
-import type { SubdivisionType } from "../types";
 
 import React from "react";
 import { APP_VERSION } from "@/version";
@@ -105,7 +104,6 @@ export function BottomBar() {
     setOngletActif,
     setVueActive,
     isMetronomePlaying,
-    metronomeBpm,
     isChronoRunning,
     chronoElapsedMs,
   } = useApp();

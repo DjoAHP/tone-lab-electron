@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import type { DocvFileItem } from "../types";
 import DossierIcon from "../assets/icons/DocV/dossier-sidebar.svg?react";
@@ -27,19 +27,6 @@ function readAllEntries(dirReader: FileSystemDirectoryReader): Promise<FileSyste
 }
 
 // Récupère tous les IDs de dossiers dans l'arbre
-function getAllFolderIds(items: DocvFileItem[] | null): string[] {
-  if (!items) return [];
-  const ids: string[] = [];
-  for (const item of items) {
-    if (item.type === "folder") {
-      ids.push(item.id);
-      if (item.children) {
-        ids.push(...getAllFolderIds(item.children));
-      }
-    }
-  }
-  return ids;
-}
 
 // Parcours récursif de l'arborescence — retourne une structure arborescente propre
 async function traverseFileTree(item: FileSystemEntry, path: string): Promise<DocvFileItem | null> {

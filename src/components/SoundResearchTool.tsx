@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
-import type { SoundEntry, InstrumentType } from "../types";
+import type { SoundEntry, InstrumentType, Plugin } from "../types";
 import StackIcon from "../assets/icons/Bottombar/stack-tool.svg?react";
 import { PluginGallery } from "./PluginGallery";
 
@@ -42,8 +42,6 @@ const INSTRUMENT_LABELS: Record<string, string> = {
 };
 
 // ── Modal d'édition ───────────────────────────────────────────
-import type { Plugin } from "../types";
-
 const INSTRUMENTS_LISTE: {
   id: InstrumentType;
   label: string;
@@ -569,8 +567,6 @@ export function SoundResearchTool() {
     projet,
     entreeSelectionnee,
     rechercheSelectionnee,
-    sousStackSelectionne,
-    stackSelectionne,
     modifierEntree,
     vueActive,
     plugins,

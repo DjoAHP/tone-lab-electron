@@ -159,7 +159,6 @@ class MetronomeService {
 
   private scheduleNote() {
     const ctx = this.audioCtx!;
-    const subRatio = SUBDIVISIONS.find(s => s.id === this._subdivision)!.ratio;
     const isMainBeat = this.currentSubCounter === 0;
 
     if (isMainBeat) {

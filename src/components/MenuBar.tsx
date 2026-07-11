@@ -4,7 +4,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import LogoIcon from "../assets/icons/Menubar/logo.svg?react";
-import { SvgIcon } from "./SvgIcon";
 
 // ─── Composant Menu déroulant ────────────────
 // Props = les "paramètres" qu'on passe à un composant

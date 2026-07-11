@@ -40,7 +40,7 @@ export function DiapaTool() {
     setActiveNote(note);
   }, []);
 
-  const handleNoteStop = useCallback((note: string) => {
+  const handleNoteStop = useCallback(() => {
     setActiveNote("---");
   }, []);
 
