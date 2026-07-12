@@ -2,9 +2,8 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import type { Stack, SousStack, RechercheInstrument, ToneLabProject, InstrumentType } from "../types";
+import type { Stack, SousStack, RechercheInstrument, InstrumentType } from "../types";
 import ProjetIcon from "../assets/icons/Sidebar/projet.svg?react";
-import StackIcon from "../assets/icons/Sidebar/stack.svg?react";
 import { HomeButton } from "./HomeButton";
 
 // Import icônes instruments avec ?react
@@ -92,16 +91,6 @@ function InlineEdit({ valeur, onSauvegarder, className, style, autoFocusOnMount 
     <span className={className} style={style} onDoubleClick={() => setEditing(true)}>
       {valeur}
     </span>
-  );
-}
-
-// ── Icône crayon ──────────────────────────────────────────────
-function CrayonIcon({ size = 10 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 10 10" fill="none"
-      stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7 1.5l1.5 1.5L3 8.5 1 9l.5-2L7 1.5z" />
-    </svg>
   );
 }
 
@@ -392,7 +381,7 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
           <path d="M3 2l4 3-4 3V2z" />
         </svg>
 
-        <StackIcon width="12" height="12" style={{ color: "hsl(var(--tl-accent-terc))" }} />
+        <ProjetIcon width="12" height="12" style={{ color: "hsl(var(--tl-accent-princ))" }} />
 
         <InlineEdit
           valeur={stack.nom}
@@ -407,7 +396,7 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
 
         {survol && (
           <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-            <BtnIcon accentOnHover             title="Nouveau SousSousStack" onClick={() => { onOuvrirModalSousStack(stack.id); setOuvert(true); }}>
+            <BtnIcon accentOnHover                           title="Nouvel album" onClick={() => { onOuvrirModalSousStack(stack.id); setOuvert(true); }}>
               <PlusIcon />
             </BtnIcon>
             <BtnIcon dangerOnHover title="Supprimer le stack"
@@ -449,168 +438,7 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// NIVEAU 0 : Projet
-// ─────────────────────────────────────────────────────────────
-interface ProjetAccordeonProps {
-  projet: ToneLabProject;
-  onOuvrirModalAlbum: () => void;
-  onOuvrirModalSousStack: (stackId: string) => void;
-  onOuvrirModalRecherche: (stackId: string, sousStackId: string) => void;
-}
 
-function ProjetAccordeon({
-  projet,
-  onOuvrirModalAlbum,
-  onOuvrirModalSousStack,
-  onOuvrirModalRecherche,
-}: ProjetAccordeonProps) {
-  const [ouvert, setOuvert] = useState(true);
-  const [survol, setSurvol] = useState(false);
-  // État local pour l'édition inline du nom de projet
-  const [editingNom, setEditingNom] = useState(false);
-  const { renommerProjet, demandeEditionNomProjet, setDemandeEditionNomProjet } = useApp();
-
-  // Ouvre l'édition inline du nom quand le menu « Renommer le projet » le demande
-  useEffect(() => {
-    if (demandeEditionNomProjet) {
-      setEditingNom(true);
-      setDemandeEditionNomProjet(false);
-    }
-  }, [demandeEditionNomProjet, setDemandeEditionNomProjet]);
-
-  const totalRecherches = projet.stacks.reduce(
-    (acc, s) =>
-      acc + s.sousStacks.reduce((a, ss) => a + (ss.recherches?.length ?? 0), 0),
-    0,
-  );
-
-  return (
-    <div className="mb-1">
-      {/* En-tête Projet */}
-      <div
-        onMouseEnter={() => setSurvol(true)}
-        onMouseLeave={() => setSurvol(false)}
-        className="flex items-center gap-1.5 px-2 py-2 mx-1 rounded-md transition-all select-none"
-        style={{ background: survol ? "hsl(222, 18%, 17%)" : "transparent" }}
-      >
-        {/* Chevron (clic = toggle) */}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"
-          className="flex-shrink-0 transition-transform duration-150 cursor-pointer"
-          style={{ color: "hsl(220, 15%, 45%)", transform: ouvert ? "rotate(90deg)" : "rotate(0deg)" }}
-          onClick={() => setOuvert(!ouvert)}>
-          <path d="M3 2l4 3-4 3V2z" />
-        </svg>
-
-        <ProjetIcon width="14" height="14"
-          className="cursor-pointer"
-          style={{ color: "hsl(var(--tl-accent-princ))" }}
-          onClick={() => setOuvert(!ouvert)} />
-
-        {/* Nom projet — éditable inline */}
-        {editingNom ? (
-          <input
-            autoFocus
-            defaultValue={projet.nom}
-            className="text-sm font-bold truncate flex-1 outline-none"
-            style={{
-              background: "hsl(222, 20%, 20%)",
-              border: "1px solid hsl(var(--tl-accent-border))",
-              borderRadius: "4px",
-              padding: "1px 6px",
-              color: "hsl(210, 30%, 88%)",
-              fontFamily: "Geist Variable, sans-serif",
-            }}
-            onBlur={(e) => {
-              const val = e.target.value.trim();
-              if (val && val !== projet.nom) renommerProjet(val);
-              setEditingNom(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-              if (e.key === "Escape") setEditingNom(false);
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <span
-            className="text-sm font-bold truncate flex-1 cursor-pointer"
-            style={{ color: "hsl(210, 30%, 88%)", fontFamily: "Geist Variable, sans-serif" }}
-            onClick={() => setOuvert(!ouvert)}
-            onDoubleClick={() => setEditingNom(true)}
-          >
-            {projet.nom}
-          </span>
-        )}
-
-        <span className="text-[10px] flex-shrink-0" style={{ color: "hsl(220, 15%, 40%)" }}>
-          {totalRecherches}
-        </span>
-
-        {/* Boutons survol : crayon + nouveau stack */}
-        {survol && !editingNom && (
-          <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-            {/* ── BOUTON CRAYON : renommer le projet ── */}
-            <button
-              onClick={() => setEditingNom(true)}
-              title="Renommer le projet"
-              className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center transition-all"
-              style={{ color: "hsl(220, 15%, 40%)" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "hsl(var(--tl-accent-text))";
-                (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--tl-accent-mid))";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "hsl(220, 15%, 40%)";
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              }}
-            >
-              <CrayonIcon size={9} />
-            </button>
-
-            {/* ── BOUTON + : nouveau stack ── */}
-            <button
-              onClick={onOuvrirModalAlbum}
-              title="Nouveau SousStack"
-              className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center transition-all"
-              style={{ color: "hsl(220, 15%, 40%)" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "hsl(var(--tl-accent-mid))";
-                (e.currentTarget as HTMLButtonElement).style.color = "hsl(var(--tl-accent-text))";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                (e.currentTarget as HTMLButtonElement).style.color = "hsl(220, 15%, 40%)";
-              }}
-            >
-              <PlusIcon size={8} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Stacks */}
-      {ouvert && (
-        <div style={{ marginLeft: "16px", paddingLeft: "8px", borderLeft: "1px solid hsl(220, 15%, 18%)" }}>
-          {projet.stacks.length === 0 ? (
-            <p className="text-[11px] px-2 py-2" style={{ color: "hsl(220, 15%, 38%)" }}>
-              Aucun SousStack — cliquez sur "+"
-            </p>
-          ) : (
-            projet.stacks.map((stack) => (
-              <StackAccordeon
-                key={stack.id}
-                stack={stack}
-                onOuvrirModalSousStack={onOuvrirModalSousStack}
-                onOuvrirModalRecherche={onOuvrirModalRecherche}
-              />
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Modal : Nouveau SousStack (album)
@@ -625,7 +453,7 @@ function NouveauStackModal({ onFermer, onCreer }: { onFermer: () => void; onCree
         style={{ width: "360px", background: "hsl(222, 22%, 12%)", border: "1px solid hsl(220, 15%, 22%)" }}>
         <div className="flex items-center justify-between px-5 py-4"
           style={{ borderBottom: "1px solid hsl(220, 15%, 18%)" }}>
-            <h2 className="text-sm font-semibold" style={{ color: "hsl(210, 30%, 90%)" }}>Nouveau SousStack</h2>
+            <h2 className="text-sm font-semibold" style={{ color: "hsl(210, 30%, 90%)" }}>Nouveau Stack</h2>
           <button onClick={onFermer} style={{ color: "hsl(220, 15%, 45%)" }}>
             <XIcon size={12} />
           </button>
@@ -633,11 +461,11 @@ function NouveauStackModal({ onFermer, onCreer }: { onFermer: () => void; onCree
         <div className="px-5 py-4">
           <label className="block text-[11px] font-semibold uppercase tracking-widest mb-2"
             style={{ color: "hsl(var(--tl-accent-text))" }}>
-            Nom du Stack (ex : album, projet musical…)
+            Nom de l'artiste (ex : Daft Punk)
           </label>
           <input type="text" value={nom} onChange={(e) => setNom(e.target.value)} autoFocus
             onKeyDown={(e) => { if (e.key === "Enter" && nom.trim()) { onCreer(nom.trim()); onFermer(); } }}
-            placeholder="Ex : Band of Gypsys"
+            placeholder="Ex : Daft Punk"
             className="w-full text-sm px-3 py-2 rounded-md outline-none"
             style={{ background: "hsl(222, 20%, 16%)", border: "1px solid hsl(220, 15%, 24%)", color: "hsl(210, 30%, 88%)" }}
             onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))"; }}
@@ -981,10 +809,21 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
         style={{ width: `${largeur}px`, background: "hsl(222, 20%, 11%)", borderRight: "1px solid hsl(220, 15%, 18%)" }}
       >
         {/* En-tête */}
-        <div className="px-3 py-2.5 flex-shrink-0" style={{ borderBottom: "1px solid hsl(220, 15%, 16%)" }}>
+        <div className="px-3 py-2.5 flex-shrink-0 flex items-center justify-between" style={{ borderBottom: "1px solid hsl(220, 15%, 16%)" }}>
           <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "hsl(220, 15%, 45%)" }}>
             Stacks
           </span>
+          <button
+            type="button"
+            onClick={() => setModalNouveauStack(true)}
+            title="Nouveau Stack"
+            className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center transition-all"
+            style={{ color: "hsl(220, 15%, 45%)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--tl-accent-text))"; e.currentTarget.style.background = "hsl(var(--tl-accent-mid))"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(220, 15%, 45%)"; e.currentTarget.style.background = "transparent"; }}
+          >
+            <PlusIcon size={11} />
+          </button>
         </div>
 
         {/* Bouton Home */}
@@ -1003,18 +842,21 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
                 Aucun Stack ouvert.<br />Utilisez Fichier → Nouveau Stack
               </p>
             </div>
+          ) : projet.stacks.length === 0 ? (
+            <div className="px-4 py-8 text-center">
+              <p className="text-xs" style={{ color: "hsl(220, 15%, 35%)" }}>
+                Aucun Stack.<br />Cliquez sur « + » pour en ajouter un.
+              </p>
+            </div>
           ) : (
-            <ProjetAccordeon
-              projet={projet}
-              onOuvrirModalAlbum={() => setModalNouveauStack(true)}
-              onOuvrirModalSousStack={(stackId) => {
-                // Délègue au parent (App.tsx) pour ouvrir la modale du titre
-                onOuvrirModalStack(stackId);
-              }}
-              onOuvrirModalRecherche={(stackId, sousStackId) => {
-                setModalRecherche({ stackId, sousStackId });
-              }}
-            />
+            projet.stacks.map((stack) => (
+              <StackAccordeon
+                key={stack.id}
+                stack={stack}
+                onOuvrirModalSousStack={(stackId) => onOuvrirModalStack(stackId)}
+                onOuvrirModalRecherche={(stackId, sousStackId) => setModalRecherche({ stackId, sousStackId })}
+              />
+            ))
           )}
         </div>
 

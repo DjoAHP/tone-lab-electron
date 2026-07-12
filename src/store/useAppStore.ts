@@ -36,6 +36,13 @@ function maintenant(): string {
 }
 
 function creerProjetVide(nom: string): ToneLabProject {
+  const stackDefaut: Stack = {
+    id: genererID(),
+    nom: "Nouveau Stack",
+    sousStacks: [],
+    date_creation: maintenant(),
+    date_modification: maintenant(),
+  };
   return {
     id: genererID(),
     version: "1.1.0",
@@ -43,7 +50,7 @@ function creerProjetVide(nom: string): ToneLabProject {
     description: "",
     date_creation: maintenant(),
     date_modification: maintenant(),
-    stacks: [],
+    stacks: [stackDefaut],
     entries: [],
   };
 }
@@ -127,6 +134,22 @@ function migrerProjet(projet: ToneLabProject): ToneLabProject {
     sousStacks: s.sousStacks.map(migrerSousStack),
   }));
 
+  // Garantir au moins un Stack (artiste) par défaut
+  if (stacksMigres.length === 0) {
+    return {
+      ...projet,
+      stacks: [
+        {
+          id: genererID(),
+          nom: "Nouveau Stack",
+          sousStacks: [],
+          date_creation: projet.date_creation,
+          date_modification: projet.date_modification,
+        },
+      ],
+    };
+  }
+
   return { ...projet, stacks: stacksMigres };
 }
 
@@ -159,7 +182,7 @@ export function useAppStore() {
     // Charger le projet ou crÃ©er un projet par dÃ©faut "Nouveau projet"
     let projet = chargerDepuisLocalStorage();
     if (!projet) {
-      projet = creerProjetVide("Nouveau Stack");
+      projet = creerProjetVide("ToneLab");
       sauvegarderDansLocalStorage(projet);
     }
 

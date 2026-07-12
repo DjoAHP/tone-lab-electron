@@ -102,8 +102,8 @@ export function MenuBar() {
     ouvrirProjet,
     sauvegarderProjet,
     renommerProjet,
+    ajouterStack,
     importerSetlist,
-    setDemandeEditionNomProjet,
     ongletActif,
   } = useApp();
 
@@ -146,18 +146,27 @@ export function MenuBar() {
 
   // ─── Créer un nouveau projet ─────────────
   function handleNouveauProjet() {
-    const nomDefaut =
-      ongletActif === "setlist"
-        ? "Nouvelle Setlist"
-        : ongletActif === "stack"
-          ? "Nouveau Stack"
-          : "Nouveau Stack";
+    // Onglet Stack : ajoute un nouveau Stack (artiste) au projet courant
+    if (ongletActif === "stack") {
+      ouvrirDialog({
+        title: "Nouveau Stack",
+        inputMode: true,
+        inputDefault: "Nouveau Stack",
+        onConfirm: (nom) => {
+          if (nom && nom.trim()) ajouterStack(nom.trim());
+        },
+      });
+      return;
+    }
+
+    // Setlist / autre : crée un nouveau projet
+    const nomDefaut = ongletActif === "setlist" ? "Nouvelle Setlist" : "Nouveau Stack";
     const creer = () => nouveauProjet(nomDefaut);
 
     // Avertissement si des modifications non sauvegardées (modale in-app)
     if (modifie && projet) {
       ouvrirDialog({
-        title: "Nouveau Stack",
+        title: "Nouveau projet",
         message: "Des modifications non sauvegardées seront perdues. Continuer ?",
         onConfirm: creer,
       });
@@ -309,20 +318,15 @@ export function MenuBar() {
   // ── Renommer le projet actif ────────────
   function handleRenommerProjet() {
     if (!projet) return;
-    if (ongletActif === "stack") {
-      // Ouvre l'édition inline du nom directement dans la Sidebar
-      setDemandeEditionNomProjet(true);
-    } else {
-      // Modale in-app (prompt désactivé en sandbox)
-      ouvrirDialog({
-        title: "Renommer le projet",
-        inputMode: true,
-        inputDefault: projet.nom,
-        onConfirm: (nom) => {
-          if (nom && nom.trim()) renommerProjet(nom.trim());
-        },
-      });
-    }
+    // Modale in-app (prompt désactivé en sandbox)
+    ouvrirDialog({
+      title: "Renommer le projet",
+      inputMode: true,
+      inputDefault: projet.nom,
+      onConfirm: (nom) => {
+        if (nom && nom.trim()) renommerProjet(nom.trim());
+      },
+    });
   }
 
   // ── Importer une setlist (.tl) dans le projet courant ──
