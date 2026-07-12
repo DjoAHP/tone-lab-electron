@@ -110,9 +110,9 @@ export function MenuBar() {
   // Libellés contextuels selon l'outil actif
   const estSetlist = ongletActif === "setlist";
   const estStack = ongletActif === "stack";
-  const libNouveau = estSetlist ? "Nouvelle Setlist" : estStack ? "Nouveau Stack" : "Nouveau projet";
-  const libOuvrir = estSetlist ? "Ouvrir une Setlist" : estStack ? "Ouvrir un Stack" : "Ouvrir le projet (.tl)…";
-  const libExporterProjet = estSetlist ? "Exporter la Setlist" : estStack ? "Exporter le Stack" : "Exporter le projet (.tl)…";
+  const libNouveau = estSetlist ? "Nouvelle Setlist" : estStack ? "Nouveau Stack" : "Nouveau Stack";
+  const libOuvrir = estSetlist ? "Ouvrir une Setlist" : estStack ? "Ouvrir un Stack" : "Ouvrir le Stack (.tl)…";
+  const libExporterProjet = estSetlist ? "Exporter la Setlist" : estStack ? "Exporter le Stack" : "Exporter le Stack (.tl)…";
   // Raccourci clavier Ctrl+S
   useEffect(() => {
     function gererTouche(e: KeyboardEvent) {
@@ -151,13 +151,13 @@ export function MenuBar() {
         ? "Nouvelle Setlist"
         : ongletActif === "stack"
           ? "Nouveau Stack"
-          : "Nouveau projet";
+          : "Nouveau Stack";
     const creer = () => nouveauProjet(nomDefaut);
 
     // Avertissement si des modifications non sauvegardées (modale in-app)
     if (modifie && projet) {
       ouvrirDialog({
-        title: "Nouveau projet",
+        title: "Nouveau Stack",
         message: "Des modifications non sauvegardées seront perdues. Continuer ?",
         onConfirm: creer,
       });

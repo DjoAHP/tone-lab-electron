@@ -50,14 +50,11 @@ export interface RechercheInstrument {
 }
 
 // Sous-stack = un TITRE musical dans un Stack (album)
-// Il peut contenir plusieurs recherches, une par instrument
+// Conteneur pur : un nom + des recherches (une par instrument)
 export interface SousStack {
 	  id: string;
 	  titre: string; // nom du titre musical
-	  // Nouveau : tableau de recherches par instrument
 	  recherches: RechercheInstrument[];
-	  // entry gardée pour rétrocompatibilité (migration automatique)
-	  entry: SoundEntry;
 }
 
 // ─── NOUVEAU : morceau dans une setlist ────────────────

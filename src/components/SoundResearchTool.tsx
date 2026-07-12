@@ -185,7 +185,7 @@ function EditModal({
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label style={labelStyle}>Titre</label>
+                <label style={labelStyle}>SousSousStack</label>
                 <input
                   type="text"
                   value={form.titre_morceau ?? ""}
@@ -219,7 +219,7 @@ function EditModal({
                 />
               </div>
               <div>
-                <label style={labelStyle}>Album</label>
+                <label style={labelStyle}>SousStack</label>
                 <input
                   type="text"
                   value={form.album ?? ""}
@@ -664,7 +664,7 @@ export function SoundResearchTool() {
           />
           <h2 className="text-base font-medium text-gray-400 mb-2">
             {projet.stacks.length === 0
-              ? "Aucun stack pour l'instant"
+              ? "Aucun SousStack pour l'instant"
               : "Sélectionnez une recherche"}
           </h2>
           <p className="text-sm text-gray-600">

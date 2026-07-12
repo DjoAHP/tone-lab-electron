@@ -407,7 +407,7 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
 
         {survol && (
           <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-            <BtnIcon accentOnHover title="Nouveau titre" onClick={() => { onOuvrirModalSousStack(stack.id); setOuvert(true); }}>
+            <BtnIcon accentOnHover             title="Nouveau SousSousStack" onClick={() => { onOuvrirModalSousStack(stack.id); setOuvert(true); }}>
               <PlusIcon />
             </BtnIcon>
             <BtnIcon dangerOnHover title="Supprimer le stack"
@@ -454,14 +454,14 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
 // ─────────────────────────────────────────────────────────────
 interface ProjetAccordeonProps {
   projet: ToneLabProject;
-  onOuvrirModalStack: () => void;
+  onOuvrirModalAlbum: () => void;
   onOuvrirModalSousStack: (stackId: string) => void;
   onOuvrirModalRecherche: (stackId: string, sousStackId: string) => void;
 }
 
 function ProjetAccordeon({
   projet,
-  onOuvrirModalStack,
+  onOuvrirModalAlbum,
   onOuvrirModalSousStack,
   onOuvrirModalRecherche,
 }: ProjetAccordeonProps) {
@@ -570,8 +570,8 @@ function ProjetAccordeon({
 
             {/* ── BOUTON + : nouveau stack ── */}
             <button
-              onClick={onOuvrirModalStack}
-              title="Nouveau stack"
+              onClick={onOuvrirModalAlbum}
+              title="Nouveau SousStack"
               className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center transition-all"
               style={{ color: "hsl(220, 15%, 40%)" }}
               onMouseEnter={(e) => {
@@ -594,7 +594,7 @@ function ProjetAccordeon({
         <div style={{ marginLeft: "16px", paddingLeft: "8px", borderLeft: "1px solid hsl(220, 15%, 18%)" }}>
           {projet.stacks.length === 0 ? (
             <p className="text-[11px] px-2 py-2" style={{ color: "hsl(220, 15%, 38%)" }}>
-              Aucun sous Stack — cliquez sur "+"
+              Aucun SousStack — cliquez sur "+"
             </p>
           ) : (
             projet.stacks.map((stack) => (
@@ -613,7 +613,7 @@ function ProjetAccordeon({
 }
 
 // ─────────────────────────────────────────────────────────────
-// Modal : Nouveau Stack (album)
+// Modal : Nouveau SousStack (album)
 // ─────────────────────────────────────────────────────────────
 function NouveauStackModal({ onFermer, onCreer }: { onFermer: () => void; onCreer: (nom: string) => void }) {
   const [nom, setNom] = useState("");
@@ -625,7 +625,7 @@ function NouveauStackModal({ onFermer, onCreer }: { onFermer: () => void; onCree
         style={{ width: "360px", background: "hsl(222, 22%, 12%)", border: "1px solid hsl(220, 15%, 22%)" }}>
         <div className="flex items-center justify-between px-5 py-4"
           style={{ borderBottom: "1px solid hsl(220, 15%, 18%)" }}>
-          <h2 className="text-sm font-semibold" style={{ color: "hsl(210, 30%, 90%)" }}>Nouveau Stack</h2>
+            <h2 className="text-sm font-semibold" style={{ color: "hsl(210, 30%, 90%)" }}>Nouveau SousStack</h2>
           <button onClick={onFermer} style={{ color: "hsl(220, 15%, 45%)" }}>
             <XIcon size={12} />
           </button>
@@ -695,7 +695,20 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
   const [reglages, setReglages] = useState("");
   const [notes, setNotes] = useState("");
   const [labelCustom, setLabelCustom] = useState("");
+  const [captureFile, setCaptureFile] = useState<File | null>(null);
+  const [capturePreview, setCapturePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [erreur, setErreur] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCaptureFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setCapturePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
 
   async function handleAjouter() {
     if (!instrument && !labelCustom.trim()) {
@@ -703,15 +716,29 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
       return;
     }
     setErreur("");
-    ajouterRechercheInstrument(stackId, sousStackId, {
-      instrument,
-      pluginId,
-      plugin: pluginNom,
-      reglages_plugin: reglages,
-      notes,
-      labelCustom: labelCustom.trim() || undefined,
-    });
-    onFermer();
+    setUploading(true);
+    try {
+      let captureUrl: string | undefined;
+      if (captureFile) {
+        const { uploadImageCloudinary } = await import("../lib/cloudinary");
+        captureUrl = await uploadImageCloudinary(captureFile);
+      }
+      ajouterRechercheInstrument(stackId, sousStackId, {
+        instrument,
+        pluginId,
+        plugin: pluginNom,
+        reglages_plugin: reglages,
+        notes,
+        captureUrl,
+        labelCustom: labelCustom.trim() || undefined,
+      });
+      onFermer();
+    } catch (err) {
+      console.error(err);
+      setErreur("L'image n'a pas pu être envoyée. Réessayez.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   const inputStyle = {
@@ -852,6 +879,33 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
             />
           </div>
 
+          {/* Capture du plugin */}
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5"
+              style={{ color: "hsl(var(--tl-accent-text))" }}>
+              Capture du plugin (optionnel)
+            </label>
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleCapture}
+              className="hidden" />
+            {capturePreview ? (
+              <div className="flex items-center gap-3">
+                <img src={capturePreview} alt="Aperçu" className="rounded-lg object-cover"
+                  style={{ width: 64, height: 64, border: "1px solid hsl(220, 15%, 24%)" }} />
+                <button type="button" onClick={() => { setCaptureFile(null); setCapturePreview(null); }}
+                  className="px-3 py-1.5 rounded-lg text-xs"
+                  style={{ background: "hsl(222, 18%, 18%)", color: "hsl(220, 15%, 60%)", border: "1px solid hsl(220, 15%, 24%)" }}>
+                  Retirer
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs transition-all"
+                style={{ background: "hsl(222, 18%, 17%)", border: "1px dashed hsl(220, 15%, 30%)", color: "hsl(220, 15%, 55%)" }}>
+                <span style={{ fontSize: "0.9rem" }}>＋</span> Ajouter une capture d'écran
+              </button>
+            )}
+          </div>
+
           {erreur && <p className="text-xs" style={{ color: "hsl(0, 70%, 60%)" }}>{erreur}</p>}
         </div>
 
@@ -862,9 +916,9 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
             style={{ background: "hsl(222, 18%, 18%)", color: "hsl(220, 15%, 60%)", border: "1px solid hsl(220, 15%, 24%)" }}>
             Annuler
           </button>
-          <button onClick={handleAjouter} className="px-4 py-2 rounded-lg text-sm font-medium"
+          <button onClick={handleAjouter} disabled={uploading} className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-60"
             style={{ background: "hsl(var(--tl-accent-button))", color: "hsl(var(--tl-accent-text))" }}>
-            Ajouter
+            {uploading ? "Envoi…" : "Ajouter"}
           </button>
         </div>
       </div>
@@ -876,7 +930,7 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
 // Sidebar principale
 // ─────────────────────────────────────────────────────────────
 interface SidebarProps {
-  onOuvrirModalStack: () => void;
+  onOuvrirModalStack: (stackId?: string) => void;
 }
 
 export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
@@ -929,7 +983,7 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
         {/* En-tête */}
         <div className="px-3 py-2.5 flex-shrink-0" style={{ borderBottom: "1px solid hsl(220, 15%, 16%)" }}>
           <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "hsl(220, 15%, 45%)" }}>
-            Projets
+            Stacks
           </span>
         </div>
 
@@ -946,17 +1000,16 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
           {!projet ? (
             <div className="px-4 py-8 text-center">
               <p className="text-xs" style={{ color: "hsl(220, 15%, 35%)" }}>
-                Aucun projet ouvert.<br />Utilisez Fichier → Nouveau projet
+                Aucun Stack ouvert.<br />Utilisez Fichier → Nouveau Stack
               </p>
             </div>
           ) : (
             <ProjetAccordeon
               projet={projet}
-              onOuvrirModalStack={() => setModalNouveauStack(true)}
-              onOuvrirModalSousStack={() => {
-                // Délègue au parent (App.tsx) pour ouvrir la modal NewStackModal
-                onOuvrirModalStack();
-                // Stocke le stackId ciblé via l'App
+              onOuvrirModalAlbum={() => setModalNouveauStack(true)}
+              onOuvrirModalSousStack={(stackId) => {
+                // Délègue au parent (App.tsx) pour ouvrir la modale du titre
+                onOuvrirModalStack(stackId);
               }}
               onOuvrirModalRecherche={(stackId, sousStackId) => {
                 setModalRecherche({ stackId, sousStackId });

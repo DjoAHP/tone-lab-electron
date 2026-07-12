@@ -50,16 +50,26 @@ function creerProjetVide(nom: string): ToneLabProject {
 
 // â”€â”€ Migration : garantit que chaque SousStack a un tableau `recherches` â”€â”€
 function migrerSousStack(ss: SousStack): SousStack {
-  if (ss.recherches && ss.recherches.length > 0) return ss;
-  // Ancien format : entry seule â†’ on crÃ©e une RechercheInstrument par dÃ©faut
-  const rechercheDefaut: RechercheInstrument = {
-    id: genererID(),
-    label: ss.entry.instrument
-      ? labelInstrument(ss.entry.instrument)
-      : "Recherche principale",
-    entry: ss.entry,
+  const legacy = ss as SousStack & { entry?: SoundEntry };
+  if (ss.recherches && ss.recherches.length > 0) {
+    if (legacy.entry) {
+      const rest = { ...ss };
+      delete (rest as { entry?: unknown }).entry;
+      return rest;
+    }
+    return ss;
+  }
+  if (legacy.entry) {
+    const rechercheDefaut: RechercheInstrument = {
+      id: genererID(),
+      label: legacy.entry.instrument
+        ? labelInstrument(legacy.entry.instrument)
+        : "Recherche principale",
+      entry: legacy.entry,
     };
-  return { ...ss, recherches: [rechercheDefaut] };
+    return { ...ss, recherches: [rechercheDefaut] };
+  }
+  return { ...ss, recherches: [] };
 }
 
 function labelInstrument(instr: InstrumentType | ""): string {
@@ -102,7 +112,6 @@ function migrerProjet(projet: ToneLabProject): ToneLabProject {
         return {
           id: genererID(),
           titre: entry.titre_morceau || "Sans titre",
-          entry,
           recherches: [rechercheDefaut],
         };
       }),
@@ -150,7 +159,7 @@ export function useAppStore() {
     // Charger le projet ou crÃ©er un projet par dÃ©faut "Nouveau projet"
     let projet = chargerDepuisLocalStorage();
     if (!projet) {
-      projet = creerProjetVide("Nouveau projet");
+      projet = creerProjetVide("Nouveau Stack");
       sauvegarderDansLocalStorage(projet);
     }
 
@@ -665,87 +674,38 @@ export function useAppStore() {
   );
 
   // â”€â”€ Sous-Stacks (titres musicaux) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Sous-Stacks (titres musicaux) : conteneur nom-only ──
+    // ── Sous-Stacks (titres musicaux) : conteneur nom-only ──
   const ajouterSousStack = useCallback(
-    (
-      stackId: string,
-      data: {
-        titre_morceau: string;
-        instrument: InstrumentType | "";
-        pluginId: string;
-        plugin: string;
-        reglages_plugin: string;
-        notes: string;
-        artiste?: string;
-        album?: string;
-        annee?: string;
-        captureUrl?: string;
-      },
-    ) => {
+    (stackId: string, titre: string) => {
       if (!state.projet) return;
-
-      const nouvelleEntry: SoundEntry = {
-        id: genererID(),
-        titre_morceau: data.titre_morceau,
-        artiste: data.artiste ?? "",
-        album: data.album ?? "",
-        annee: data.annee ?? "",
-        instrument: data.instrument,
-        pluginId: data.pluginId,
-        plugin: data.plugin,
-        reglages_plugin: data.reglages_plugin,
-        captureUrl: data.captureUrl,
-        notes: data.notes,
-        tags: [],
-        date_creation: maintenant(),
-        date_modification: maintenant(),
-      };
-
-      // La premiÃ¨re recherche = instrument choisi (ou "Recherche principale")
-      const premiereRecherche: RechercheInstrument = {
-        id: genererID(),
-        label: data.instrument
-          ? labelInstrument(data.instrument)
-          : "Recherche principale",
-        entry: nouvelleEntry,
-      };
 
       const nouveauSousStack: SousStack = {
         id: genererID(),
-        titre: data.titre_morceau,
-        entry: nouvelleEntry, // rÃ©trocompat
-        recherches: [premiereRecherche],
+        titre: titre.trim() || "Sans titre",
+        recherches: [],
       };
 
-      mettreAJourEtat((prev: AppState) => {
-        if (!prev.projet) return prev;
-        const stacksMisAJour = prev.projet.stacks.map((s: Stack) =>
-          s.id === stackId
-            ? {
-                ...s,
-                sousStacks: [...s.sousStacks, nouveauSousStack],
-                date_modification: maintenant(),
-              }
-            : s,
-        );
-
-        const projetMisAJour: ToneLabProject = {
-          ...prev.projet,
-          stacks: stacksMisAJour,
-          date_modification: maintenant(),
-        };
-
-        sauvegarderDansLocalStorage(projetMisAJour);
-        saveProject(projetMisAJour);
-
-        return {
-          projet: projetMisAJour,
-          entreeSelectionnee: nouvelleEntry.id,
-          stackSelectionne: stackId,
-          sousStackSelectionne: nouveauSousStack.id,
-          rechercheSelectionnee: premiereRecherche.id,
-          modifie: true,
-          vueActive: "stack",
-        };
+      const stacksMisAJour = state.projet.stacks.map((s: Stack) =>
+        s.id === stackId
+          ? { ...s, sousStacks: [...s.sousStacks, nouveauSousStack], date_modification: maintenant() }
+          : s,
+      );
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        stacks: stacksMisAJour,
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      saveProject(projetMisAJour);
+      mettreAJourEtat({
+        projet: projetMisAJour,
+        entreeSelectionnee: null,
+        stackSelectionne: stackId,
+        sousStackSelectionne: nouveauSousStack.id,
+        rechercheSelectionnee: null,
+        modifie: true,
+        vueActive: "stack",
       });
     },
     [state.projet, mettreAJourEtat],
@@ -770,17 +730,19 @@ export function useAppStore() {
 
       // RÃ©cupÃ¨re les infos du sous-stack parent pour prÃ©-remplir l'entry
       let parentEntry: SoundEntry | null = null;
+      let titreParent = "";
       for (const s of state.projet.stacks) {
         const ss = s.sousStacks.find((ss) => ss.id === sousStackId);
         if (ss) {
-          parentEntry = ss.entry;
+          parentEntry = ss.recherches?.[0]?.entry ?? null;
+          titreParent = ss.titre;
           break;
         }
       }
 
       const nouvelleEntry: SoundEntry = {
         id: genererID(),
-        titre_morceau: parentEntry?.titre_morceau ?? "",
+        titre_morceau: parentEntry?.titre_morceau ?? titreParent,
         artiste: parentEntry?.artiste ?? "",
         album: parentEntry?.album ?? "",
         annee: parentEntry?.annee ?? "",
@@ -926,7 +888,7 @@ export function useAppStore() {
   );
 
   const modifierSousStack = useCallback(
-    (sousStackId: string, modifications: Partial<SoundEntry>) => {
+    (sousStackId: string, modifications: { titre_morceau?: string }) => {
       if (!state.projet) return;
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
@@ -935,11 +897,6 @@ export function useAppStore() {
             ? {
                 ...ss,
                 titre: modifications.titre_morceau ?? ss.titre,
-                entry: {
-                  ...ss.entry,
-                  ...modifications,
-                  date_modification: maintenant(),
-                },
               }
             : ss,
         ),
@@ -1069,18 +1026,9 @@ export function useAppStore() {
             return r;
           });
           // VÃ©rifie aussi l'entry directe (rÃ©trocompat)
-          const entryMisAJour =
-            ss.entry.id === id
-              ? {
-                  ...ss.entry,
-                  ...modifications,
-                  date_modification: maintenant(),
-                }
-              : ss.entry;
           return {
             ...ss,
             recherches: recherchesMisAJour,
-            entry: entryMisAJour,
           };
         }),
       }));
@@ -1098,7 +1046,7 @@ export function useAppStore() {
     [state.projet, mettreAJourEtat],
   );
 
-  const ajouterEntree = useCallback(
+      const ajouterEntree = useCallback(
     (data: {
       titre_morceau: string;
       instrument: InstrumentType | "";
@@ -1109,8 +1057,9 @@ export function useAppStore() {
       captureUrl?: string;
     }) => {
       if (!state.projet) return;
+      let projetDeBase = state.projet;
       let stackId: string;
-      if (state.projet.stacks.length === 0) {
+      if (projetDeBase.stacks.length === 0) {
         const nouveauStack: Stack = {
           id: genererID(),
           nom: "Stack 1",
@@ -1118,17 +1067,62 @@ export function useAppStore() {
           date_creation: maintenant(),
           date_modification: maintenant(),
         };
-        setState((prev) => ({
-          ...prev,
-          projet: { ...prev.projet!, stacks: [nouveauStack] },
-        }));
+        projetDeBase = { ...projetDeBase, stacks: [nouveauStack] };
         stackId = nouveauStack.id;
       } else {
-        stackId = state.stackSelectionne ?? state.projet.stacks[0].id;
+        stackId = state.stackSelectionne ?? projetDeBase.stacks[0].id;
       }
-      ajouterSousStack(stackId, data);
+
+      // Cree un titre (nom) + une premiere recherche instrument
+      const nouvelleEntry: SoundEntry = {
+        id: genererID(),
+        titre_morceau: data.titre_morceau,
+        artiste: "",
+        album: "",
+        annee: "",
+        instrument: data.instrument,
+        pluginId: data.pluginId,
+        plugin: data.plugin,
+        reglages_plugin: data.reglages_plugin,
+        captureUrl: data.captureUrl,
+        notes: data.notes,
+        tags: [],
+        date_creation: maintenant(),
+        date_modification: maintenant(),
+      };
+      const nouvelleRecherche: RechercheInstrument = {
+        id: genererID(),
+        label: data.instrument ? labelInstrument(data.instrument) : "Nouvelle recherche",
+        entry: nouvelleEntry,
+      };
+      const nouveauSousStack: SousStack = {
+        id: genererID(),
+        titre: data.titre_morceau,
+        recherches: [nouvelleRecherche],
+      };
+
+      const projetMisAJour: ToneLabProject = {
+        ...projetDeBase,
+        stacks: projetDeBase.stacks.map((s) =>
+          s.id === stackId
+            ? { ...s, sousStacks: [...s.sousStacks, nouveauSousStack], date_modification: maintenant() }
+            : s,
+        ),
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      saveProject(projetMisAJour);
+      mettreAJourEtat({
+        projet: projetMisAJour,
+        entreeSelectionnee: nouvelleEntry.id,
+        stackSelectionne: stackId,
+        sousStackSelectionne: nouveauSousStack.id,
+        rechercheSelectionnee: nouvelleRecherche.id,
+        modifie: true,
+        vueActive: "stack",
+      });
     },
-    [state.projet, state.stackSelectionne, ajouterSousStack],
+    [state.projet, state.stackSelectionne, mettreAJourEtat],
   );
 
   const supprimerEntree = useCallback(
