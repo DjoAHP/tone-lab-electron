@@ -974,12 +974,16 @@ export function Sidebar({ onOuvrirModalTitre }: SidebarProps) {
             type="button"
             onClick={() => setModalNouveauStack(true)}
             title="Nouveau Stack"
-            className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center transition-all"
-            style={{ color: "hsl(220, 15%, 45%)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--tl-accent-text))"; e.currentTarget.style.background = "hsl(var(--tl-accent-mid))"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(220, 15%, 45%)"; e.currentTarget.style.background = "transparent"; }}
+            className="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+            style={{
+              background: "hsl(var(--tl-accent-button))",
+              color: "hsl(var(--tl-accent-text))",
+              border: "1px solid hsl(var(--tl-accent-button-border))",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1.1)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.filter = "none"; }}
           >
-            <PlusIcon size={11} />
+            <PlusIcon size={12} />
           </button>
         </div>
 
