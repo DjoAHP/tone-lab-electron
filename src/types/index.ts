@@ -40,39 +40,48 @@ export interface SoundEntry {
 }
 
 // ─── NOUVEAU : une recherche pour un instrument précis dans un titre ───
-// C'est le niveau le plus profond : Projet > Stack > SousStack > RechercheInstrument
+// C'est le niveau le plus profond : Projet > Stack > Album > SousStack > RechercheInstrument
 export interface RechercheInstrument {
-	  id: string;
-	  // Nom affiché dans la sidebar (ex: "Rhodes", "Guitare clean"…)
-	  // Par défaut = le label de l'instrument, mais renommable
-	  label: string;
-	  entry: SoundEntry;
+ 	  id: string;
+ 	  // Nom affiché dans la sidebar (ex: "Rhodes", "Guitare clean"…)
+ 	  // Par défaut = le label de l'instrument, mais renommable
+ 	  label: string;
+ 	  entry: SoundEntry;
 }
 
-// Sous-stack = un TITRE musical dans un Stack (album)
+// Sous-stack = un TITRE musical dans un Album
 // Conteneur pur : un nom + des recherches (une par instrument)
 export interface SousStack {
-	  id: string;
-	  titre: string; // nom du titre musical
-	  recherches: RechercheInstrument[];
+ 	  id: string;
+ 	  titre: string; // nom du titre musical
+ 	  recherches: RechercheInstrument[];
+}
+
+// Album = un album musical dans un Stack (artiste)
+export interface Album {
+ 	  id: string;
+ 	  nom: string; // ex: "Axis: Bold as Love"
+ 	  sousStacks: SousStack[];
+ 	  date_creation: string;
+ 	  date_modification: string;
 }
 
 // ─── NOUVEAU : morceau dans une setlist ────────────────
 export interface SetlistSong {
-	  id: string;
-	  title: string;
-	  position: number; // position dans la setlist (1, 2, 3...)
-	  time?: number; // durée en secondes (optionnel)
-	  tonalite?: string; // tonalité (ex: "C", "D#", "Fm")
+ 	  id: string;
+ 	  title: string;
+ 	  position: number; // position dans la setlist (1, 2, 3...)
+ 	  time?: number; // durée en secondes (optionnel)
+ 	  tonalite?: string; // tonalité (ex: "C", "D#", "Fm")
 }
 
-// Stack = un album / groupe de recherches dans un Projet
+// Stack = un artiste (dossier) dans un Projet
 export interface Stack {
-	  id: string;
-	  nom: string; // ex: "Band of Gypsys"
-	  sousStacks: SousStack[];
-	  date_creation: string;
-	  date_modification: string;
+ 	  id: string;
+ 	  nom: string; // ex: "Jimi Hendrix"
+ 	  albums: Album[];
+ 	  date_creation: string;
+ 	  date_modification: string;
 }
 
 export interface ToneLabProject {

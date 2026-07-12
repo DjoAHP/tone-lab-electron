@@ -4,23 +4,23 @@ import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 
 interface NewTitreModalProps {
-  stackId: string;
+  albumId: string;
   onFermer: () => void;
 }
 
-// Modale "Nouveau SousSousStack" : le SousStack est un conteneur nom-only.
+// Modale "Nouveau titre" : le SousStack est un conteneur nom-only (titre musical).
 // Les recherches (Nouvelle recherche — instrument) s'ajoutent ensuite via le "+" du titre.
-export function NewTitreModal({ stackId, onFermer }: NewTitreModalProps) {
+export function NewTitreModal({ albumId, onFermer }: NewTitreModalProps) {
   const { ajouterSousStack } = useApp();
   const [titre, setTitre] = useState("");
   const [erreur, setErreur] = useState("");
 
   function handleAjouter() {
     if (!titre.trim()) {
-      setErreur("Le nom du SousSousStack est requis.");
+      setErreur("Le nom du titre est requis.");
       return;
     }
-    ajouterSousStack(stackId, titre.trim());
+    ajouterSousStack(albumId, titre.trim());
     onFermer();
   }
 
@@ -52,7 +52,7 @@ export function NewTitreModal({ stackId, onFermer }: NewTitreModalProps) {
             className="text-sm font-semibold"
             style={{ color: "hsl(210, 30%, 90%)" }}
           >
-            Nouveau SousSousStack
+            Nouveau titre
           </h2>
           <button onClick={onFermer} style={{ color: "hsl(220, 15%, 45%)" }}>
             <svg width="12" height="12" viewBox="0 0 12 12">
@@ -72,7 +72,7 @@ export function NewTitreModal({ stackId, onFermer }: NewTitreModalProps) {
             className="block text-[11px] font-semibold uppercase tracking-widest mb-2"
             style={{ color: "hsl(var(--tl-accent-text))" }}
           >
-            Nom du SousSousStack
+            Nom du titre
           </label>
           <input
             type="text"

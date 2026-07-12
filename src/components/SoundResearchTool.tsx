@@ -584,31 +584,34 @@ export function SoundResearchTool() {
 
   if (projet) {
     for (const s of projet.stacks) {
-      for (const ss of s.sousStacks) {
-        // 1. Cherche par rechercheSelectionnee
-        if (rechercheSelectionnee) {
-          const r = ss.recherches?.find((r) => r.id === rechercheSelectionnee);
-          if (r) {
-            entree = r.entry;
-            rechercheLabel = r.label;
-            sousStackTitre = ss.titre;
-            stackNom = s.nom;
-            break;
+      for (const a of s.albums) {
+        for (const ss of a.sousStacks) {
+          // 1. Cherche par rechercheSelectionnee
+          if (rechercheSelectionnee) {
+            const r = ss.recherches?.find((r) => r.id === rechercheSelectionnee);
+            if (r) {
+              entree = r.entry;
+              rechercheLabel = r.label;
+              sousStackTitre = ss.titre;
+              stackNom = s.nom;
+              break;
+            }
+          }
+          // 2. Fallback : cherche par entreeSelectionnee dans les recherches
+          if (!entree && entreeSelectionnee) {
+            const r = ss.recherches?.find(
+              (r) => r.entry.id === entreeSelectionnee,
+            );
+            if (r) {
+              entree = r.entry;
+              rechercheLabel = r.label;
+              sousStackTitre = ss.titre;
+              stackNom = s.nom;
+              break;
+            }
           }
         }
-        // 2. Fallback : cherche par entreeSelectionnee dans les recherches
-        if (!entree && entreeSelectionnee) {
-          const r = ss.recherches?.find(
-            (r) => r.entry.id === entreeSelectionnee,
-          );
-          if (r) {
-            entree = r.entry;
-            rechercheLabel = r.label;
-            sousStackTitre = ss.titre;
-            stackNom = s.nom;
-            break;
-          }
-        }
+        if (entree) break;
       }
       if (entree) break;
     }

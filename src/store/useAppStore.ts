@@ -7,6 +7,7 @@ import type {
   SoundEntry,
   InstrumentType,
   Stack,
+  Album,
   SousStack,
   RechercheInstrument,
   SetlistSong,
@@ -39,7 +40,15 @@ function creerProjetVide(nom: string): ToneLabProject {
   const stackDefaut: Stack = {
     id: genererID(),
     nom: "Nouveau Stack",
-    sousStacks: [],
+    albums: [
+      {
+        id: genererID(),
+        nom: "Nouvel album",
+        sousStacks: [],
+        date_creation: maintenant(),
+        date_modification: maintenant(),
+      },
+    ],
     date_creation: maintenant(),
     date_modification: maintenant(),
   };
@@ -103,9 +112,9 @@ function migrerProjet(projet: ToneLabProject): ToneLabProject {
     projet.entries.length > 0 &&
     (!projet.stacks || projet.stacks.length === 0)
   ) {
-    const stackDefaut: Stack = {
+    const albumDefaut: Album = {
       id: genererID(),
-      nom: "Recherches",
+      nom: "Album",
       date_creation: projet.date_creation,
       date_modification: projet.date_modification,
       sousStacks: projet.entries.map((entry) => {
@@ -123,16 +132,43 @@ function migrerProjet(projet: ToneLabProject): ToneLabProject {
         };
       }),
     };
+    const stackDefaut: Stack = {
+      id: genererID(),
+      nom: "Recherches",
+      date_creation: projet.date_creation,
+      date_modification: projet.date_modification,
+      albums: [albumDefaut],
+    };
     return { ...projet, stacks: [stackDefaut] };
   }
 
   if (!projet.stacks) return { ...projet, stacks: [] };
 
-  // Migration v1 : stacks sans recherches dans les sous-stacks
-  const stacksMigres = projet.stacks.map((s) => ({
-    ...s,
-    sousStacks: s.sousStacks.map(migrerSousStack),
-  }));
+  // Migration v1 : stacks -> albums, sous-stacks -> titres
+  const stacksMigres = projet.stacks.map((s) => {
+    const legacy = s as Stack & { sousStacks?: SousStack[] };
+    const albums: Album[] =
+      legacy.albums && legacy.albums.length > 0
+        ? legacy.albums
+        : legacy.sousStacks && legacy.sousStacks.length > 0
+          ? [
+              {
+                id: genererID(),
+                nom: "Album",
+                date_creation: s.date_creation,
+                date_modification: s.date_modification,
+                sousStacks: legacy.sousStacks.map(migrerSousStack),
+              },
+            ]
+          : [];
+    return {
+      ...s,
+      albums: albums.map((a) => ({
+        ...a,
+        sousStacks: (a.sousStacks ?? []).map(migrerSousStack),
+      })),
+    };
+  });
 
   // Garantir au moins un Stack (artiste) par défaut
   if (stacksMigres.length === 0) {
@@ -142,7 +178,15 @@ function migrerProjet(projet: ToneLabProject): ToneLabProject {
         {
           id: genererID(),
           nom: "Nouveau Stack",
-          sousStacks: [],
+          albums: [
+            {
+              id: genererID(),
+              nom: "Nouvel album",
+              sousStacks: [],
+              date_creation: projet.date_creation,
+              date_modification: projet.date_modification,
+            },
+          ],
           date_creation: projet.date_creation,
           date_modification: projet.date_modification,
         },
@@ -635,7 +679,7 @@ export function useAppStore() {
       const nouveauStack: Stack = {
         id: genererID(),
         nom,
-        sousStacks: [],
+        albums: [],
         date_creation: maintenant(),
         date_modification: maintenant(),
       };
@@ -696,11 +740,85 @@ export function useAppStore() {
     [state.projet, state.stackSelectionne, state.vueActive, mettreAJourEtat],
   );
 
+  // ── Albums (niveau entre artiste et titre) ──
+  const ajouterAlbum = useCallback(
+    (stackId: string, nom: string) => {
+      if (!state.projet) return;
+      const nouvelAlbum: Album = {
+        id: genererID(),
+        nom: nom.trim() || "Nouvel album",
+        sousStacks: [],
+        date_creation: maintenant(),
+        date_modification: maintenant(),
+      };
+      const stacksMisAJour = state.projet.stacks.map((s: Stack) =>
+        s.id === stackId
+          ? { ...s, albums: [...s.albums, nouvelAlbum], date_modification: maintenant() }
+          : s,
+      );
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        stacks: stacksMisAJour,
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      saveProject(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  const renommerAlbum = useCallback(
+    (albumId: string, nouveauNom: string) => {
+      if (!state.projet) return;
+      const stacksMisAJour = state.projet.stacks.map((s: Stack) => ({
+        ...s,
+        albums: s.albums.map((a) =>
+          a.id === albumId
+            ? { ...a, nom: nouveauNom, date_modification: maintenant() }
+            : a,
+        ),
+      }));
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        stacks: stacksMisAJour,
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      saveProject(projetMisAJour);
+      mettreAJourEtat({ projet: projetMisAJour, modifie: true });
+    },
+    [state.projet, mettreAJourEtat],
+  );
+
+  const supprimerAlbum = useCallback(
+    (albumId: string) => {
+      if (!state.projet) return;
+      const stacksMisAJour = state.projet.stacks.map((s: Stack) => ({
+        ...s,
+        albums: s.albums.filter((a) => a.id !== albumId),
+      }));
+      const projetMisAJour: ToneLabProject = {
+        ...state.projet,
+        stacks: stacksMisAJour,
+        date_modification: maintenant(),
+      };
+      sauvegarderDansLocalStorage(projetMisAJour);
+      saveProject(projetMisAJour);
+      mettreAJourEtat({
+        projet: projetMisAJour,
+        sousStackSelectionne: null,
+        modifie: true,
+      });
+    },
+    [state.projet, state.sousStackSelectionne, mettreAJourEtat],
+  );
+
   // â”€â”€ Sous-Stacks (titres musicaux) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // ── Sous-Stacks (titres musicaux) : conteneur nom-only ──
     // ── Sous-Stacks (titres musicaux) : conteneur nom-only ──
   const ajouterSousStack = useCallback(
-    (stackId: string, titre: string) => {
+    (albumId: string, titre: string) => {
       if (!state.projet) return;
 
       const nouveauSousStack: SousStack = {
@@ -709,11 +827,19 @@ export function useAppStore() {
         recherches: [],
       };
 
-      const stacksMisAJour = state.projet.stacks.map((s: Stack) =>
-        s.id === stackId
-          ? { ...s, sousStacks: [...s.sousStacks, nouveauSousStack], date_modification: maintenant() }
-          : s,
+      // Stack (artiste) parent de l'album ciblé
+      const stackParent = state.projet.stacks.find((s: Stack) =>
+        s.albums.some((a) => a.id === albumId),
       );
+
+      const stacksMisAJour = state.projet.stacks.map((s: Stack) => ({
+        ...s,
+        albums: s.albums.map((a) =>
+          a.id === albumId
+            ? { ...a, sousStacks: [...a.sousStacks, nouveauSousStack], date_modification: maintenant() }
+            : a,
+        ),
+      }));
       const projetMisAJour: ToneLabProject = {
         ...state.projet,
         stacks: stacksMisAJour,
@@ -724,7 +850,7 @@ export function useAppStore() {
       mettreAJourEtat({
         projet: projetMisAJour,
         entreeSelectionnee: null,
-        stackSelectionne: stackId,
+        stackSelectionne: stackParent?.id ?? null,
         sousStackSelectionne: nouveauSousStack.id,
         rechercheSelectionnee: null,
         modifie: true,
@@ -755,11 +881,13 @@ export function useAppStore() {
       let parentEntry: SoundEntry | null = null;
       let titreParent = "";
       for (const s of state.projet.stacks) {
-        const ss = s.sousStacks.find((ss) => ss.id === sousStackId);
-        if (ss) {
-          parentEntry = ss.recherches?.[0]?.entry ?? null;
-          titreParent = ss.titre;
-          break;
+        for (const a of s.albums) {
+          const ss = a.sousStacks.find((ss) => ss.id === sousStackId);
+          if (ss) {
+            parentEntry = ss.recherches?.[0]?.entry ?? null;
+            titreParent = ss.titre;
+            break;
+          }
         }
       }
 
@@ -794,13 +922,20 @@ export function useAppStore() {
         s.id === stackId
           ? {
               ...s,
-              sousStacks: s.sousStacks.map((ss) =>
-                ss.id === sousStackId
+              albums: s.albums.map((a) =>
+                a.sousStacks.some((ss) => ss.id === sousStackId)
                   ? {
-                      ...ss,
-                      recherches: [...(ss.recherches ?? []), nouvelleRecherche],
+                      ...a,
+                      sousStacks: a.sousStacks.map((ss) =>
+                        ss.id === sousStackId
+                          ? {
+                              ...ss,
+                              recherches: [...(ss.recherches ?? []), nouvelleRecherche],
+                            }
+                          : ss,
+                      ),
                     }
-                  : ss,
+                  : a,
               ),
             }
           : s,
@@ -834,14 +969,17 @@ export function useAppStore() {
 
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
-        sousStacks: s.sousStacks.map((ss) =>
-          ss.id === sousStackId
-            ? {
-                ...ss,
-                recherches: ss.recherches.filter((r) => r.id !== rechercheId),
-              }
-            : ss,
-        ),
+        albums: s.albums.map((a) => ({
+          ...a,
+          sousStacks: a.sousStacks.map((ss) =>
+            ss.id === sousStackId
+              ? {
+                  ...ss,
+                  recherches: ss.recherches.filter((r) => r.id !== rechercheId),
+                }
+              : ss,
+          ),
+        })),
       }));
 
       const projetMisAJour: ToneLabProject = {
@@ -885,16 +1023,19 @@ export function useAppStore() {
 
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
-        sousStacks: s.sousStacks.map((ss) =>
-          ss.id === sousStackId
-            ? {
-                ...ss,
-                recherches: ss.recherches.map((r) =>
-                  r.id === rechercheId ? { ...r, label: nouveauLabel } : r,
-                ),
-              }
-            : ss,
-        ),
+        albums: s.albums.map((a) => ({
+          ...a,
+          sousStacks: a.sousStacks.map((ss) =>
+            ss.id === sousStackId
+              ? {
+                  ...ss,
+                  recherches: ss.recherches.map((r) =>
+                    r.id === rechercheId ? { ...r, label: nouveauLabel } : r,
+                  ),
+                }
+              : ss,
+          ),
+        })),
       }));
 
       const projetMisAJour: ToneLabProject = {
@@ -915,14 +1056,17 @@ export function useAppStore() {
       if (!state.projet) return;
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
-        sousStacks: s.sousStacks.map((ss) =>
-          ss.id === sousStackId
-            ? {
-                ...ss,
-                titre: modifications.titre_morceau ?? ss.titre,
-              }
-            : ss,
-        ),
+        albums: s.albums.map((a) => ({
+          ...a,
+          sousStacks: a.sousStacks.map((ss) =>
+            ss.id === sousStackId
+              ? {
+                  ...ss,
+                  titre: modifications.titre_morceau ?? ss.titre,
+                }
+              : ss,
+          ),
+        })),
       }));
       const projetMisAJour: ToneLabProject = {
         ...state.projet,
@@ -941,7 +1085,10 @@ export function useAppStore() {
       if (!state.projet) return;
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
-        sousStacks: s.sousStacks.filter((ss) => ss.id !== sousStackId),
+        albums: s.albums.map((a) => ({
+          ...a,
+          sousStacks: a.sousStacks.filter((ss) => ss.id !== sousStackId),
+        })),
       }));
       const projetMisAJour: ToneLabProject = {
         ...state.projet,
@@ -1032,28 +1179,31 @@ export function useAppStore() {
 
       const stacksMisAJour = state.projet.stacks.map((s) => ({
         ...s,
-        sousStacks: s.sousStacks.map((ss) => {
-          // VÃ©rifie dans les recherches
-          const recherchesMisAJour = ss.recherches.map((r) => {
-            if (r.entry.id === id) {
-              trouve = true;
-              return {
-                ...r,
-                entry: {
-                  ...r.entry,
-                  ...modifications,
-                  date_modification: maintenant(),
-                },
-              };
-            }
-            return r;
-          });
-          // VÃ©rifie aussi l'entry directe (rÃ©trocompat)
-          return {
-            ...ss,
-            recherches: recherchesMisAJour,
-          };
-        }),
+        albums: s.albums.map((a) => ({
+          ...a,
+          sousStacks: a.sousStacks.map((ss) => {
+            // VÃ©rifie dans les recherches
+            const recherchesMisAJour = ss.recherches.map((r) => {
+              if (r.entry.id === id) {
+                trouve = true;
+                return {
+                  ...r,
+                  entry: {
+                    ...r.entry,
+                    ...modifications,
+                    date_modification: maintenant(),
+                  },
+                };
+              }
+              return r;
+            });
+            // VÃ©rifie aussi l'entry directe (rÃ©trocompat)
+            return {
+              ...ss,
+              recherches: recherchesMisAJour,
+            };
+          }),
+        })),
       }));
 
       if (!trouve) return;
@@ -1083,13 +1233,13 @@ export function useAppStore() {
       let projetDeBase = state.projet;
       let stackId: string;
       if (projetDeBase.stacks.length === 0) {
-        const nouveauStack: Stack = {
-          id: genererID(),
-          nom: "Stack 1",
-          sousStacks: [],
-          date_creation: maintenant(),
-          date_modification: maintenant(),
-        };
+      const nouveauStack: Stack = {
+        id: genererID(),
+        nom: "Nouveau Stack",
+        albums: [],
+        date_creation: maintenant(),
+        date_modification: maintenant(),
+      };
         projetDeBase = { ...projetDeBase, stacks: [nouveauStack] };
         stackId = nouveauStack.id;
       } else {
@@ -1128,7 +1278,26 @@ export function useAppStore() {
         ...projetDeBase,
         stacks: projetDeBase.stacks.map((s) =>
           s.id === stackId
-            ? { ...s, sousStacks: [...s.sousStacks, nouveauSousStack], date_modification: maintenant() }
+            ? {
+                ...s,
+                albums:
+                  s.albums.length > 0
+                    ? s.albums.map((a, i) =>
+                        i === 0
+                          ? { ...a, sousStacks: [...a.sousStacks, nouveauSousStack], date_modification: maintenant() }
+                          : a,
+                      )
+                    : [
+                        {
+                          id: genererID(),
+                          nom: "Nouvel album",
+                          sousStacks: [nouveauSousStack],
+                          date_creation: maintenant(),
+                          date_modification: maintenant(),
+                        },
+                      ],
+                date_modification: maintenant(),
+              }
             : s,
         ),
         date_modification: maintenant(),
@@ -1153,11 +1322,13 @@ export function useAppStore() {
       if (!state.projet) return;
       // Cherche la recherche ayant cet entry.id et la supprime
       for (const s of state.projet.stacks) {
-        for (const ss of s.sousStacks) {
-          const r = ss.recherches.find((r) => r.entry.id === id);
-          if (r) {
-            supprimerRechercheInstrument(ss.id, r.id);
-            return;
+        for (const a of s.albums) {
+          for (const ss of a.sousStacks) {
+            const r = ss.recherches.find((r) => r.entry.id === id);
+            if (r) {
+              supprimerRechercheInstrument(ss.id, r.id);
+              return;
+            }
           }
         }
       }
@@ -1305,6 +1476,10 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     ajouterStack,
     renommerStack,
     supprimerStack,
+    // Actions albums
+    ajouterAlbum,
+    renommerAlbum,
+    supprimerAlbum,
     // Actions sous-stacks
     ajouterSousStack,
     modifierSousStack,

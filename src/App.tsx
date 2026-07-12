@@ -17,14 +17,13 @@ import { NewTitreModal } from "./components/NewTitreModal";
 import { useApp } from "./context/AppContext";
 
 function AppInner() {
-  const [modalSousStackOuverte, setModalSousStackOuverte] = useState(false);
-  const [stackIdCible, setStackIdCible] = useState<string | null>(null);
-  const { projet, stackSelectionne, ongletActif, setlistSidebarOuverte, docvSidebarOuverte } = useApp();
+  const [modalTitreOuverte, setModalTitreOuverte] = useState(false);
+  const [albumIdCible, setAlbumIdCible] = useState<string | null>(null);
+  const { projet, ongletActif, setlistSidebarOuverte, docvSidebarOuverte } = useApp();
 
-  function handleOuvrirModalStack(stackId?: string) {
-    const id = stackId ?? stackSelectionne ?? projet?.stacks[0]?.id ?? null;
-    setStackIdCible(id);
-    setModalSousStackOuverte(true);
+  function handleOuvrirModalTitre(albumId?: string) {
+    setAlbumIdCible(albumId ?? null);
+    setModalTitreOuverte(true);
   }
 
   return (
@@ -37,7 +36,7 @@ function AppInner() {
       <div className="flex flex-1 min-h-0">
         {/* GAUCHE : Sidebar Stack (outil Stack) */}
         {ongletActif === "stack" && (
-          <Sidebar onOuvrirModalStack={handleOuvrirModalStack} />
+          <Sidebar onOuvrirModalTitre={handleOuvrirModalTitre} />
         )}
 
         {/* GAUCHE : Sidebar Setlist (outil Setlist) */}
@@ -68,10 +67,10 @@ function AppInner() {
 
       <BottomBar />
 
-      {modalSousStackOuverte && stackIdCible && (
+      {modalTitreOuverte && albumIdCible && (
         <NewTitreModal
-          stackId={stackIdCible}
-          onFermer={() => setModalSousStackOuverte(false)}
+          albumId={albumIdCible}
+          onFermer={() => setModalTitreOuverte(false)}
         />
       )}
     </div>

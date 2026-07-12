@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import type { Stack, SousStack, RechercheInstrument, InstrumentType } from "../types";
+import type { Stack, Album, SousStack, RechercheInstrument, InstrumentType } from "../types";
 import ProjetIcon from "../assets/icons/Sidebar/projet.svg?react";
 import { HomeButton } from "./HomeButton";
 
@@ -91,6 +91,16 @@ function InlineEdit({ valeur, onSauvegarder, className, style, autoFocusOnMount 
     <span className={className} style={style} onDoubleClick={() => setEditing(true)}>
       {valeur}
     </span>
+  );
+}
+
+// ── Icône dossier (album) ─────────────────────────────────────
+function FolderIcon({ size = 11, style }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+      stroke="currentColor" strokeWidth="1.3" style={style}>
+      <path d="M1.5 4.5a1 1 0 0 1 1-1h3l1.5 1.5h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7.5z" />
+    </svg>
   );
 }
 
@@ -345,24 +355,26 @@ function SousStackItem({
 }
 
 // ─────────────────────────────────────────────────────────────
-// NIVEAU 1 : Stack (album)
+// NIVEAU 1 : Stack (artiste)
 // ─────────────────────────────────────────────────────────────
 interface StackAccordeonProps {
   stack: Stack;
-  onOuvrirModalSousStack: (stackId: string) => void;
+  onOuvrirModalAlbum: (stackId: string) => void;
+  onOuvrirModalTitre: (albumId: string) => void;
   onOuvrirModalRecherche: (stackId: string, sousStackId: string) => void;
 }
 
-function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche }: StackAccordeonProps) {
+function StackAccordeon({
+  stack,
+  onOuvrirModalAlbum,
+  onOuvrirModalTitre,
+  onOuvrirModalRecherche,
+}: StackAccordeonProps) {
   const [ouvert, setOuvert] = useState(true);
   const [survol, setSurvol] = useState(false);
   const {
-    sousStackSelectionne,
-    rechercheSelectionnee,
-    supprimerSousStack,
-    renommerStack,
     supprimerStack,
-    modifierSousStack,
+    renommerStack,
   } = useApp();
 
   return (
@@ -391,12 +403,12 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
         />
 
         <span className="text-[10px] flex-shrink-0" style={{ color: "hsl(220, 15%, 40%)" }}>
-          {stack.sousStacks.length}
+          {stack.albums.length}
         </span>
 
         {survol && (
           <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-            <BtnIcon accentOnHover                           title="Nouvel album" onClick={() => { onOuvrirModalSousStack(stack.id); setOuvert(true); }}>
+            <BtnIcon accentOnHover title="Nouvel album" onClick={() => { onOuvrirModalAlbum(stack.id); setOuvert(true); }}>
               <PlusIcon />
             </BtnIcon>
             <BtnIcon dangerOnHover title="Supprimer le stack"
@@ -407,15 +419,108 @@ function StackAccordeon({ stack, onOuvrirModalSousStack, onOuvrirModalRecherche 
         )}
       </div>
 
-      {/* Sous-stacks */}
+      {/* Albums */}
       {ouvert && (
         <div style={{ marginLeft: "20px", paddingLeft: "8px", borderLeft: "1px solid hsl(220, 15%, 20%)" }}>
-          {stack.sousStacks.length === 0 ? (
+          {stack.albums.length === 0 ? (
             <p className="text-[10px] px-2 py-1.5" style={{ color: "hsl(220, 15%, 35%)" }}>
+              Aucun album
+            </p>
+          ) : (
+            stack.albums.map((album) => (
+              <AlbumAccordeon
+                key={album.id}
+                stack={stack}
+                album={album}
+                onOuvrirModalTitre={onOuvrirModalTitre}
+                onOuvrirModalRecherche={onOuvrirModalRecherche}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// NIVEAU 1b : Album (entre artiste et titre)
+// ─────────────────────────────────────────────────────────────
+interface AlbumAccordeonProps {
+  stack: Stack;
+  album: Album;
+  onOuvrirModalTitre: (albumId: string) => void;
+  onOuvrirModalRecherche: (stackId: string, sousStackId: string) => void;
+}
+
+function AlbumAccordeon({
+  stack,
+  album,
+  onOuvrirModalTitre,
+  onOuvrirModalRecherche,
+}: AlbumAccordeonProps) {
+  const [ouvert, setOuvert] = useState(true);
+  const [survol, setSurvol] = useState(false);
+  const {
+    sousStackSelectionne,
+    rechercheSelectionnee,
+    supprimerAlbum,
+    renommerAlbum,
+    supprimerSousStack,
+    modifierSousStack,
+  } = useApp();
+
+  return (
+    <div className="mb-0.5">
+      {/* En-tête Album */}
+      <div
+        onClick={() => setOuvert(!ouvert)}
+        onMouseEnter={() => setSurvol(true)}
+        onMouseLeave={() => setSurvol(false)}
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-md cursor-pointer transition-all select-none"
+        style={{ background: survol ? "hsl(222, 18%, 16%)" : "transparent" }}
+      >
+        <svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor"
+          className="flex-shrink-0 transition-transform duration-150"
+          style={{ color: "hsl(220, 15%, 42%)", transform: ouvert ? "rotate(90deg)" : "rotate(0deg)" }}>
+          <path d="M3 2l4 3-4 3V2z" />
+        </svg>
+
+        <FolderIcon style={{ color: "hsl(220, 15%, 50%)" }} />
+
+        <InlineEdit
+          valeur={album.nom}
+          onSauvegarder={(nom) => renommerAlbum(album.id, nom)}
+          className="text-xs truncate flex-1"
+          style={{ color: "hsl(210, 20%, 72%)", fontFamily: "Geist Variable, sans-serif" }}
+        />
+
+        <span className="text-[10px] flex-shrink-0" style={{ color: "hsl(220, 15%, 38%)" }}>
+          {album.sousStacks.length}
+        </span>
+
+        {survol && (
+          <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+            <BtnIcon accentOnHover title="Nouveau titre" onClick={() => { onOuvrirModalTitre(album.id); setOuvert(true); }}>
+              <PlusIcon />
+            </BtnIcon>
+            <BtnIcon dangerOnHover title="Supprimer l'album"
+              onClick={() => { if (window.confirm(`Supprimer l'album "${album.nom}" ?`)) supprimerAlbum(album.id); }}>
+              <XIcon />
+            </BtnIcon>
+          </div>
+        )}
+      </div>
+
+      {/* Titres (SousStacks) */}
+      {ouvert && (
+        <div style={{ marginLeft: "16px", paddingLeft: "6px", borderLeft: "1px solid hsl(220, 15%, 18%)" }}>
+          {album.sousStacks.length === 0 ? (
+            <p className="text-[10px] px-2 py-1" style={{ color: "hsl(220, 15%, 32%)" }}>
               Aucun titre
             </p>
           ) : (
-            stack.sousStacks.map((ss) => {
+            album.sousStacks.map((ss) => {
               const estSelectionne =
                 ss.id === sousStackSelectionne ||
                 ss.recherches?.some((r) => r.id === rechercheSelectionnee);
@@ -466,6 +571,57 @@ function NouveauStackModal({ onFermer, onCreer }: { onFermer: () => void; onCree
           <input type="text" value={nom} onChange={(e) => setNom(e.target.value)} autoFocus
             onKeyDown={(e) => { if (e.key === "Enter" && nom.trim()) { onCreer(nom.trim()); onFermer(); } }}
             placeholder="Ex : Daft Punk"
+            className="w-full text-sm px-3 py-2 rounded-md outline-none"
+            style={{ background: "hsl(222, 20%, 16%)", border: "1px solid hsl(220, 15%, 24%)", color: "hsl(210, 30%, 88%)" }}
+            onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))"; }}
+            onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = "hsl(220, 15%, 24%)"; }}
+          />
+        </div>
+        <div className="flex justify-end gap-3 px-5 py-4" style={{ borderTop: "1px solid hsl(220, 15%, 18%)" }}>
+          <button onClick={onFermer} className="px-4 py-2 rounded-lg text-sm"
+            style={{ background: "hsl(222, 18%, 18%)", color: "hsl(220, 15%, 60%)", border: "1px solid hsl(220, 15%, 24%)" }}>
+            Annuler
+          </button>
+          <button onClick={() => { if (nom.trim()) { onCreer(nom.trim()); onFermer(); } }}
+            disabled={!nom.trim()} className="px-5 py-2 rounded-lg text-sm font-medium"
+            style={{
+              background: nom.trim() ? "hsl(var(--tl-accent-button))" : "hsl(var(--tl-accent-dim))",
+              color: nom.trim() ? "hsl(var(--tl-accent-text))" : "hsl(220, 15%, 40%)",
+            }}>
+            Créer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Modal : Nouvel album
+// ─────────────────────────────────────────────────────────────
+function NouvelAlbumModal({ onFermer, onCreer }: { onFermer: () => void; onCreer: (nom: string) => void }) {
+  const [nom, setNom] = useState("");
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(10, 12, 20, 0.82)", backdropFilter: "blur(4px)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onFermer(); }}>
+      <div className="flex flex-col rounded-xl shadow-2xl"
+        style={{ width: "360px", background: "hsl(222, 22%, 12%)", border: "1px solid hsl(220, 15%, 22%)" }}>
+        <div className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: "1px solid hsl(220, 15%, 18%)" }}>
+            <h2 className="text-sm font-semibold" style={{ color: "hsl(210, 30%, 90%)" }}>Nouvel album</h2>
+          <button onClick={onFermer} style={{ color: "hsl(220, 15%, 45%)" }}>
+            <XIcon size={12} />
+          </button>
+        </div>
+        <div className="px-5 py-4">
+          <label className="block text-[11px] font-semibold uppercase tracking-widest mb-2"
+            style={{ color: "hsl(var(--tl-accent-text))" }}>
+            Nom de l'album
+          </label>
+          <input type="text" value={nom} onChange={(e) => setNom(e.target.value)} autoFocus
+            onKeyDown={(e) => { if (e.key === "Enter" && nom.trim()) { onCreer(nom.trim()); onFermer(); } }}
+            placeholder="Ex : Discovery"
             className="w-full text-sm px-3 py-2 rounded-md outline-none"
             style={{ background: "hsl(222, 20%, 16%)", border: "1px solid hsl(220, 15%, 24%)", color: "hsl(210, 30%, 88%)" }}
             onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = "hsl(var(--tl-accent-princ))"; }}
@@ -758,12 +914,13 @@ function ModalNouvelleRecherche({ stackId, sousStackId, onFermer }: ModalRecherc
 // Sidebar principale
 // ─────────────────────────────────────────────────────────────
 interface SidebarProps {
-  onOuvrirModalStack: (stackId?: string) => void;
+  onOuvrirModalTitre: (albumId: string) => void;
 }
 
-export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
-  const { projet, sidebarOuverte, ajouterStack } = useApp();
+export function Sidebar({ onOuvrirModalTitre }: SidebarProps) {
+  const { projet, sidebarOuverte, ajouterStack, ajouterAlbum } = useApp();
   const [modalNouveauStack, setModalNouveauStack] = useState(false);
+  const [modalAlbum, setModalAlbum] = useState<string | null>(null);
   // Pour la modal nouvelle recherche instrument
   const [modalRecherche, setModalRecherche] = useState<{
     stackId: string;
@@ -853,7 +1010,8 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
               <StackAccordeon
                 key={stack.id}
                 stack={stack}
-                onOuvrirModalSousStack={(stackId) => onOuvrirModalStack(stackId)}
+                onOuvrirModalAlbum={(stackId) => setModalAlbum(stackId)}
+                onOuvrirModalTitre={onOuvrirModalTitre}
                 onOuvrirModalRecherche={(stackId, sousStackId) => setModalRecherche({ stackId, sousStackId })}
               />
             ))
@@ -875,6 +1033,14 @@ export function Sidebar({ onOuvrirModalStack }: SidebarProps) {
         <NouveauStackModal
           onFermer={() => setModalNouveauStack(false)}
           onCreer={(nom) => ajouterStack(nom)}
+        />
+      )}
+
+      {/* Modal nouvel album */}
+      {modalAlbum && (
+        <NouvelAlbumModal
+          onFermer={() => setModalAlbum(null)}
+          onCreer={(nom) => ajouterAlbum(modalAlbum, nom)}
         />
       )}
 
