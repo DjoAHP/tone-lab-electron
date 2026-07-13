@@ -1378,8 +1378,7 @@ export function useAppStore() {
     mettreAJourEtat({ setlistSidebarOuverte: !state.setlistSidebarOuverte });
   }, [state.setlistSidebarOuverte, mettreAJourEtat]);
   // ---- DocV Audio Player ----
-  const [youtubePlayerRef, setYoutubePlayerRef] = useState<any>(null);
-
+  // (Contrôleur de lecture unifié défini plus bas)
   const setDocvAudioUrl = useCallback(
     (url: string | null) => {
       mettreAJourEtat({ docvAudioUrl: url, modifie: true });
@@ -1403,27 +1402,64 @@ export function useAppStore() {
     [mettreAJourEtat],
   );
 
-  const registerYouTubePlayer = useCallback((player: any) => {
-    setYoutubePlayerRef(player);
+  // ---- Contrôleur de lecture unifié (YouTube OU fichier local) ----
+  // Référence non persistée (hors objet `state`) : pointeur vers le contrôleur
+  // de la source active. Interface commune : { toggle, seek(delta),
+  // getCurrentTime, getDuration }. Permet aux raccourcis clavier de piloter
+  // indifféremment YouTube et le fichier local.
+  const [audioControllerRef, setAudioControllerRef] = useState<any>(null);
+  const [docvAudioActive, setDocvAudioActive] = useState<boolean>(false);
+
+  const registerAudioController = useCallback((controller: any) => {
+    setAudioControllerRef(controller);
+    setDocvAudioActive(!!controller);
   }, []);
 
+  const clearAudioController = useCallback(() => {
+    setAudioControllerRef(null);
+    setDocvAudioActive(false);
+  }, []);
+
+  const playPauseAudio = useCallback(() => {
+    if (audioControllerRef && typeof audioControllerRef.toggle === "function") {
+      audioControllerRef.toggle();
+    }
+  }, [audioControllerRef]);
+
+  const seekAudio = useCallback((delta: number) => {
+    if (audioControllerRef && typeof audioControllerRef.seek === "function") {
+      audioControllerRef.seek(delta);
+    }
+  }, [audioControllerRef]);
+
+  const registerYouTubePlayer = useCallback((player: any) => {
+    if (player) {
+      registerAudioController({
+        toggle: () => {
+          const ytState = player.getPlayerState();
+          if (ytState === 1) player.pauseVideo();
+          else player.playVideo();
+        },
+        seek: (d: number) => {
+          const t = player.getCurrentTime();
+          const dur = player.getDuration();
+          player.seekTo(Math.max(0, Math.min(dur, t + d)), true);
+        },
+        getCurrentTime: () => player.getCurrentTime(),
+        getDuration: () => player.getDuration(),
+      });
+    } else {
+      clearAudioController();
+    }
+  }, [registerAudioController, clearAudioController]);
+
   const seekYouTubeAudio = useCallback((delta: number) => {
-    if (!youtubePlayerRef) return;
-    const currentTime = youtubePlayerRef.getCurrentTime();
-    const duration = youtubePlayerRef.getDuration();
-    const newTime = Math.max(0, Math.min(duration, currentTime + delta));
-    youtubePlayerRef.seekTo(newTime, true);
-  }, [youtubePlayerRef]);
+    seekAudio(delta);
+  }, [seekAudio]);
 
   const playPauseYouTubeAudio = useCallback(() => {
-    if (!youtubePlayerRef) return;
-    const state = youtubePlayerRef.getPlayerState();
-    if (state === 1) {
-      youtubePlayerRef.pauseVideo();
-    } else {
-      youtubePlayerRef.playVideo();
-    }
-  }, [youtubePlayerRef]);
+    playPauseAudio();
+  }, [playPauseAudio]);
 const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEtat({ setlistSidebarWidth: width });  }, [mettreAJourEtat]);
 
 
@@ -1523,10 +1559,15 @@ const setSetlistSidebarWidth = useCallback((width: number) => {    mettreAJourEt
     docvAudioPlaying: state.docvAudioPlaying,
     docvAudioCurrentTime: state.docvAudioCurrentTime,
     docvAudioDuration: state.docvAudioDuration,
+    docvAudioActive,
     setDocvAudioUrl,
     setDocvAudioPlaying,
     setDocvAudioTime,
     registerYouTubePlayer,
+    registerAudioController,
+    clearAudioController,
+    playPauseAudio,
+    seekAudio,
     seekYouTubeAudio,
     playPauseYouTubeAudio,  };
 }

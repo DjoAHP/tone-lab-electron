@@ -1,13 +1,26 @@
-// Sidebar droite fixe pour le lecteur audio YouTube dans DocV
+// Sidebar droite fixe pour le lecteur audio dans DocV
 // Toujours visible quand on est dans l'outil DocV
 // Largeur fixe 280px, pas de redimensionnement, pas de bouton fermeture
+//
+// Deux sources possibles (une seule active à la fois) :
+//  - URL YouTube (iframe masquée)
+//  - fichier local (mp3/wav/flac) via dialogue natif Electron
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { FileVolume } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { extractYouTubeId } from "../utils/youtube.utils";
 import { DocVAudioPlayer } from "./DocVAudioPlayer";
+import { DocVLocalAudioPlayer } from "./DocVLocalAudioPlayer";
 
 const SIDEBAR_WIDTH = 280;
+
+type AudioMode = "youtube" | "file" | null;
+
+interface FileInfo {
+  name: string;
+  objectUrl: string;
+}
 
 export function DocVAudioSidebar() {
   const {
@@ -15,11 +28,19 @@ export function DocVAudioSidebar() {
     setDocvAudioPlaying,
     setDocvAudioTime,
     registerYouTubePlayer,
+    registerAudioController,
+    clearAudioController,
   } = useApp();
 
   const [inputUrl, setInputUrl] = useState("");
   const [videoId, setVideoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<AudioMode>(null);
+  const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);
+
+  // Référence vers l'objectURL courant (pour le révoquer proprement)
+  const fileInfoRef = useRef<FileInfo | null>(null);
+  fileInfoRef.current = fileInfo;
 
   // Référence globale du player YouTube
   const playerRef = React.useRef<any>(null);
@@ -29,7 +50,16 @@ export function DocVAudioSidebar() {
     registerYouTubePlayer(player);
   }, [registerYouTubePlayer]);
 
-  // Charger la vidéo
+  // Libère l'objectURL au démontage de la sidebar
+  useEffect(() => {
+    return () => {
+      if (fileInfoRef.current?.objectUrl) {
+        URL.revokeObjectURL(fileInfoRef.current.objectUrl);
+      }
+    };
+  }, []);
+
+  // Charger la vidéo YouTube
   const handleLoadVideo = () => {
     const id = extractYouTubeId(inputUrl);
     if (!id) {
@@ -37,19 +67,73 @@ export function DocVAudioSidebar() {
       return;
     }
     setError(null);
+    // Bascule vers le mode YouTube (révoque un éventuel fichier)
+    if (fileInfoRef.current?.objectUrl) {
+      URL.revokeObjectURL(fileInfoRef.current.objectUrl);
+    }
+    setFileInfo(null);
+    clearAudioController();
     setVideoId(id);
+    setMode("youtube");
     setDocvAudioUrl(inputUrl);
   };
 
-  // Vider le lecteur
-  const handleClear = () => {
+  // Applique une source fichier (révoque l'objectURL précédent)
+  const setFileSource = useCallback((name: string, objectUrl: string) => {
+    if (fileInfoRef.current?.objectUrl) {
+      URL.revokeObjectURL(fileInfoRef.current.objectUrl);
+    }
+    setFileInfo({ name, objectUrl });
     setVideoId(null);
     setInputUrl("");
+    setError(null);
+    setMode("file");
+    registerAudioController(null); // sera remplacé par le contrôleur fichier
+  }, [registerAudioController]);
+
+  // Charger un fichier audio local (mp3/wav/flac)
+  // En Electron : dialogue natif via le preload. Sinon (npm run dev, navigateur) :
+  // repli sur un <input type="file"> classique.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLoadFile = async () => {
+    if (window.electronAPI && typeof window.electronAPI.openAudioFile === "function") {
+      const result = await window.electronAPI.openAudioFile();
+      if (!result) return;
+      const blob = new Blob([result.buffer], { type: result.mime });
+      const url = URL.createObjectURL(blob);
+      setFileSource(result.name, url);
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permet de re-sélectionner le même fichier
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setFileSource(file.name, url);
+  };
+
+  // Vider le lecteur (les deux sources)
+  const handleClear = () => {
+    if (fileInfoRef.current?.objectUrl) {
+      URL.revokeObjectURL(fileInfoRef.current.objectUrl);
+    }
+    setFileInfo(null);
+    setVideoId(null);
+    setInputUrl("");
+    setError(null);
+    setMode(null);
     setDocvAudioUrl(null);
     setDocvAudioPlaying(false);
     setDocvAudioTime(0, 0);
     playerRef.current = null;
+    clearAudioController();
   };
+
+  const afficheLecteur = mode === "youtube" || mode === "file";
 
   return (
     <div
@@ -85,7 +169,7 @@ export function DocVAudioSidebar() {
         </span>
       </div>
 
-      {/* Zone URL */}
+      {/* Zone URL YouTube */}
       <div style={{ padding: "12px", flexShrink: 0 }}>
         <input
           type="text"
@@ -128,39 +212,67 @@ export function DocVAudioSidebar() {
           >
             Charger
           </button>
-          {videoId && (
-            <button
-              onClick={handleClear}
-              style={{
-                padding: "6px 12px",
-                fontSize: "12px",
-                background: "hsl(222, 18%, 18%)",
-                color: "hsl(220, 15%, 60%)",
-                border: "1px solid hsl(220, 15%, 24%)",
-                borderRadius: "6px",
-                cursor: "pointer",
-              }}
-            >
-              Vider
-            </button>
-          )}
         </div>
       </div>
 
+      {/* Bouton fichier local */}
+      <div style={{ padding: "0 12px 12px", flexShrink: 0 }}>
+        <button
+          onClick={handleLoadFile}
+          style={{
+            width: "100%",
+            padding: "8px 12px",
+            fontSize: "12px",
+            background: "hsl(222, 18%, 18%)",
+            color: "hsl(220, 15%, 75%)",
+            border: "1px solid hsl(220, 15%, 24%)",
+            borderRadius: "6px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          <FileVolume size={15} style={{ color: "hsl(var(--tl-accent-princ))" }} />
+          Charger un fichier (mp3/wav/flac)
+        </button>
+      </div>
+
+      {/* Input fichier caché (repli pour npm run dev / navigateur) */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".mp3,.wav,.flac,audio/mpeg,audio/wav,audio/flac,audio/*"
+        style={{ display: "none" }}
+        onChange={handleFileInputChange}
+      />
+
       {/* Lecteur audio */}
-      {videoId && (
+      {afficheLecteur && (
         <div style={{ flex: 1, overflow: "auto" }}>
-          <DocVAudioPlayer
-            videoId={videoId}
-            onRegisterPlayer={handleRegisterPlayer}
-            onPlayingChange={(playing) => setDocvAudioPlaying(playing)}
-            onTimeUpdate={(time, duration) => setDocvAudioTime(time, duration)}
-          />
+          {mode === "youtube" && videoId && (
+            <DocVAudioPlayer
+              videoId={videoId}
+              onRegisterPlayer={handleRegisterPlayer}
+              onPlayingChange={(playing) => setDocvAudioPlaying(playing)}
+              onTimeUpdate={(time, duration) => setDocvAudioTime(time, duration)}
+            />
+          )}
+          {mode === "file" && fileInfo && (
+            <DocVLocalAudioPlayer
+              objectUrl={fileInfo.objectUrl}
+              fileName={fileInfo.name}
+              onRegisterController={registerAudioController}
+              onPlayingChange={(playing) => setDocvAudioPlaying(playing)}
+              onTimeUpdate={(time, duration) => setDocvAudioTime(time, duration)}
+            />
+          )}
         </div>
       )}
 
-      {/* Message d'aide si aucune vidéo chargée */}
-      {!videoId && (
+      {/* Message d'aide si aucune source chargée */}
+      {!afficheLecteur && (
         <div
           style={{
             flex: 1,
@@ -174,7 +286,29 @@ export function DocVAudioSidebar() {
             lineHeight: 1.5,
           }}
         >
-          Collez une URL YouTube ci-dessus et cliquez sur "Charger" pour écouter l'audio tout en lisant votre partition.
+          Collez une URL YouTube ci-dessus ou chargez un fichier audio local pour écouter
+          pendant la lecture de votre partition.
+        </div>
+      )}
+
+      {/* Bouton Vider (si une source est chargée) */}
+      {afficheLecteur && (
+        <div style={{ padding: "12px", flexShrink: 0 }}>
+          <button
+            onClick={handleClear}
+            style={{
+              width: "100%",
+              padding: "6px 12px",
+              fontSize: "12px",
+              background: "hsl(222, 18%, 18%)",
+              color: "hsl(220, 15%, 60%)",
+              border: "1px solid hsl(220, 15%, 24%)",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Vider
+          </button>
         </div>
       )}
     </div>

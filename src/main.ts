@@ -1,5 +1,5 @@
 import "./vite-env.d.ts";
-import { app, BrowserWindow, Menu, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, Menu, shell, ipcMain, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -199,9 +199,12 @@ if (started) {
   app.quit();
 }
 
+// Référence module-level sur la fenêtre principale (pour les dialogues natifs).
+let mainWindow: BrowserWindow | null = null;
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -305,6 +308,39 @@ ipcMain.on('help:open', (_event, tool: string) => {
 
 ipcMain.on('shell:openExternal', (_event, url: string) => {
   openExternalUrl(url);
+});
+
+// ── Ouverture d'un fichier audio local (mp3/wav/flac) pour le lecteur DocV ──
+// Renvoie null si annulé, sinon { name, buffer (ArrayBuffer), mime }.
+ipcMain.handle('dialog:openAudioFile', async () => {
+  if (!mainWindow) return null;
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: "Choisir un fichier audio",
+      properties: ['openFile'],
+      filters: [
+        { name: 'Audio', extensions: ['mp3', 'wav', 'flac'] },
+        { name: 'Tous les fichiers', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+
+    const filePath = result.filePaths[0];
+    const ext = path.extname(filePath).slice(1).toLowerCase();
+    const mimeByExt: Record<string, string> = {
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      flac: 'audio/flac',
+    };
+    const mime = mimeByExt[ext] ?? 'application/octet-stream';
+    const data = fs.readFileSync(filePath);
+    // Copie dans un ArrayBuffer neuf (le Buffer fs peut être plus large que la vue).
+    const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    return { name: path.basename(filePath), buffer, mime };
+  } catch (err) {
+    console.error('[DocV] Erreur lecture fichier audio :', err);
+    return null;
+  }
 });
 
 

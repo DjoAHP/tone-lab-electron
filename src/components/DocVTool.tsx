@@ -10,9 +10,9 @@ export function DocVTool() {
     docvSelectedFile,
     docvFiles,
     setDocvSelectedFile,
-    docvAudioUrl,
-    playPauseYouTubeAudio,
-    seekYouTubeAudio,
+    docvAudioActive,
+    playPauseAudio,
+    seekAudio,
   } = useApp();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -176,25 +176,25 @@ export function DocVTool() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      // Si lecteur audio actif (URL chargée)
-      const audioActif = docvAudioUrl !== null;
+      // Si lecteur audio actif (URL YouTube OU fichier local)
+      const audioActif = docvAudioActive;
 
       if (audioActif) {
         // Espace = play/pause audio
         if (e.key === " ") {
           e.preventDefault();
-          playPauseYouTubeAudio();
+          playPauseAudio();
           return;
         }
         // Flèches gauche/droite = seek audio
         if (e.key === "ArrowLeft") {
           e.preventDefault();
-          seekYouTubeAudio(-10);
+          seekAudio(-10);
           return;
         }
         if (e.key === "ArrowRight") {
           e.preventDefault();
-          seekYouTubeAudio(10);
+          seekAudio(10);
           return;
         }
       }
@@ -220,7 +220,7 @@ export function DocVTool() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [docvAudioUrl, navigateFile, toggleFullscreen, playPauseYouTubeAudio, seekYouTubeAudio]);
+  }, [docvAudioActive, navigateFile, toggleFullscreen, playPauseAudio, seekAudio]);
 
   if (!selectedItem) {
     return (

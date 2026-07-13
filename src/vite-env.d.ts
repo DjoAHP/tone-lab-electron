@@ -17,9 +17,16 @@ declare const __APP_VERSION__: string;
 // API exposée par le preload (contextBridge) au renderer
 type HelpTool = "stack" | "setlist";
 
+interface AudioFileResult {
+  name: string;
+  buffer: ArrayBuffer;
+  mime: string;
+}
+
 interface ElectronAPI {
   openHelp(tool: HelpTool): void;
   openExternal(url: string): void;
+  openAudioFile(): Promise<AudioFileResult | null>;
 }
 
 // Augmentation de l'interface globale Window (fichier .d.ts script)
