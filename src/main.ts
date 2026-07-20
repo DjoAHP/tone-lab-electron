@@ -44,9 +44,11 @@ function tryServeDocv(reqUrl: URL, res: import('node:http').ServerResponse): boo
       return true;
     }
     const data = fs.readFileSync(filePath);
+    // Pas de CSP restrictive ici : le viewer PDF intégré de Chromium a besoin
+    // de charger ses propres sous-ressources. La CSP de la page parente
+    // (index.html) autorise déjà frame-src blob:/tonelab.local.
     res.writeHead(200, {
       'Content-Type': 'application/pdf',
-      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
     });
     res.end(data);
   } catch {
