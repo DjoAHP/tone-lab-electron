@@ -17,9 +17,44 @@ import squirrelStartup from "electron-squirrel-startup";
 const APP_HOST = 'tonelab.local';
 let rendererPort = 0;
 
+// Dossier temporaire dédié aux PDF DocV servis via tonelab.local (contourne
+// le blocage du sandbox sur les blob: iframe PDF sous Electron packagé).
+const DOCV_TMP_DIR = path.join(app.getPath('temp'), 'tonelab-docv');
+try { fs.mkdirSync(DOCV_TMP_DIR, { recursive: true }); } catch { /* ignore */ }
+
 // Mappe le faux domaine tonelab.local vers la boucle locale (doit être défini
 // AVANT app.whenReady). Chromium résout ainsi tonelab.local → 127.0.0.1.
 app.commandLine.appendSwitch('host-resolver-rules', `MAP ${APP_HOST} 127.0.0.1`);
+
+function safeDocvFilename(name: string): string {
+  const base = path.basename(name).replace(/[^\w.-]/g, '_');
+  return base || 'doc.pdf';
+}
+
+// Sert un PDF temporaire DocV depuis /__docv/<fichier> via tonelab.local.
+// Renvoie true si la requête a été traitée (route DocV), false sinon.
+function tryServeDocv(reqUrl: URL, res: import('node:http').ServerResponse): boolean {
+  if (!reqUrl.pathname.startsWith('/__docv/')) return false;
+  try {
+    const fileName = path.basename(reqUrl.pathname);
+    const filePath = path.join(DOCV_TMP_DIR, fileName);
+    if (!filePath.startsWith(DOCV_TMP_DIR)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return true;
+    }
+    const data = fs.readFileSync(filePath);
+    res.writeHead(200, {
+      'Content-Type': 'application/pdf',
+      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'",
+    });
+    res.end(data);
+  } catch {
+    res.writeHead(404);
+    res.end('Not found');
+  }
+  return true;
+}
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html',
@@ -58,6 +93,7 @@ function startRendererServer(): Promise<number> {
       async (req, res) => {
         try {
           const reqUrl = new URL(req.url || '/', `https://${APP_HOST}`);
+          if (tryServeDocv(reqUrl, res)) return;
           let pathname = decodeURIComponent(reqUrl.pathname);
           if (pathname === '/' || pathname === '') pathname = '/index.html';
 
@@ -101,7 +137,9 @@ function startDevProxy(targetDevUrl: string): Promise<number> {
 
   const server = https.createServer(
     { cert: LOCAL_CERT, key: LOCAL_KEY },
-    (req, res) => {
+    async (req, res) => {
+      const reqUrl = new URL(req.url || '/', `https://${APP_HOST}`);
+      if (tryServeDocv(reqUrl, res)) return;
       const proxyReq = http.request(
         {
           host: target.hostname,
@@ -344,7 +382,22 @@ ipcMain.handle('dialog:openAudioFile', async () => {
 });
 
 
-// This method will be called when Electron has finished
+// ── Sauvegarde d'un PDF DocV dans un fichier temporaire (servi via tonelab.local) ──
+// Le sandbox Electron bloque le rendu des blob: iframe PDF ; on écrit donc le
+// PDF dans un fichier temporaire et on le sert via la route /__docv/ du serveur
+// HTTPS local → l'iframe charge une URL http(s) classique, le PDF s'affiche.
+ipcMain.handle('docv:saveTempPdf', async (_event, payload: { name: string; buffer: ArrayBuffer }) => {
+  try {
+    const fileName = safeDocvFilename(payload.name);
+    const filePath = path.join(DOCV_TMP_DIR, fileName);
+    if (!filePath.startsWith(DOCV_TMP_DIR)) return null;
+    fs.writeFileSync(filePath, Buffer.from(payload.buffer));
+    return `https://${APP_HOST}:${rendererPort}/__docv/${encodeURIComponent(fileName)}`;
+  } catch (err) {
+    console.error('[DocV] Erreur écriture PDF temporaire :', err);
+    return null;
+  }
+});
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {

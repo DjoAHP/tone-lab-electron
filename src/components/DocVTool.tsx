@@ -83,11 +83,36 @@ export function DocVTool() {
     if (!selectedItem || selectedItem.type === "folder") return;
     if (!selectedItem._file) return;
 
-    const url = URL.createObjectURL(selectedItem._file);
-    setObjectUrl(url);
+    // Les images fonctionnent via blob: URL classique.
+    if (selectedItem.extension?.toLowerCase() !== "pdf") {
+      const url = URL.createObjectURL(selectedItem._file);
+      setObjectUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    // PDF : sous Electron en sandbox, le blob: iframe ne s'affiche pas (page
+    // blanche). On écrit le PDF dans un fichier temporaire servi via
+    // tonelab.local et on charge cette URL http(s) dans l'iframe.
+    let cancelled = false;
+    selectedItem._file.arrayBuffer().then(async (buffer) => {
+      if (cancelled) return;
+      const electronAPI = (window as unknown as { electronAPI?: { saveTempPdf?: (n: string, b: ArrayBuffer) => Promise<string | null> } }).electronAPI;
+      if (!electronAPI?.saveTempPdf) {
+        // Repli navigateur/PWA : blob: URL (fonctionne hors Electron sandbox).
+        const url = URL.createObjectURL(selectedItem._file!);
+        setObjectUrl(url);
+        return;
+      }
+      const url = await electronAPI.saveTempPdf(selectedItem.name, buffer);
+      if (cancelled) return;
+      if (url) setObjectUrl(url);
+      else setError("Impossible d'ouvrir le PDF");
+    });
 
     return () => {
-      URL.revokeObjectURL(url);
+      cancelled = true;
     };
   }, [selectedItem]);
 

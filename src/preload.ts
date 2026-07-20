@@ -30,6 +30,13 @@ const electronAPI = {
   openAudioFile(): Promise<AudioFileResult | null> {
     return ipcRenderer.invoke("dialog:openAudioFile");
   },
+
+  // Écrit un PDF dans un fichier temporaire et renvoie l'URL https (tonelab.local)
+  // permettant de l'afficher dans une iframe (contourne le blocage blob: en sandbox).
+  // Renvoie null en cas d'échec.
+  saveTempPdf(name: string, buffer: ArrayBuffer): Promise<string | null> {
+    return ipcRenderer.invoke("docv:saveTempPdf", { name, buffer });
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);
